@@ -1,0 +1,37 @@
+   
+        
+        
+        def 
+
+        poll_options = ''        
+        for i in range(len(args)):         
+            emoji = chr(0x1F1E6 + i)
+            poll_options = '\n'.join([poll_options, f'{emoji} {args[i]}'])
+            lastResult.poll_options[emoji] = args[i]
+        response = f"----------Take a Lap Discord Poll---------{poll_options}"
+        message = await ctx.send(response)
+    
+    for i in range(len(args)):
+        emoji = chr(0x1F1E6 + i)        
+        await message.add_reaction(emoji)
+    lastResult.poll_id = message.id
+    await ctx.send(f"Poll created with ID: {lastResult.poll_id}. Use !pollresults to print the results.")
+
+@bot.command(name='pollresults')
+async def poll_results(ctx):
+    channel = ctx.channel
+    poll_results = 'Here are the results of the last poll:\n'
+    if(lastResult.poll_id == 0):
+        await ctx.send('There are no polls to show results for.')
+        return
+    else:
+        message = await channel.fetch_message(lastResult.poll_id)
+        
+        for i in range(len(lastResult.poll_options)):
+            emoji = chr(0x1F1E6 + i)
+            reaction = discord.utils.get(message.reactions, emoji=emoji)
+            reaction_count = reaction.count
+        
+            poll_results += f'{lastResult.poll_options[emoji]} : {reaction_count}\n'
+        await ctx.send(poll_results)
+ 
