@@ -1,31 +1,18 @@
-import discord
+from discord.ext import commands
+from objects.poll import Poll
 
-class Poll:
-    def __init__(self):
-        self.poll_id = 0 
-        self.question = ''
-        self.answers = {}    
-        self.votes = {}
-        print("Poll is initialized")   
-
-    def new_poll(self,question, answers):
-        self.question = question
-        self.answers = answers
-        self.votes = {answer: 0 for answer in answers}
-        print("Poll is new") 
-
-    def update_vote(self, votes):
-        self.votes = votes
-
-    async def send(self, channel):
-        embed = discord.Embed(title=self.question, description='\n'.join([f'{i+1}. {answer}' for i, answer in enumerate(self.answers)]), color=discord.Color.blue())
-        for option in self.answers:
-            embed.add_field(name=option, value=self.votes[option], inline=True)
+class pollCog(commands.Cog):
+    def __init__(self, bot):
+        self.bot = bot
+        print("Poll cog is initialized")
         
-        message = await channel.send(embed=embed)
-        for i in range(len(self.answers)):
-            await message.add_reaction(chr(0x1F1E6 + i))
+    @commands.command(name='poll', help='Lets users run a self-made poll for others to vote on.')
+    @commands.has_role('Guild Members')
+    async def poll(self, ctx, *args):
+        print('test')
+        poll = Poll()
+        poll.new_poll(args[0],args[1:])
+        await poll.send(ctx.channel)
 
-            
-        
- 
+async def setup(bot):
+    await bot.add_cog(pollCog(bot))
