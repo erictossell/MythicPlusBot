@@ -1,6 +1,6 @@
 import discord
 from discord.ext import commands
-from objects.getMythicPlusRecentRuns import getMythicPlusRecentRuns
+from objects.raiderIO.getMythicPlusRecentRuns import getMythicPlusRecentRuns
 from objects.raiderIO.getMythicPlusBestRuns import getMythicPlusBestRuns
 from objects.raiderIO.getMythicPlusAffixes import getMythicPlusAffixes
 from util.util import convertMillis
