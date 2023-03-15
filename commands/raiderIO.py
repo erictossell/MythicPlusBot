@@ -1,8 +1,7 @@
 import discord
 from discord.ext import commands
-from objects.raiderIO.getMythicPlusRecentRuns import getMythicPlusRecentRuns
-from objects.raiderIO.getMythicPlusBestRuns import getMythicPlusBestRuns
-from objects.raiderIO.getMythicPlusAffixes import getMythicPlusAffixes
+from objects.raiderIOService import getCharacter
+
 from util.util import convertMillis
 
 class RaiderIO(commands.Cog):
@@ -16,7 +15,7 @@ class RaiderIO(commands.Cog):
         if len(args) == 0:
             await ctx.channel.send('Please provide a character name and realm.')
         if len(args) == 1:
-            character = getMythicPlusBestRuns(args[0],'Area-52')
+            character = getCharacter(args[0],'Area-52')
             title = character.name+"'s Best Mythic+ Runs"         
             
             embed = discord.Embed(title=title, description= '', color=discord.Color.green(), url=character.url)
@@ -29,7 +28,7 @@ class RaiderIO(commands.Cog):
 
             for run in character.bestRuns:
                 time = convertMillis(run['clear_time_ms'])
-                name = run['dungeon'] + ' - ' + str(run['mythic_level'])    
+                name = run['dungeon'] + ' - ' + str(run['mythic_level'] )    
                 value = 'Time: **' + time + '** | Score: ' + str(run['score'])
                             
                 embed.add_field(name=name, value=value, inline=False)
