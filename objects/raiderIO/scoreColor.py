@@ -1,5 +1,5 @@
 class ScoreColor:
-    def __init__(self, color, score):
-        self.color = color
+    def __init__(self, score, color):        
         self.score = score
+        self.color = color
     
