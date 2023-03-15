@@ -2,21 +2,20 @@ from discord import Member
 import requests
 
 import requests
-from objects.affix import Affix
-from objects.character import Character
-from objects.dungeonRun import DungeonRun
+from objects.raiderIO.affix import Affix
+from objects.raiderIO.character import Character
+from objects.raiderIO.dungeonRun import DungeonRun
 
-from objects.scoreColor import ScoreColor
+from objects.raiderIO.scoreColor import ScoreColor
 
 class RaiderIOService:
     def __init__(self):
         self = self  
         
-    def getCharacter(name, realm):
+    def getCharacter(name, realm='Area-52'):
         region = 'us'        
         try:
-            request = requests.get('https://raider.io/api/v1/characters/profile?region='+region+'&realm='+realm+'&name='+name+'&fields=gear,mythic_plus_scores_by_season:current,mythic_plus_ranks,mythic_plus_best_runs,mythic_plus_recent_runs')
-            
+            request = requests.get('https://raider.io/api/v1/characters/profile?region='+region+'&realm='+realm+'&name='+name+'&fields=gear,mythic_plus_scores_by_season:current,mythic_plus_ranks,mythic_plus_best_runs,mythic_plus_recent_runs') 
             score = request.json()['mythic_plus_scores_by_season'][0]['scores']['all']
             best_runs = []
             recent_runs = []
@@ -25,15 +24,12 @@ class RaiderIOService:
                 for affix in run['affixes']:
                     affixes.append(Affix(affix['name'], affix['description'], affix['wowhead_url']))
                 best_runs.append(DungeonRun(run['dungeon'], run['short_name'], run['mythic_level'], run['completed_at'], run['clear_time_ms'], run['par_time_ms'], run['num_keystone_upgrades'], run['score'], affixes, run['url']))
-            
             for run in request.json()['mythic_plus_recent_runs']:
                 affixes = []
                 for affix in run['affixes']:
                     affixes.append(Affix(affix['name'], affix['description'], affix['wowhead_url']))
                 recent_runs.append(DungeonRun(run['dungeon'], run['short_name'], run['mythic_level'], run['completed_at'], run['clear_time_ms'], run['par_time_ms'], run['num_keystone_upgrades'], run['score'], affixes, run['url']))
-            
-            rank = request.json()['mythic_plus_ranks']['class']['realm']
-                        
+            rank = request.json()['mythic_plus_ranks']['class']['realm']                        
             character = Character(
                 request.json()['profile_url'],
                 request.json()['name'],
@@ -54,7 +50,8 @@ class RaiderIOService:
         except:
             print('Error: Character not found.')
             return
-        return character   
+        return character
+       
     
     def getScoreColors():
         scoreColors = []
@@ -64,11 +61,10 @@ class RaiderIOService:
                 scoreColors.append(ScoreColor(score['score'], score['color']))
         except:
             print('Error: Score colors not found.')
-        return scoreColors            
+        return scoreColors   
         
                 
-    def getMembers():
-        
+    def getMembers():        
         try:
             members = []
             request = request.get('https://raider.io/api/v1/guilds/profile?region=us&realm=Area-52&name=Take%20A%20Lap&fields=members')
@@ -78,8 +74,8 @@ class RaiderIOService:
         except:
             print('Error: Guild not found.')
             return
-        return members
-            
+        return members  
+              
             
     def getMythicPlusAffixes():
         try:        
