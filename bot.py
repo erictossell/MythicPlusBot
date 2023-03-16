@@ -25,6 +25,7 @@ async def load_extensions():
     await bot.load_extension('commands.poll')
     await bot.load_extension('events.errors')
     await bot.load_extension('commands.raiderIO')
+    await bot.load_extension('events.memberEvents')
 
 async def main():
     await load_extensions()
