@@ -5,8 +5,8 @@ class Dice:
         self.num_sides = num_sides
 
     def roll(self):
-        if self.num_sides < 1:
-            return "Please enter a number greater than 0."
+        if self.num_sides <= 1:
+            return "Please enter a number greater than 1."
         else:
-            roll_result = random.randint(0, self.num_sides)
-            return f"You rolled a {roll_result} (between 0 and {self.num_sides})."
+            roll_result = random.randint(1, self.num_sides)
+            return f"You rolled a {roll_result} (between 1 and {self.num_sides})."
