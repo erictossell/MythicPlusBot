@@ -50,5 +50,5 @@ class RaiderIO(commands.Cog):
         await ctx.channel.send(embed=embed)
 
 
-async def setup(bot):
-    await bot.add_cog(RaiderIO(bot))
+def setup(bot):
+    bot.add_cog(RaiderIO(bot))

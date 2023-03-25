@@ -15,5 +15,5 @@ class errorsCog(commands.Cog):
             await ctx.send("You're missing a required argument. Please try again.")
 
 
-async def setup(bot):
-    await bot.add_cog(errorsCog(bot))
+def setup(bot):
+    bot.add_cog(errorsCog(bot))

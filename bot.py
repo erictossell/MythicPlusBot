@@ -8,6 +8,7 @@ import discord
 from dotenv import load_dotenv
 from discord.ext import commands
 
+
 #Load Environment variables
 load_dotenv('configurations/main.env')
 TOKEN = os.getenv('DISCORD_TOKEN')
@@ -20,15 +21,14 @@ intents.presences = True #v2
 
 bot = commands.Bot(command_prefix='!', intents=intents, activity=discord.Activity(type=discord.ActivityType.watching, name="for !help"))
 
-async def load_extensions():
-    await bot.load_extension('commands.general')
-    await bot.load_extension('commands.poll')
-    await bot.load_extension('events.errors')
-    await bot.load_extension('commands.raiderIO')
-    await bot.load_extension('events.memberEvents')
+cogs_list = ['commands.general', 'commands.poll', 'events.errors', 'commands.raiderIO', 'events.memberEvents']
+
+def load_extensions():
+    for cog in cogs_list:
+        bot.load_extension(cog)
 
 async def main():
-    await load_extensions()
+    load_extensions()
     await bot.start(TOKEN)
 
 asyncio.run(main())

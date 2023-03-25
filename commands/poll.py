@@ -13,5 +13,5 @@ class pollCog(commands.Cog):
         poll.new_poll(args[0],args[1:])
         await poll.send(ctx.channel)
 
-async def setup(bot):
-    await bot.add_cog(pollCog(bot))
+def setup(bot):
+    bot.add_cog(pollCog(bot))
