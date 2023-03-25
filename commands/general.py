@@ -1,20 +1,9 @@
-import discord
 from discord.ext import commands
+from objects.createPollView import PollView
 
 from objects.dice import Dice
-
-class MyView(discord.ui.View):
-    @discord.ui.button(label='Click me!', style=discord.ButtonStyle.green, emoji='👍')
-    async def my_callback(self, button: discord.ui.Button, interaction: discord.Interaction):
-        try:            
-            print('button clicked')        
-            await interaction.response.send_message("You clicked the button!")
-            await interaction.message.delete()
-        except Exception as e:
-            print('Error occured:', e)
-            await interaction.message.delete()
-            await interaction.response.send_message("Error occured while processing your request. Please try again later.")     
-      
+from objects.myView import MyView
+   
       
 class generalCog(commands.Cog):
     def __init__(self, bot):
@@ -35,9 +24,13 @@ class generalCog(commands.Cog):
     async def button(self,ctx):
         print('button command called')
         view = MyView()
-        
-        #view.add_item(discord.ui.Button(label='Click me!', style=discord.ButtonStyle.green, emoji='👍'))        
         await ctx.send('This is a button', view=view)
+        
+    @commands.command(name='testPoll', help='Sends a poll to the channel.')
+    async def testPoll (self,ctx):
+        print('testPoll command called')
+        view = PollView()
+        await ctx.send('This is a poll', view=view)
     
 def setup(bot):
     bot.add_cog(generalCog(bot))
