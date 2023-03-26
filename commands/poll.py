@@ -1,5 +1,5 @@
 from discord.ext import commands
-from objects.poll import Poll
+from objects.poll.poll import Poll
 
 class pollCog(commands.Cog):
     def __init__(self, bot):

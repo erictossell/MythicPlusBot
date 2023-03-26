@@ -1,3 +1,4 @@
 #Environment Variables
 *.env
 *.png
+venv/

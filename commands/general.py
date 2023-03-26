@@ -1,8 +1,8 @@
 from discord.ext import commands
-from objects.createPollView import PollView
 
 from objects.dice import Dice
-from objects.myView import MyView
+from objects.poll.createPollButton import CreatePollButton
+
    
       
 class generalCog(commands.Cog):
@@ -20,17 +20,13 @@ class generalCog(commands.Cog):
         dice = Dice(int(num_sides))
         await ctx.send(dice.roll())
     
-    @commands.command(name='button', help='Sends a button to the channel.')
-    async def button(self,ctx):
-        print('button command called')
-        view = MyView()
-        await ctx.send('This is a button', view=view)
+    
         
     @commands.command(name='testPoll', help='Sends a poll to the channel.')
     async def testPoll (self,ctx):
         print('testPoll command called')
-        view = PollView()
-        await ctx.send('This is a poll', view=view)
+        view = CreatePollButton()
+        await ctx.send('Take a Lap Discord Poll', view=view)
     
 def setup(bot):
     bot.add_cog(generalCog(bot))

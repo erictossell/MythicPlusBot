@@ -1,8 +1,7 @@
 import discord
 from discord.ext import commands
 class Poll():
-    def __init__(self):
-       
+    def __init__(self):       
         self.poll_id = 0 
         self.question = ''
         self.answers = {}    
