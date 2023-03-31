@@ -2,5 +2,5 @@
 *.png
 *.pyc
 *.log
-
+*.csv
 venv/

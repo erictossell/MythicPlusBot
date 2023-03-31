@@ -16,11 +16,11 @@ class CreatePollModal(discord.ui.Modal):
     async def callback(self, interaction: discord.Interaction):       
         embed = discord.Embed(title=self.children[0].value, color=discord.Color.green(), description='Poll created by ' + interaction.user.mention)     
         
-        for i, child in enumerate(self.children[1:], start=1):           
+        for i, child in enumerate(self.children[1:]):           
             if child.value:
                 embed.add_field(name=chr(0x1F1E6 + i), value=child.value)
         print(self.children[1:])
-        await interaction.message.delete()
+        
         await interaction.response.edit_message(embeds=[embed])
         for i in range(len(self.children[1:])):
             await interaction.message.add_reaction(chr(0x1F1E6 + i))

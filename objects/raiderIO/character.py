@@ -10,7 +10,7 @@ class Character:
         self.url = url
         self.name = name
         self.realm = realm                               
-        self.faction = faction
+        self.faction = faction.capitalize()
         self.class_name = class_name
         self.spec_name = spec_name
         self.role = role
@@ -25,7 +25,7 @@ class Character:
         self.score_color = score_color
     
     def getCharacterEmbed(self):        
-        title = self.name + ' - ' + self.realm + ' - ' + self.faction       
+        title = self.name + ' - ' + self.realm + ' - ' + self.faction     
         embed = discord.Embed(title=title, description='', color=discord.Color.from_rgb(*hex_to_rgb(self.score_color)), url=self.url)
         embed.add_field(name='Mythic + Score', value=str(self.score), inline=False)
         embed.add_field(name='Class Rank on ' + self.realm, value=str(self.rank), inline=False)
@@ -38,8 +38,10 @@ class Character:
         embed.set_footer(text= 'Last crawled at: ' + self.last_crawled_at)
         
         return embed
+            
         
         
+            
     def getBestRunsEmbed(self):
         title = self.name+"'s Best Mythic+ Runs"
         
