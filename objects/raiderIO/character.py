@@ -24,10 +24,9 @@ class Character:
         self.item_level = item_level
         self.score_color = score_color
     
-    def getCharacterEmbed(self):
-        
+    def getCharacterEmbed(self):        
         title = self.name + ' - ' + self.realm + ' - ' + self.faction       
-        embed = discord.Embed(title=title, description='', color=discord.Color.from_str(self.score_color), url=self.url)
+        embed = discord.Embed(title=title, description='', color=discord.Color.from_rgb(*hex_to_rgb(self.score_color)), url=self.url)
         embed.add_field(name='Mythic + Score', value=str(self.score), inline=False)
         embed.add_field(name='Class Rank on ' + self.realm, value=str(self.rank), inline=False)
         embed.add_field(name='Item Level', value=str(self.item_level), inline=False)
@@ -43,8 +42,8 @@ class Character:
         
     def getBestRunsEmbed(self):
         title = self.name+"'s Best Mythic+ Runs"
-        print(hex_to_rgb(self.score_color))
-        embed = discord.Embed(title=title, description= '', color=discord.Color.from_str(self.score_color), url=self.url)
+        
+        embed = discord.Embed(title=title, description= '', color=discord.Color.from_rgb(*hex_to_rgb(self.score_color)), url=self.url)
         embed.add_field(name='Class', value=self.class_name, inline=True)
         embed.add_field(name='Last Spec', value=self.spec_name, inline=True)
         embed.add_field(name='Last Role', value=self.role, inline=True)        
@@ -62,7 +61,7 @@ class Character:
     
     def getRecentRunsEmbed(self):        
         title = self.name+"'s Recent Mythic+ Runs"                
-        embed = discord.Embed(title=title, description= '', color=discord.Color.from_str(self.score_color), url=self.url)
+        embed = discord.Embed(title=title, description= '', color=discord.Color.from_rgb(*hex_to_rgb(self.score_color)), url=self.url)
         embed.add_field(name='Class', value=self.class_name, inline=True)
         embed.add_field(name='Last Spec', value=self.spec_name, inline=True)
         embed.add_field(name='Last Role', value=self.role, inline=True)        

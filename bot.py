@@ -22,7 +22,7 @@ intents.presences = True #v2
 
 bot = commands.Bot(command_prefix='!', intents=intents, activity=discord.Activity(type=discord.ActivityType.watching, name="for !help"))
 
-cogs_list = ['commands.general', 'commands.poll', 'events.errors', 'commands.raiderIO', 'events.memberEvents']
+cogs_list = ['commands.general', 'commands.poll', 'events.errors', 'commands.raiderIO']
 
 logger = logging.getLogger('discord')
 logger.setLevel(logging.WARNING)
@@ -35,8 +35,8 @@ def load_extensions():
     for cog in cogs_list:
         bot.load_extension(cog)
 
-async def main():
+def main():
     load_extensions()
-    await bot.start(TOKEN)
+    bot.run(os.getenv('DISCORD_TOKEN'))
 
-asyncio.run(main())
+main()
