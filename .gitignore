@@ -1,4 +1,6 @@
 *.env
 *.png
 *.pyc
+*.log
+
 venv/
