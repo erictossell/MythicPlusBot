@@ -31,17 +31,22 @@ class UnregisterModal(discord.ui.Modal):
                     data = list(reader)
                     
                 for row in data:
-                    if row[0] == name and row[1] == realm and row[2] == str(userID):
+                    if row[0] == name and row[1] == realm and row[2] != str(userID):
+                        
+                        await interaction.response.send_message('You do not have permission to unregister this character. Contact an admin if you believe this is an error.', ephemeral=True)
+                        break
+                    elif row[0] == name and row[1] == realm and row[2] == str(userID):
                         data.remove(row)
                         with open(filename, mode='w', newline='') as csv_file:
                             writer = csv.writer(csv_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
                             writer.writerows(data)
+                        
                         await interaction.response.send_message('You have unregistered the character ' + name + ' on realm ' + realm + ' for Tal-Bot reporting.', ephemeral=True)
                         break
+                else:
                     
+                    await interaction.response.send_message('This character is not registered.', ephemeral=True)
                     
                         
         except Exception as e:
-            user = await self.ctx.bot.fetch_user(173958345022111744)
-            channel = await user.create_dm()
-            await channel.send(f'Error in !register command: {e}')
+            print(e)

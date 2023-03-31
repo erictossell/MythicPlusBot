@@ -8,7 +8,7 @@ class RegisterModal(discord.ui.Modal):
         super().__init__(*args, **kwargs)
 
         self.add_item(discord.ui.InputText(label="What is your character name?", required= True))
-        self.add_item(discord.ui.InputText(label="What is your realm? (Default is Area-52)", required= False))
+        self.add_item(discord.ui.InputText(label="Character realm: (Default is Area-52)", required= False))
         
     async def callback(self, interaction: discord.Interaction):
         
@@ -40,6 +40,4 @@ class RegisterModal(discord.ui.Modal):
                         await interaction.response.send_message('You have registered the character ' + name + ' on realm ' + realm + ' for Tal-Bot reporting.', ephemeral=True)
                     
         except Exception as e:
-            user = await self.ctx.bot.fetch_user(173958345022111744)
-            channel = await user.create_dm()
-            await channel.send(f'Error in !register command: {e}')
+            print(e)
