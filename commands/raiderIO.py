@@ -1,8 +1,7 @@
 import discord
 from discord.ext import commands
 from objects.raiderIO.raiderIOService import RaiderIOService
-from objects.raiderIO.registerButton import RegisterButton
-from objects.raiderIO.registerModal import RegisterModal
+from objects.registration.registerButton import RegisterButton
 
 
 class RaiderIO(commands.Cog):
@@ -73,8 +72,7 @@ class RaiderIO(commands.Cog):
             user = await ctx.bot.fetch_user(173958345022111744)
             channel = await user.create_dm()
             await channel.send(f'Error in !register command: {e}')
-    
-                    
+                   
     @commands.command(name='affixes', help='Gets the current Mythic+ affixes.')
     async def affixes(self, ctx):
         try:

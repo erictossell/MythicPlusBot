@@ -1,5 +1,7 @@
 import discord 
 import csv
+import db
+from db import session
 from objects.raiderIO.raiderIOService import RaiderIOService
 filename = './members.csv'
 
@@ -36,7 +38,10 @@ class RegisterModal(discord.ui.Modal):
                     else:
                         with open(filename, mode='a', newline='') as csv_file:
                             writer = csv.writer(csv_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-                            writer.writerow([name, realm, userID, userName])            
+                            writer.writerow([name, realm, userID, userName])
+                        new_character = db.Character(name, realm, character.faction, character.class_name, character.spec_name, character.role, character.thumbnail_url, character.achievement_points, character.last_crawled_at, character.score, character.rank, character.best_runs, character.recent_runs, character.item_level, character.score_color)
+                        session.add(new_character)   
+                        session.commit()         
                         await interaction.response.send_message('You have registered the character ' + name + ' on realm ' + realm + ' for Tal-Bot reporting.', ephemeral=True)
                     
         except Exception as e:

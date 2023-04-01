@@ -4,7 +4,7 @@ import datetime
 
 import util.util as util
 from util.util import hex_to_rgb
-class Character:
+class CharacterIO:
     def __init__(self, url, name, realm, faction, class_name, spec_name, role, thumbnail_url, achievement_points, last_crawled_at,score, rank, best_runs, recent_runs, item_level, score_color):
         self.region = 'us'        
         self.url = url

@@ -2,6 +2,7 @@ from discord.ext import commands
 
 from objects.dice import Dice
 from objects.poll.createPollButton import CreatePollButton
+from objects.raiderIO.raiderIOCrawler import RaiderIOCrawler
 
    
       
@@ -32,6 +33,17 @@ class generalCog(commands.Cog):
         print('testPoll command called')
         view = CreatePollButton()
         await ctx.send('Take a Lap Discord Poll', view=view)
+        
+    @commands.command(name="crawl")
+    async def crawl(self, ctx):
+        print('crawl command called')
+        RaiderIOCrawler.crawl_members()
+    
+    @commands.command(name="crawlRuns")
+    async def crawlRuns(self, ctx):
+        print('crawl runs command called')
+        RaiderIOCrawler.crawl_runs()
+        
     
 def setup(bot):
     bot.add_cog(generalCog(bot))
