@@ -1,12 +1,12 @@
-from discord import Member
 import requests
-
-import requests
+import json
 from util.binarySearch import binary_search_score_colors
+from util.searchMembers import search_member
 from objects.raiderIO.affix import Affix
-from objects.raiderIO.character import Character
-from objects.raiderIO.dungeonRun import DungeonRun
+from objects.raiderIO.characterIO import CharacterIO
+from objects.raiderIO.dungeonRunIO import DungeonRun
 from objects.raiderIO.scoreColor import ScoreColor
+from objects.raiderIO.member import Member
 
 
 def getScoreColors():
@@ -45,7 +45,7 @@ class RaiderIOService:
             
             score_color = binary_search_score_colors(scoreColors, score)
             
-            character = Character(
+            character = CharacterIO(
                 request.json()['profile_url'],
                 request.json()['name'],
                 request.json()['realm'],
@@ -63,7 +63,7 @@ class RaiderIOService:
                 request.json()['gear']['item_level_equipped'],
                 score_color                
             )
-                        
+            print('Character found: ' + character.name)            
         except:
             print('Error: Character not found.')
             return
@@ -91,3 +91,31 @@ class RaiderIOService:
             print('Error: Affixes not found.')
             return       
         return affixes 
+    
+    def getGuildRun(id, season):
+        try:
+            request = requests.get('https://raider.io/api/v1/mythic-plus/run-details?season='+season+'&id='+id)
+                
+            data = json.loads(request.text)
+            
+            guildMemberCounter = 0
+            
+            for roster in data['roster']:                            
+                if roster['guild']['id'] == 1616915:
+                    guildMemberCounter += 1
+                    print('Guild member found: ' + roster['character']['name'])
+                elif search_member(roster['character']['name'], roster['character']['realm']):
+                    guildMemberCounter += 1
+                    print('Guild member found: ' + roster['character']['name'])
+            if guildMemberCounter >= 5:
+                print('Guild run found: ' + id)
+                
+                #run = DungeonRun(data['dungeon'], data['short_name'], data['mythic_level'], data['completed_at'], data['clear_time_ms'], data['par_time_ms'], data['num_keystone_upgrades'], data['score'], data['affixes'], data['url'])
+                return True
+                
+            else:
+                print('Guild run not found: ' + id)
+                return None           
+        except:
+            print('Error: Run not found.')
+            return
