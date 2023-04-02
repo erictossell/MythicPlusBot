@@ -3,8 +3,8 @@ import json
 from util.binarySearch import binary_search_score_colors
 from util.searchMembers import search_member
 from objects.raiderIO.affix import Affix
-from objects.raiderIO.characterIO import CharacterIO
-from objects.raiderIO.dungeonRunIO import DungeonRun
+from objects.raiderIO.character import Character
+from objects.raiderIO.dungeonRun import DungeonRun
 from objects.raiderIO.scoreColor import ScoreColor
 from objects.raiderIO.member import Member
 
@@ -24,46 +24,55 @@ class RaiderIOService:
         self = self  
               
     def getCharacter(name, realm='Area-52'):
-        region = 'us'        
+        region = 'us'
+        #print('Character found: ' + name)
+        #print('Realm: ' + realm)        
         try:
             request = requests.get('https://raider.io/api/v1/characters/profile?region='+region+'&realm='+realm+'&name='+name+'&fields=gear,mythic_plus_scores_by_season:current,mythic_plus_ranks,mythic_plus_best_runs,mythic_plus_recent_runs') 
-            scoreColors = getScoreColors()
-            score = request.json()['mythic_plus_scores_by_season'][0]['scores']['all']
-            best_runs = []
-            recent_runs = []
-            for run in request.json()['mythic_plus_best_runs']:
-                affixes = []
-                for affix in run['affixes']:
-                    affixes.append(Affix(affix['name'], affix['description'], affix['wowhead_url']))
-                best_runs.append(DungeonRun(run['dungeon'], run['short_name'], run['mythic_level'], run['completed_at'], run['clear_time_ms'], run['par_time_ms'], run['num_keystone_upgrades'], run['score'], affixes, run['url']))
-            for run in request.json()['mythic_plus_recent_runs']:
-                affixes = []
-                for affix in run['affixes']:
-                    affixes.append(Affix(affix['name'], affix['description'], affix['wowhead_url']))
-                recent_runs.append(DungeonRun(run['dungeon'], run['short_name'], run['mythic_level'], run['completed_at'], run['clear_time_ms'], run['par_time_ms'], run['num_keystone_upgrades'], run['score'], affixes, run['url']))
-            rank = request.json()['mythic_plus_ranks']['class']['realm']
-            
-            score_color = binary_search_score_colors(scoreColors, score)
-            
-            character = CharacterIO(
-                request.json()['profile_url'],
-                request.json()['name'],
-                request.json()['realm'],
-                request.json()['faction'],
-                request.json()['class'],
-                request.json()['active_spec_name'],
-                request.json()['active_spec_role'],
-                request.json()['thumbnail_url'],
-                request.json()['achievement_points'],
-                request.json()['last_crawled_at'],
-                score,
-                rank,
-                best_runs,
-                recent_runs,
-                request.json()['gear']['item_level_equipped'],
-                score_color                
-            )
-            print('Character found: ' + character.name)            
+            if request.status_code == 200:
+                
+                faction = request.json()['faction'] 
+                #print('Faction: ' + faction)
+                role = request.json()['active_spec_role']
+                #print('Role: ' + role)          
+                spec = request.json()['active_spec_name']
+                #print('Spec: ' + spec)
+                playerClass = request.json()['class']
+                #print('Class: ' + playerClass)
+                achievementPoints = request.json()['achievement_points']
+                #print('Achievement Points: ' + str(achievementPoints))
+                item_level = request.json()['gear']['item_level_equipped']    
+                #print('Item Level: ' + str(item_level))            
+                score = request.json()['mythic_plus_scores_by_season'][0]['scores']['all']
+                #print('Score: ' + str(score))
+                rank = request.json()['mythic_plus_ranks']['class']['realm']
+                #print('Rank: ' + str(rank))
+                best_runs = []
+                recent_runs = []
+                for run in request.json()['mythic_plus_best_runs']:
+                    affixes = []
+                    for affix in run['affixes']:
+                        affixes.append(Affix(affix['name'], affix['description'], affix['wowhead_url']))
+                    best_runs.append(DungeonRun(run['dungeon'], run['short_name'], run['mythic_level'], run['completed_at'], run['clear_time_ms'], run['par_time_ms'], run['num_keystone_upgrades'], run['score'], affixes, run['url']))
+                #print('Best Runs: ' + str(len(best_runs)))
+                for run in request.json()['mythic_plus_recent_runs']:
+                    affixes = []
+                    for affix in run['affixes']:
+                        affixes.append(Affix(affix['name'], affix['description'], affix['wowhead_url']))
+                    recent_runs.append(DungeonRun(run['dungeon'], run['short_name'], run['mythic_level'], run['completed_at'], run['clear_time_ms'], run['par_time_ms'], run['num_keystone_upgrades'], run['score'], affixes, run['url']))
+                #print('Recent Runs: ' + str(len(recent_runs)))
+                scoreColors = getScoreColors()
+                score_color = binary_search_score_colors(scoreColors, score)
+                #print('Score Color: ' + score_color)
+                thumbnail = request.json()['thumbnail_url']
+                #print('Thumbnail: ' + thumbnail)
+                url = request.json()['profile_url']
+                #print('URL: ' + url)
+                last_crawled_at = request.json()['last_crawled_at']
+                #print('Last Crawled At: ' + last_crawled_at)              
+                
+                character = Character(name,realm, faction, role, spec, playerClass, achievementPoints, item_level, score, score_color, rank, best_runs, recent_runs,thumbnail, url, last_crawled_at )
+                print('Character found: ' + character.name)            
         except:
             print('Error: Character not found.')
             return

@@ -4,6 +4,7 @@ from objects.raiderIO.raiderIOService import RaiderIOService
 from objects.registration.registerButton import RegisterButton
 
 
+
 class RaiderIO(commands.Cog):
     def __init__(self, bot):
         self.bot = bot             
@@ -49,7 +50,8 @@ class RaiderIO(commands.Cog):
             if len(args) == 0:
                 await ctx.channel.send('Please provide a character name and realm.')
             if len(args) == 1:
-                character = RaiderIOService.getCharacter(args[0])                                         
+                character = RaiderIOService.getCharacter(args[0])
+                print(character.name)                                                  
                 await ctx.send(embed=character.getCharacterEmbed())                
             if len(args) == 2:
                 character = RaiderIOService.getCharacter(args[0], args[1])                 

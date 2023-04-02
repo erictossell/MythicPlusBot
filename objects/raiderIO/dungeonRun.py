@@ -1,4 +1,4 @@
-class DungeonRunIO:
+class DungeonRun:
     def __init__(self, name, short_name, mythic_level, completed_at, clear_time_ms, par_time_ms, num_keystone_upgrades, score, affixes, url):
         self.name = name
         self.short_name = short_name

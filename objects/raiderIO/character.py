@@ -4,29 +4,32 @@ import datetime
 
 import util.util as util
 from util.util import hex_to_rgb
-class CharacterIO:
-    def __init__(self, url, name, realm, faction, class_name, spec_name, role, thumbnail_url, achievement_points, last_crawled_at,score, rank, best_runs, recent_runs, item_level, score_color):
-        self.region = 'us'        
-        self.url = url
-        self.name = name
-        self.realm = realm                               
+class Character:
+    def __init__(self, name, realm, faction, role, spec_name, class_name, achievement_points, item_level, score, score_color, rank, best_runs, recent_runs, thumbnail_url, url, last_crawled_at):
+        self = self
+        self.name = name       
+        self.realm = realm                                       
         self.faction = faction.capitalize()
-        self.class_name = class_name
-        self.spec_name = spec_name
+        self.region = 'us'
         self.role = role
-        self.thumbnail_url = thumbnail_url
+        self.spec_name = spec_name
+        self.class_name = class_name       
         self.achievement_points = achievement_points
-        self.last_crawled_at = last_crawled_at
+        self.item_level = item_level
         self.score = score
+        self.score_color = score_color
         self.rank = rank        
         self.best_runs = best_runs
         self.recent_runs = recent_runs
-        self.item_level = item_level
-        self.score_color = score_color
+        self.thumbnail_url = thumbnail_url
+        self.url = url
+        
+        self.last_crawled_at = last_crawled_at   
     
     def getCharacterEmbed(self):        
-        title = self.name + ' - ' + self.realm + ' - ' + self.faction     
-        embed = discord.Embed(title=title, description='', color=discord.Color.from_rgb(*hex_to_rgb(self.score_color)), url=self.url)
+        title = self.name + ' - ' + self.realm + ' - ' + self.faction 
+        color = discord.Color.from_rgb(*hex_to_rgb(self.score_color))    
+        embed = discord.Embed(title=title, description='', color=color, url=self.url)
         embed.add_field(name='Mythic + Score', value=str(self.score), inline=False)
         embed.add_field(name='Class Rank on ' + self.realm, value=str(self.rank), inline=False)
         embed.add_field(name='Item Level', value=str(self.item_level), inline=False)
@@ -38,10 +41,7 @@ class CharacterIO:
         embed.set_footer(text= 'Last crawled at: ' + self.last_crawled_at)
         
         return embed
-            
-        
-        
-            
+                
     def getBestRunsEmbed(self):
         title = self.name+"'s Best Mythic+ Runs"
         

@@ -1,7 +1,8 @@
+from datetime import datetime
 import discord 
 import csv
 import db
-from db import session
+from db import Session
 from objects.raiderIO.raiderIOService import RaiderIOService
 filename = './members.csv'
 
@@ -39,9 +40,12 @@ class RegisterModal(discord.ui.Modal):
                         with open(filename, mode='a', newline='') as csv_file:
                             writer = csv.writer(csv_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
                             writer.writerow([name, realm, userID, userName])
-                        new_character = db.Character(name, realm, character.faction, character.class_name, character.spec_name, character.role, character.thumbnail_url, character.achievement_points, character.last_crawled_at, character.score, character.rank, character.best_runs, character.recent_runs, character.item_level, character.score_color)
-                        session.add(new_character)   
-                        session.commit()         
+                        
+                        new_character = db.CharacterDB(userID, name, realm, character.faction, character.region, character.role, character.spec_name, character.class_name, character.achievement_points, character.item_level, character.score, character.rank, character.thumbnail_url, character.url, datetime.strptime(character.last_crawled_at,'%Y-%m-%dT%H:%M:%S.%fZ' ), True, [])
+                        session = Session()                        
+                        session.add(new_character)
+                        session.commit()
+                        session.close()         
                         await interaction.response.send_message('You have registered the character ' + name + ' on realm ' + realm + ' for Tal-Bot reporting.', ephemeral=True)
                     
         except Exception as e:
