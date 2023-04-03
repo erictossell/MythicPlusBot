@@ -1,12 +1,8 @@
-import datetime
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from db.base import Base
 from db.characterDB import CharacterDB
 from db.dungeonRunDB import DungeonRunDB
-from objects.raiderIO.raiderIOService import RaiderIOService
-
-
 
 engine = create_engine('sqlite:///tal.db', echo=True)
 Base.metadata.create_all(engine)
@@ -17,6 +13,13 @@ def lookupCharacter(name, realm):
         existing_character = session.query(CharacterDB).filter(CharacterDB.name == name and CharacterDB.realm == realm).first()
         if existing_character != None:
             return existing_character
+        else:
+            return None
+def lookupRun(id):
+        session = Session()
+        existing_run = session.query(DungeonRunDB).filter(DungeonRunDB.id == id).first()
+        if existing_run != None:
+            return existing_run
         else:
             return None
 def addCharacter(character):
@@ -81,7 +84,6 @@ def updateCharacterReporting(character):
     except Exception as e:
         print(e)
         return
-                
 def removeCharacter(name, realm):
     session = Session()
     existing_character = session.query(CharacterDB).filter(CharacterDB.name == name and CharacterDB.realm == realm).first()
@@ -92,7 +94,6 @@ def removeCharacter(name, realm):
         return True
     else:
         return False
-    
 def addDungeonRun(character, run):
     try: 
         session = Session()

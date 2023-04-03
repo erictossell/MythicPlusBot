@@ -18,7 +18,6 @@ class RegisterModal(discord.ui.Modal):
             realm = self.children[1].value.capitalize()
             userID = interaction.user.id
             
-            
             if self.children[1].value == '':
                 realm = 'Area-52'
             character = RaiderIOService.getCharacter(name, realm)

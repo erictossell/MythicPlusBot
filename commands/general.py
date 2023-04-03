@@ -36,15 +36,20 @@ class generalCog(commands.Cog):
         view = CreatePollButton()
         await ctx.send('Take a Lap Discord Poll', view=view)
         
-    @commands.command(name="crawl")
-    async def crawl(self, ctx):
-        print('crawl command called')
-        RaiderIOCrawler.crawlCharacters()
+    #@commands.command(name="crawl")    
+    #async def crawl(self, ctx):
+    #    print('crawl command called')
+    #    RaiderIOCrawler.crawlCharacters()
     
-    @commands.command(name="crawlRuns")
-    async def crawlRuns(self, ctx):
-        print('crawl runs command called')
-        return
+    #@commands.command(name="crawlGuild")    
+    #async def crawlGuild(self, ctx):
+    #    print('crawl guild command called')
+    #    RaiderIOCrawler.crawlGuildMembers()
+    
+    #@commands.command(name="crawlRuns")    
+    #async def crawlRuns(self, ctx):
+    #    print('crawl runs command called')
+    #    return
         
     
 def setup(bot):

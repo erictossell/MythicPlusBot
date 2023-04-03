@@ -1,3 +1,4 @@
+import re
 import requests
 import json
 from util.binarySearch import binary_search_score_colors
@@ -81,14 +82,21 @@ class RaiderIOService:
     def getMembers():        
         try:
             members = []
-            request = request.get('https://raider.io/api/v1/guilds/profile?region=us&realm=Area-52&name=Take%20A%20Lap&fields=members')
+            pattern = r"^[^0-9]*$"
+            
+            request = requests.get('https://raider.io/api/v1/guilds/profile?region=us&realm=Area-52&name=Take%20A%20Lap&fields=members')
+            print (request.json())
             for member in request.json()['members']:
-                if member['rank'] > 8:
-                    members.append(Member(member['rank'], member['name'], member['class'], member['last_crawled_at'], member['profile_url']))
+                
+                if member['rank'] < 8:                            
+                    members.append(Member(member['rank'], member['character']['name'], member['character']['class'], member['character']['last_crawled_at'], member['character']['profile_url']))
+            
+            print(members)  
+            return members 
         except:
             print('Error: Guild not found.')
             return
-        return members  
+         
                
     def getMythicPlusAffixes():
         try:        
