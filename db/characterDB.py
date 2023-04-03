@@ -1,6 +1,7 @@
 from sqlalchemy import Column, DateTime, Integer, String, ForeignKey, Boolean
 from sqlalchemy.orm import relationship
 from db.base import Base
+from db.dungeonRunDB import DungeonRunDB
 
 
 class CharacterDB(Base):
@@ -55,7 +56,3 @@ class CharacterDB(Base):
         self.is_reporting = is_reporting
         
         self.dungeon_runs = dungeon_runs
-        
-    def save(self):
-        existing_character = session.query(CharacterDB).filter(CharacterDB.name == self.name and CharacterDB.realm == self.realm).first()
-        
