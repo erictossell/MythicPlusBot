@@ -57,4 +57,11 @@ class RaiderIOCrawler:
             
         except Exception as e:
             print(e)
-            return False    
+            return False
+        
+    def crawlRuns():
+        try:
+           print('executing crawl runs')
+        except Exception as e:
+            print(e)
+            return False         

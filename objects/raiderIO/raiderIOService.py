@@ -96,8 +96,7 @@ class RaiderIOService:
         except:
             print('Error: Guild not found.')
             return
-         
-               
+              
     def getMythicPlusAffixes():
         try:        
             request = requests.get('https://raider.io/api/v1/mythic-plus/affixes?region=us&locale=en')        

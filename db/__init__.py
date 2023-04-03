@@ -84,6 +84,18 @@ def updateCharacterReporting(character):
     except Exception as e:
         print(e)
         return
+def setGuildRun(run):
+    try:
+        session = Session()
+        existing_run = session.query(DungeonRunDB).filter(DungeonRunDB.id == run.id).first()
+        if existing_run != None:
+            existing_run.is_guild_run = True
+        session.commit()
+        session.close
+        return True
+    except Exception as e:
+        print(e)
+        return
 def removeCharacter(name, realm):
     session = Session()
     existing_character = session.query(CharacterDB).filter(CharacterDB.name == name and CharacterDB.realm == realm).first()
@@ -118,5 +130,13 @@ def getAllCharacters():
     except Exception as e:
         print(e)
         return None
-
+def getAllRuns():
+    try:
+        session = Session()
+        characters = session.query(DungeonRunDB).all()
+        session.close()
+        return characters
+    except Exception as e:
+        print(e)
+        return None
             

@@ -16,9 +16,7 @@ class CreatePollButton(discord.ui.View):
             print('Error occured:', e)
             await interaction.message.delete()
             await interaction.response.send_message("Error occured while processing your request. Please try again later.", ephemeral=True)
-    
-    
-    
+      
     @discord.ui.button(label='Create Poll', style=discord.ButtonStyle.green, emoji='📄')
     async def createPoll_callback(self, button: discord.ui.Button, interaction: discord.Interaction):
         try:            
