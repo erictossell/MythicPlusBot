@@ -56,3 +56,6 @@ class CharacterDB(Base):
         self.is_reporting = is_reporting
         
         self.dungeon_runs = dungeon_runs
+        
+    def __repr__(self):
+        return f"CharacterDB(discord_user_id={self.discord_user_id}, name={self.name}, realm={self.realm}, faction={self.faction}, region={self.region}, role={self.role}, spec_name={self.spec_name}, class_name={self.class_name}, achievement_points={self.achievement_points}, item_level={self.item_level}, score={self.score}, rank={self.rank}, thumbnail_url={self.thumbnail_url}, url={self.url}, last_crawled_at={self.last_crawled_at}, is_reporting={self.is_reporting}, dungeon_runs={self.dungeon_runs})"

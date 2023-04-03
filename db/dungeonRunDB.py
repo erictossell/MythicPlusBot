@@ -49,7 +49,9 @@ class DungeonRunDB(Base):
         self.is_crawled = False
         
         self.character = character
-    
+        
+    def __repr__(self):
+        return f"DungeonRunDB(id={self.id}, season={self.season}, name={self.name}, short_name={self.short_name}, mythic_level={self.mythic_level}, completed_at={self.completed_at}, clear_time_ms={self.clear_time_ms}, par_time_ms={self.par_time_ms}, num_keystone_upgrades={self.num_keystone_upgrades}, score={self.score}, url={self.url}, character={self.character})" 
     
           
         

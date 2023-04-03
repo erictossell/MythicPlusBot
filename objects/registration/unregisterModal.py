@@ -33,8 +33,9 @@ class UnregisterModal(discord.ui.Modal):
                 await interaction.response.send_message('You do not have permission to unregister this character. Contact an admin if you believe this is an error.', ephemeral=True)
                 return               
             
-            elif existingCharacter.discord_user_id == userID:  
-                db.removeCharacter(name, realm)                  
+            elif existingCharacter.discord_user_id == userID:
+                existingCharacter.is_reporting = False  
+                db.updateCharacterReporting(existingCharacter)                
                 await interaction.response.send_message('You have unregistered the character ' + name + ' on realm ' + realm + ' for Tal-Bot reporting.', ephemeral=True)
                 return
             
