@@ -1,8 +1,10 @@
+import datetime
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from db.base import Base
 from db.characterDB import CharacterDB
 from db.dungeonRunDB import DungeonRunDB
+from objects.raiderIO.raiderIOService import RaiderIOService
 
 
 
@@ -67,13 +69,29 @@ def removeCharacter(name, realm):
     else:
         return False
     
-def addDungeonRun(character, dungeon_run):
-    session = Session()
-    existing_character = session.query(CharacterDB).filter(CharacterDB.name == character.name and CharacterDB.realm == character.realm).first()
-    if existing_character != None:
-        dungeon_Run = DungeonRunDB(dungeon_run.season, dungeon_run.dungeon, dungeon_run.level, dungeon_run.num_keystone_upgrades, dungeon_run.final_level, dungeon_run.num_chests, dungeon_run.num_affixes, dungeon_run.time, dungeon_run.completed_at, dungeon_run.url, dungeon_run.mythic_plus_highest_level_runs, dungeon_run.mythic_plus_recent_runs, dungeon_run.mythic_plus_best_runs)
-        session.commit(dungeon_Run)
+def addDungeonRun(character, run):
+    try: 
+        session = Session()
+        existing_character = session.query(CharacterDB).filter(CharacterDB.name == character.name and CharacterDB.realm == character.realm).first()
+        if existing_character != None:
+            dungeon_Run = DungeonRunDB(run.id, run.season, run.name, run.short_name, run.mythic_level, run.completed_at, run.clear_time_ms, run.par_time_ms, run.num_keystone_upgrades, run.score, run.url, existing_character)
+            session.add(dungeon_Run)
+            session.commit()
+            session.close()
+            return True
+        else:
+            return False
+    except Exception as e:
+        print(e)
+        return None
+def getAllCharacters():
+    try:
+        session = Session()
+        characters = session.query(CharacterDB).all()
         session.close()
-        return True
-    else:
-        return False
+        return characters
+    except Exception as e:
+        print(e)
+        return None
+
+            

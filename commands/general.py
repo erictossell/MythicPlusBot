@@ -1,8 +1,10 @@
 from discord.ext import commands
+import db
 
 from objects.dice import Dice
 from objects.poll.createPollButton import CreatePollButton
 from objects.raiderIO.raiderIOCrawler import RaiderIOCrawler
+
 
    
       
@@ -37,12 +39,12 @@ class generalCog(commands.Cog):
     @commands.command(name="crawl")
     async def crawl(self, ctx):
         print('crawl command called')
-        RaiderIOCrawler.crawl_members()
+        RaiderIOCrawler.crawlCharacters()
     
     @commands.command(name="crawlRuns")
     async def crawlRuns(self, ctx):
         print('crawl runs command called')
-        RaiderIOCrawler.crawl_runs()
+        return
         
     
 def setup(bot):
