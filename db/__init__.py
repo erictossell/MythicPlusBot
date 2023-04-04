@@ -9,37 +9,54 @@ Base.metadata.create_all(engine)
 Session = sessionmaker(bind=engine)
 
 def lookupCharacter(name, realm):
-        session = Session()
+    session = Session()
+    try:        
         existing_character = session.query(CharacterDB).filter(CharacterDB.name == name and CharacterDB.realm == realm).first()
-        if existing_character != None:
+        if existing_character != None:            
             return existing_character
-        else:
+        else:            
             return None
+    except Exception as e:
+        print(e)
+        session.rollback()
+        return None
+    finally:
+        session.close()
+    
 def lookupRun(id):
-        session = Session()
+    session = Session()
+    try:        
         existing_run = session.query(DungeonRunDB).filter(DungeonRunDB.id == id).first()
-        if existing_run != None:
+        if existing_run != None:            
             return existing_run
-        else:
+        else:            
             return None
+    except Exception as e:
+        print(e)
+        session.rollback()
+        return None
+    finally:
+        session.close()
 def addCharacter(character):
-    try:
-        session = Session()
+    session = Session()
+    try:        
         existing_character = session.query(CharacterDB).filter(CharacterDB.name == character.name and CharacterDB.realm == character.realm).first()
         if existing_character == None:
             characterDB = CharacterDB(character.discord_user_id, character.name, character.realm, character.faction, character.region, character.role, character.spec_name, character.class_name, character.achievement_points, character.item_level, character.score, character.rank, character.thumbnail_url, character.url, character.last_crawled_at, character.is_reporting, character.dungeon_runs)
             session.add(characterDB)
-            session.commit()
-            session.close()
+            session.commit()            
             return True
-        else:
+        else:            
             return False
     except Exception as e:
         print(e)
+        session.rollback()
         return
+    finally:
+        session.close()
 def updateCharacter(character):
-    try:
-        session = Session()
+    session = Session()
+    try:        
         existing_character = session.query(CharacterDB).filter(CharacterDB.name == character.name and CharacterDB.realm == character.realm).first()
         if existing_character != None:
             existing_character.discord_user_id = character.discord_user_id
@@ -59,84 +76,100 @@ def updateCharacter(character):
             existing_character.last_crawled_at = character.last_crawled_at
             existing_character.is_reporting = character.is_reporting
             existing_character.dungeon_runs = character.dungeon_runs
-            
             session.commit()
-            session.close()
             return True
         else:
             return False
     except Exception as e:
+        session.rollback()
         print(e)
         return
+    finally:
+        session.close()
 def updateCharacterReporting(character):
+    session = Session()
     try:
-        session = Session()
+        
         existing_character = session.query(CharacterDB).filter(CharacterDB.name == character.name and CharacterDB.realm == character.realm).first()
         if existing_character != None:
             if existing_character.is_reporting == True:
                 existing_character.is_reporting = False
             else:
                 existing_character.is_reporting = True
-            
             session.commit()
-            session.close()
             return True
     except Exception as e:
         print(e)
         return
+    finally:
+        session.close()
 def setGuildRun(run):
-    try:
-        session = Session()
+    session = Session()
+    try:        
         existing_run = session.query(DungeonRunDB).filter(DungeonRunDB.id == run.id).first()
         if existing_run != None:
             existing_run.is_guild_run = True
         session.commit()
-        session.close
         return True
     except Exception as e:
+        session.rollback()
         print(e)
         return
+    finally:
+        session.close()
 def removeCharacter(name, realm):
     session = Session()
-    existing_character = session.query(CharacterDB).filter(CharacterDB.name == name and CharacterDB.realm == realm).first()
-    if existing_character != None:
-        session.delete(existing_character)
-        session.commit()
+    try:
+        existing_character = session.query(CharacterDB).filter(CharacterDB.name == name and CharacterDB.realm == realm).first()
+        if existing_character != None:
+            session.delete(existing_character)
+            session.commit()
+            return True
+        else:            
+            return False
+    except Exception as e:
+        session.rollback()
+        print(e)
+        return None
+    finally:
         session.close()
-        return True
-    else:
-        return False
 def addDungeonRun(character, run):
+    session = Session()
     try: 
-        session = Session()
         existing_character = session.query(CharacterDB).filter(CharacterDB.name == character.name and CharacterDB.realm == character.realm).first()
         if existing_character != None:
             dungeon_Run = DungeonRunDB(run.id, run.season, run.name, run.short_name, run.mythic_level, run.completed_at, run.clear_time_ms, run.par_time_ms, run.num_keystone_upgrades, run.score, run.url, existing_character)
             session.add(dungeon_Run)
             session.commit()
-            session.close()
             return True
         else:
             return False
     except Exception as e:
+        session.rollback()
         print(e)
         return None
+    finally:
+        session.close()
 def getAllCharacters():
-    try:
-        session = Session()
+    session = Session()
+    try:        
         characters = session.query(CharacterDB).all()
-        session.close()
         return characters
     except Exception as e:
         print(e)
+        session.rollback()
         return None
+    finally:       
+        session.close()
 def getAllRuns():
-    try:
-        session = Session()
-        characters = session.query(DungeonRunDB).all()
-        session.close()
-        return characters
+    session = Session()
+    try:    
+        runs = session.query(DungeonRunDB).all()
+        return runs
     except Exception as e:
+        session.rollback()
         print(e)
         return None
+    finally:
+        session.close()
             

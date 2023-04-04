@@ -1,4 +1,3 @@
-
 from datetime import datetime
 import time
 import db
@@ -15,7 +14,7 @@ class RaiderIOCrawler:
             characters = db.getAllCharacters()            
             for character in characters:
                 time.sleep(1)
-                if character.is_reporting == True:
+                if character.is_reporting == True and character.score > 0:
                     
                     characterIO = RaiderIOService.getCharacter(character.name, character.realm)
                     
