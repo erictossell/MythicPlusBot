@@ -9,10 +9,12 @@ Base.metadata.create_all(engine)
 Session = sessionmaker(bind=engine)
 
 def lookupCharacter(name, realm):
+    print('DB: looking up character: ' + name + ' on realm: ' + realm)
     session = Session()
     try:        
         existing_character = session.query(CharacterDB).filter(CharacterDB.name == name and CharacterDB.realm == realm).first()
-        if existing_character != None:            
+        if existing_character != None:  
+            print('DB: found character: ' + existing_character.name + ' on realm: ' + existing_character.realm)          
             return existing_character
         else:            
             return None
@@ -21,8 +23,7 @@ def lookupCharacter(name, realm):
         session.rollback()
         return None
     finally:
-        session.close()
-    
+        session.close()   
 def lookupRun(id):
     session = Session()
     try:        

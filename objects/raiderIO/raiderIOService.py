@@ -22,32 +22,34 @@ def getScoreColors():
     
 class RaiderIOService:
     def __init__(self):
-        self = self  
+        self = self
+         
               
-    def getCharacter(name, realm='Area-52'):
+    def getCharacter(name, realm='Area-52', scoreColors=getScoreColors()):
         region = 'us'
+        print('RIO Serice: Looking up character: ' + name)
         #print('Character found: ' + name)
         #print('Realm: ' + realm)        
         try:
             request = requests.get('https://raider.io/api/v1/characters/profile?region='+region+'&realm='+realm+'&name='+name+'&fields=gear,mythic_plus_scores_by_season:current,mythic_plus_ranks,mythic_plus_best_runs,mythic_plus_recent_runs') 
             if request.status_code == 200:
-                
+                print('RIO Service: 200')
                 faction = request.json()['faction'] 
-                #print('Faction: ' + faction)
+                print('Faction: ' + faction)
                 role = request.json()['active_spec_role']
-                #print('Role: ' + role)          
+                print('Role: ' + role)          
                 spec = request.json()['active_spec_name']
-                #print('Spec: ' + spec)
+                print('Spec: ' + spec)
                 playerClass = request.json()['class']
-                #print('Class: ' + playerClass)
+                print('Class: ' + playerClass)
                 achievementPoints = request.json()['achievement_points']
-                #print('Achievement Points: ' + str(achievementPoints))
+                print('Achievement Points: ' + str(achievementPoints))
                 item_level = request.json()['gear']['item_level_equipped']    
-                #print('Item Level: ' + str(item_level))            
+                print('Item Level: ' + str(item_level))            
                 score = request.json()['mythic_plus_scores_by_season'][0]['scores']['all']
-                #print('Score: ' + str(score))
+                print('Score: ' + str(score))
                 rank = request.json()['mythic_plus_ranks']['class']['realm']
-                #print('Rank: ' + str(rank))
+                print('Rank: ' + str(rank))
                 best_runs = []
                 recent_runs = []
                 for run in request.json()['mythic_plus_best_runs']:
@@ -55,47 +57,60 @@ class RaiderIOService:
                     for affix in run['affixes']:
                         affixes.append(Affix(affix['name'], affix['description'], affix['wowhead_url']))
                     best_runs.append(DungeonRun(run['dungeon'], run['short_name'], run['mythic_level'], run['completed_at'], run['clear_time_ms'], run['par_time_ms'], run['num_keystone_upgrades'], run['score'], affixes, run['url']))
-                #print('Best Runs: ' + str(len(best_runs)))
+                print('Best Runs: ' + str(len(best_runs)))
                 for run in request.json()['mythic_plus_recent_runs']:
                     affixes = []
                     for affix in run['affixes']:
                         affixes.append(Affix(affix['name'], affix['description'], affix['wowhead_url']))
                     recent_runs.append(DungeonRun(run['dungeon'], run['short_name'], run['mythic_level'], run['completed_at'], run['clear_time_ms'], run['par_time_ms'], run['num_keystone_upgrades'], run['score'], affixes, run['url']))
-                #print('Recent Runs: ' + str(len(recent_runs)))
-                scoreColors = getScoreColors()
+                print('Recent Runs: ' + str(len(recent_runs)))
+                
                 score_color = binary_search_score_colors(scoreColors, score)
-                #print('Score Color: ' + score_color)
+                print('Score Color: ' + score_color)
                 thumbnail = request.json()['thumbnail_url']
-                #print('Thumbnail: ' + thumbnail)
+                print('Thumbnail: ' + thumbnail)
                 url = request.json()['profile_url']
-                #print('URL: ' + url)
+                print('URL: ' + url)
                 last_crawled_at = request.json()['last_crawled_at']
-                #print('Last Crawled At: ' + last_crawled_at)              
+                print('Last Crawled At: ' + last_crawled_at)              
                 
                 character = Character(name,realm, faction, role, spec, playerClass, achievementPoints, item_level, score, score_color, rank, best_runs, recent_runs,thumbnail, url, last_crawled_at )
-                print('Character found: ' + character.name)            
+                print('Character found: ' + character.name)
+                return character
+            elif request.status_code == 404:
+                print('Character not found: ' + name)
+                return None
+            elif request.status_code == 429:
+                print('Too many requests.')
+                return None 
+            elif request.status_code == 500:
+                print('Internal server error.')
+                return None        
+            else:
+                print('Error: Character not found.')
+                return None   
         except:
             print('Error: Character not found.')
-            return
-        return character
+            return None
+        
                    
     def getMembers():        
         try:
-            members = []
-            pattern = r"^[^0-9]*$"
-            
+            pattern = re.compile(r'^[^0-9]*$')
+            members = []           
             request = requests.get('https://raider.io/api/v1/guilds/profile?region=us&realm=Area-52&name=Take%20A%20Lap&fields=members')
-            print (request.json())
             for member in request.json()['members']:
-                
-                if member['rank'] < 8:                            
-                    members.append(Member(member['rank'], member['character']['name'], member['character']['class'], member['character']['last_crawled_at'], member['character']['profile_url']))
-            
-            print(members)  
-            return members 
-        except:
+                if member['rank'] <= 8:    
+                    if pattern.search(str(member['character']['name'])):
+                        members.append(Member(member['rank'], str(member['character']['name']), member['character']['class'], member['character']['last_crawled_at'], member['character']['profile_url']))
+                    else:                     
+                        print('Found a character with a number in the name ' + member['character']['name'])
+        except Exception as e:
+            print(e)
             print('Error: Guild not found.')
-            return
+        finally:
+            print('Finished grabbing members.')
+            return members
               
     def getMythicPlusAffixes():
         try:        
