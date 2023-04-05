@@ -23,7 +23,7 @@ def getScoreColors():
 class RaiderIOService:
     def __init__(self):
         self = self
-         
+        scoreColors = getScoreColors() 
               
     def getCharacter(name, realm='Area-52', scoreColors=getScoreColors()):
         region = 'us'
@@ -65,7 +65,7 @@ class RaiderIOService:
                     recent_runs.append(DungeonRun(run['dungeon'], run['short_name'], run['mythic_level'], run['completed_at'], run['clear_time_ms'], run['par_time_ms'], run['num_keystone_upgrades'], run['score'], affixes, run['url']))
                 print('Recent Runs: ' + str(len(recent_runs)))
                 
-                score_color = binary_search_score_colors(scoreColors, score)
+                score_color = binary_search_score_colors(scoreColors, int(score))
                 print('Score Color: ' + score_color)
                 thumbnail = request.json()['thumbnail_url']
                 print('Thumbnail: ' + thumbnail)
@@ -89,8 +89,8 @@ class RaiderIOService:
             else:
                 print('Error: Character not found.')
                 return None   
-        except:
-            print('Error: Character not found.')
+        except Exception as e:
+            print(e)
             return None
         
                    

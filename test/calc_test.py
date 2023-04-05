@@ -18,4 +18,4 @@ class TestDice(TestCase):
         d = Dice(-1)
         assert d.roll() == "Please enter a number greater than 1."
     
-    
+   
