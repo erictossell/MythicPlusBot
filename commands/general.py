@@ -1,3 +1,4 @@
+import time
 from discord.ext import commands
 from objects.dice import Dice
 from objects.poll.createPollButton import CreatePollButton
@@ -29,20 +30,45 @@ class generalCog(commands.Cog):
         view = CreatePollButton()
         await ctx.send('Take a Lap Discord Poll', view=view)
         
-    #@commands.command(name="crawl")    
-    #async def crawl(self, ctx):
-    #    print('crawl command called')
-    #    RaiderIOCrawler.crawlCharacters()
+    @commands.command(name="crawl") 
+    @commands.has_role("Guild Masters")   
+    async def crawl(self, ctx):
+        async with ctx.typing():
+            print('crawl command called')
+            start_time = time.time()
+            await ctx.send('Crawling Raider.IO characters...')
+            
+            RaiderIOCrawler.crawlCharacters()
+            end_time = time.time()
+            elapsed_time = end_time - start_time
+            await ctx.send('Finished crawling Raider.IO guild members for new runs after ' + str(elapsed_time) + ' seconds.')
+        
     
-    #@commands.command(name="crawlGuild")    
-    #async def crawlGuild(self, ctx):
-    #    print('crawl guild command called')
-    #    RaiderIOCrawler.crawlGuildMembers()
-    
-    #@commands.command(name="crawlRuns")    
-    #async def crawlRuns(self, ctx):
-    #    print('crawl runs command called')
-    #    RaiderIOCrawler.crawlRuns()
+    @commands.command(name="crawlGuild")
+    @commands.has_role("Guild Masters")      
+    async def crawlGuild(self, ctx):
+        async with ctx.typing():
+            print('crawl guild command called')
+            start_time = time.time()
+            await ctx.send('Crawling Raider.IO guild members...')
+            await ctx.typing()
+            RaiderIOCrawler.crawlGuildMembers()
+            end_time = time.time()
+            elapsed_time = end_time - start_time
+            await ctx.send('Finished crawling Raider.IO guild members after ' + str(elapsed_time) + ' seconds.')
+        
+    @commands.command(name="crawlRuns")    
+    @commands.has_role("Guild Masters")  
+    async def crawlRuns(self, ctx):
+        async with ctx.typing():
+            print('crawl runs command called')
+            await ctx.send('Crawling Raider.IO guild runs...')
+            
+            start_time = time.time()
+            RaiderIOCrawler.crawlRuns()
+            end_time = time.time()
+            elapsed_time = end_time - start_time
+            await ctx.send('Finished crawling Raider.IO guild runs after ' + str(elapsed_time) + ' seconds.')
         
 def setup(bot):
     bot.add_cog(generalCog(bot))

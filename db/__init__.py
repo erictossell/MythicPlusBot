@@ -13,7 +13,9 @@ def lookupCharacter(name, realm):
     session = Session()
     try:        
         existing_character = session.query(CharacterDB).filter(CharacterDB.name == name and CharacterDB.realm == realm).first()
-        if existing_character != None:  
+        if existing_character == None:
+            print('DB: character not found: ' + name + ' on realm: ' + realm)
+        elif str(existing_character.realm).capitalize() == str(realm).capitalize() and str(existing_character.name).capitalize() == str(name).capitalize(): 
             print('DB: found character: ' + existing_character.name + ' on realm: ' + existing_character.realm)          
             return existing_character
         else:            
@@ -42,7 +44,7 @@ def addCharacter(character):
     session = Session()
     try:        
         existing_character = session.query(CharacterDB).filter(CharacterDB.name == character.name and CharacterDB.realm == character.realm).first()
-        if existing_character == None:
+        if existing_character.realm.capitalize() != character.realm.capitalize() or existing_character.name.capitalize() != character.name.capitalize():
             characterDB = CharacterDB(character.discord_user_id, character.name, character.realm, character.faction, character.region, character.role, character.spec_name, character.class_name, character.achievement_points, character.item_level, character.score, character.rank, character.thumbnail_url, character.url, character.last_crawled_at, character.is_reporting, character.dungeon_runs)
             session.add(characterDB)
             session.commit()            

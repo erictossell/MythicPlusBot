@@ -20,25 +20,19 @@ class RegisterModal(discord.ui.Modal):
             
             if self.children[1].value == '':
                 realm = 'Area-52'
-            character = RaiderIOService.getCharacter(name, realm)
-            existingCharacter = db.lookupCharacter(name, realm)
+            character = RaiderIOService.getCharacter(name, realm)            
+            existingCharacter = db.lookupCharacter(name, realm)            
             if character == None:
-                await interaction.response.send_message('Character '+ name +' on ' + realm + ' not found', ephemeral=True)
-                return
-            elif existingCharacter != None and existingCharacter.discord_user_id != userID:
-                await interaction.response.send_message('Character '+ name +' on ' + realm + ' is already registered to another user', ephemeral=True)
-                return
-            elif existingCharacter != None and existingCharacter.discord_user_id == userID and existingCharacter.is_reporting == True:
-                await interaction.response.send_message('Character '+ name +' on ' + realm + ' is already registered', ephemeral=True)
-                return
-            elif existingCharacter != None and existingCharacter.discord_user_id == userID:
-                 db.updateCharacterReporting(existingCharacter)
-                 await interaction.response.send_message('You have registered the character ' + existingCharacter.name + ' on realm ' + existingCharacter.realm + ' for Tal-Bot reporting.', ephemeral=True)
-                 return       
-            else:                
-                new_character = db.CharacterDB(userID, name, realm, character.faction, character.region, character.role, character.spec_name, character.class_name, character.achievement_points, character.item_level, character.score, character.rank, character.thumbnail_url, character.url, datetime.strptime(character.last_crawled_at,'%Y-%m-%dT%H:%M:%S.%fZ' ), True, [])
+                await interaction.response.send_message('Character '+ name +' on ' + realm + ' not found.', ephemeral=True)
+                return 
+            elif existingCharacter == None:
+                new_character = db.CharacterDB(userID, character.name, character.realm, character.faction, character.region, character.role, character.spec_name, character.class_name, character.achievement_points, character.item_level, character.score, character.rank, character.thumbnail_url, character.url, datetime.strptime(character.last_crawled_at,'%Y-%m-%dT%H:%M:%S.%fZ' ), True, [])
                 db.addCharacter(new_character)        
                 await interaction.response.send_message('You have registered the character ' + new_character.name + ' on realm ' + new_character.realm + ' for Tal-Bot reporting.', ephemeral=True)
-                    
+                return                
+                
+                  
+                           
+                
         except Exception as e:
             print(e)

@@ -8,6 +8,7 @@ def binary_search_score_colors(score_color_list, input_score):
     
     while left <= right:
         mid = (left + right) // 2
+        print(mid)
         if score_color_list[mid].score == input_score:
             return score_color_list[mid].color
         elif score_color_list[mid].score > input_score:

@@ -4,12 +4,10 @@ from objects.poll.createPollModal import CreatePollModal
 
 class CreatePollButton(discord.ui.View):
     
-    @discord.ui.button(label='Cancel', style=discord.ButtonStyle.red, emoji='❌')
+    @discord.ui.button(label='Cancel', style=discord.ButtonStyle.red, emoji='✖️')
     async def cancel_callback(self, button: discord.ui.Button, interaction: discord.Interaction):
         try:            
-            print('button clicked')    
-            
-            await interaction.response.send_message("Cancelled", ephemeral=True)
+            print('button clicked')   
             await interaction.message.delete()
             
         except Exception as e:
