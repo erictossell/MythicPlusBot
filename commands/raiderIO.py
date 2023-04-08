@@ -1,9 +1,12 @@
+#---------------Take a Lap Discord Bot-----------------
+# Description: This file contains the commands for the RaiderIO cog.
+# Author: Eriim
+
+import re
 import discord
 from discord.ext import commands
 from objects.raiderIO.raiderIOService import RaiderIOService
 from objects.registration.registerButton import RegisterButton
-
-
 
 class RaiderIO(commands.Cog):
     def __init__(self, bot):
@@ -46,10 +49,18 @@ class RaiderIO(commands.Cog):
                 
     @commands.command(name='character', help='Usage: !character <character name> <realm> (optional on Area-52)')
     async def character(self, ctx, *args):       
-        try:         
+        try:
+            pattern = re.compile(r"-")         
             if len(args) == 0:
                 await ctx.channel.send('Please provide a character name and realm.')
             if len(args) == 1:
+                
+                    
+                if pattern.search(args[0]) and args[0].count("-") == 1:
+                    
+                    character = RaiderIOService.getCharacter(args[0].split("-")[0], args[0].split("-")[1])
+                    await ctx.channel.send(embed=character.getCharacterEmbed())
+                    return
                 character = RaiderIOService.getCharacter(args[0])
                 print(character.name)                                                  
                 await ctx.send(embed=character.getCharacterEmbed())                
@@ -57,12 +68,12 @@ class RaiderIO(commands.Cog):
                 character = RaiderIOService.getCharacter(args[0], args[1])                 
                 await ctx.channel.send(embed=character.getCharacterEmbed())
         except Exception as e:
-            await ctx.channel.send('Type !help to see how to use this command.')
+            await ctx.channel.send(f' I was not able to find a character with name:  {args[0]}  Type !help to see how to use this command.')
             user = await ctx.bot.fetch_user(173958345022111744)
             channel = await user.create_dm()
             await channel.send(f'Error in !character command: {e}')   
     
-    @commands.command(name='register', help='')
+    @commands.command(name='register', help='Register a character that is not in the guild.')
     async def register(self, ctx, *args):
         try: 
             user = await ctx.bot.fetch_user(ctx.author.id)

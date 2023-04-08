@@ -1,4 +1,9 @@
+#---------------Take a Lap Discord Bot-----------------
+# Description: This file contains the general commands for the bot.
+# Author: Eriim
+
 import time
+from StringProgressBar import progressBar
 from discord.ext import commands
 from objects.dice import Dice
 from objects.poll.createPollButton import CreatePollButton
@@ -38,10 +43,11 @@ class generalCog(commands.Cog):
             start_time = time.time()
             await ctx.send('Crawling Raider.IO characters...')
             
-            RaiderIOCrawler.crawlCharacters()
+            RaiderIOCrawler.crawlCharacters(ctx)
             end_time = time.time()
             elapsed_time = end_time - start_time
             await ctx.send('Finished crawling Raider.IO guild members for new runs after ' + str(elapsed_time) + ' seconds.')
+            
         
     
     @commands.command(name="crawlGuild")
@@ -51,7 +57,7 @@ class generalCog(commands.Cog):
             print('crawl guild command called')
             start_time = time.time()
             await ctx.send('Crawling Raider.IO guild members...')
-            await ctx.typing()
+            
             RaiderIOCrawler.crawlGuildMembers()
             end_time = time.time()
             elapsed_time = end_time - start_time

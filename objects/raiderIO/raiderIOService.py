@@ -23,7 +23,7 @@ def getScoreColors():
 class RaiderIOService:
     def __init__(self):
         self = self
-        scoreColors = getScoreColors() 
+        
               
     def getCharacter(name, realm='Area-52', scoreColors=getScoreColors()):
         region = 'us'

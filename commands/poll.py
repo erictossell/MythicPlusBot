@@ -1,3 +1,7 @@
+#---------------Take a Lap Discord Bot-----------------
+# Description: This file contains the poll command for the bot.
+# Author: Eriim
+
 from discord.ext import commands
 from objects.poll.poll import Poll
 

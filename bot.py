@@ -1,14 +1,13 @@
 #---------------Take a Lap Discord Bot-----------------
-
+# Description: This file contains the main function for the bot.
+# Author: Eriim
 
 #Imports
-
 import os
 import discord
 import logging
 from dotenv import load_dotenv
 from discord.ext import commands
-
 
 #Load Environment variables
 load_dotenv('configurations/main.env')
@@ -25,11 +24,10 @@ bot = commands.Bot(command_prefix='!', intents=intents, activity=discord.Activit
 cogs_list = ['commands.general', 'commands.poll', 'events.errors', 'commands.raiderIO']
 
 logger = logging.getLogger('discord')
-logger.setLevel(logging.WARNING)
+logger.setLevel(logging.DEBUG)
 handler = logging.FileHandler(filename='discord.log', encoding='utf-8', mode='w')
 handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
 logger.addHandler(handler)
-
 
 def load_extensions():
     for cog in cogs_list:

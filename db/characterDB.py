@@ -1,3 +1,7 @@
+#---------------Take a Lap Discord Bot-----------------
+#Description: This file contains the CharacterDB class which is used to create the character table in the database.
+#Author: Eriim
+
 from sqlalchemy import Column, DateTime, Integer, String, ForeignKey, Boolean
 from sqlalchemy.orm import relationship
 from db.base import Base

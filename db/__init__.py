@@ -1,3 +1,7 @@
+##---------------Take a Lap Discord Bot-----------------
+#Description: This file is used to create the database and tables for the bot. It is also used to query the database for information.
+#Author: Eriim
+
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from db.base import Base

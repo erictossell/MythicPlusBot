@@ -1,3 +1,7 @@
+#---------------Take a Lap Discord Bot-----------------
+# Description: This file contains the member events for the bot.
+# Author: Eriim
+
 from discord.ext import commands
 
 class membersCog(commands.Cog):

@@ -27,7 +27,7 @@ class Character:
         self.last_crawled_at = last_crawled_at   
     
     def getCharacterEmbed(self):        
-        title = self.name + ' - ' + self.realm + ' - ' + self.faction 
+        title = self.name.capitalize() + ' - ' + self.realm.capitalize() + ' - ' + self.faction.capitalize() 
         color = discord.Color.from_rgb(*hex_to_rgb(self.score_color))    
         embed = discord.Embed(title=title, description='', color=color, url=self.url)
         embed.add_field(name='Mythic + Score', value=str(self.score), inline=False)
@@ -43,7 +43,7 @@ class Character:
         return embed
                 
     def getBestRunsEmbed(self):
-        title = self.name+"'s Best Mythic+ Runs"
+        title = self.name.capitalize()+"'s Best Mythic+ Runs"
         
         embed = discord.Embed(title=title, description= '', color=discord.Color.from_rgb(*hex_to_rgb(self.score_color)), url=self.url)
         embed.add_field(name='Class', value=self.class_name, inline=True)
@@ -62,7 +62,7 @@ class Character:
         return embed
     
     def getRecentRunsEmbed(self):        
-        title = self.name+"'s Recent Mythic+ Runs"                
+        title = self.name.capitalize()+"'s Recent Mythic+ Runs"                
         embed = discord.Embed(title=title, description= '', color=discord.Color.from_rgb(*hex_to_rgb(self.score_color)), url=self.url)
         embed.add_field(name='Class', value=self.class_name, inline=True)
         embed.add_field(name='Last Spec', value=self.spec_name, inline=True)

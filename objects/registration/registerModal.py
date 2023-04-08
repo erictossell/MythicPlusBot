@@ -20,11 +20,13 @@ class RegisterModal(discord.ui.Modal):
             
             if self.children[1].value == '':
                 realm = 'Area-52'
-            character = RaiderIOService.getCharacter(name, realm)            
+            character = RaiderIOService.getCharacter(name, realm)
             existingCharacter = db.lookupCharacter(name, realm)            
+                        
             if character == None:
                 await interaction.response.send_message('Character '+ name +' on ' + realm + ' not found.', ephemeral=True)
                 return 
+            
             elif existingCharacter == None:
                 new_character = db.CharacterDB(userID, character.name, character.realm, character.faction, character.region, character.role, character.spec_name, character.class_name, character.achievement_points, character.item_level, character.score, character.rank, character.thumbnail_url, character.url, datetime.strptime(character.last_crawled_at,'%Y-%m-%dT%H:%M:%S.%fZ' ), True, [])
                 db.addCharacter(new_character)        

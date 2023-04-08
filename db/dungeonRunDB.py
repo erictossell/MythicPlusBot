@@ -1,7 +1,9 @@
+#---------------Take a Lap Discord Bot-----------------
+# Description: This file contains the DungeonRunDB class which is used to create the dungeon_runs table in the database.
+# Author: Eriim
 from sqlalchemy import Column, DateTime, Integer, String, ForeignKey, Boolean
 from sqlalchemy.orm import relationship
 from db.base import Base
-
 
 class DungeonRunDB(Base):
     __tablename__ = 'dungeon_runs'

@@ -1,18 +1,22 @@
 from datetime import datetime
 import time
 import db
+
 from objects.raiderIO.raiderIOService import RaiderIOService
 from objects.raiderIO.raiderIOService import getScoreColors
 from objects.raiderIO.member import Member
+from StringProgressBar import progressBar
 
 class RaiderIOCrawler:
     def __init__():
         self = self
 
-    def crawlCharacters():
+    def crawlCharacters(ctx):
         try:
             print('trying to crawl characters')
-            characters = db.getAllCharacters()            
+            
+            characters = db.getAllCharacters()
+                     
             for character in characters:
                 time.sleep(0.3)
                 if character.is_reporting == True and character.score > 0:
@@ -35,7 +39,7 @@ class RaiderIOCrawler:
                             db.addDungeonRun(character, run)
                         else:
                             print("No recent runs for " + character.name)
-                                
+                            
         except Exception as e:
             print(e)
             return False
