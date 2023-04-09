@@ -19,11 +19,11 @@ class RaiderIO(commands.Cog):
             if len(args) == 0:
                 await ctx.channel.send('Please provide a character name and realm.')
             if len(args) == 1:
-                character = RaiderIOService.getCharacter(args[0])          
-                await ctx.channel.send(embed=character.getBestRunsEmbed())    
+                character = RaiderIOService.get_character(args[0])          
+                await ctx.channel.send(embed=character.get_best_runs_embed())    
             if len(args) == 2:
-                character = RaiderIOService.getCharacter(args[0], args[1])           
-                await ctx.channel.send(embed=character.getBestRunsEmbed())
+                character = RaiderIOService.get_character(args[0], args[1])           
+                await ctx.channel.send(embed=character.get_best_runs_embed())
         except Exception as e:
             await ctx.channel.send('Type !help to see how to use this command.')
             user = await ctx.bot.fetch_user(173958345022111744)
@@ -36,11 +36,11 @@ class RaiderIO(commands.Cog):
             if len(args) == 0:
                 await ctx.channel.send('Please provide a character name and realm.')
             if len(args) == 1:
-                character = RaiderIOService.getCharacter(args[0])                 
-                await ctx.channel.send(embed=character.getRecentRunsEmbed())
+                character = RaiderIOService.get_character(args[0])                 
+                await ctx.channel.send(embed=character.get_recent_runs_embed())
             if len(args) == 2:
-                character = RaiderIOService.getCharacter(args[0], args[1])                 
-                await ctx.channel.send(embed=character.getRecentRunsEmbed())
+                character = RaiderIOService.get_character(args[0], args[1])                 
+                await ctx.channel.send(embed=character.get_recent_runs_embed())
         except Exception as e:
             await ctx.channel.send('Type !help to see how to use this command.')
             user = await ctx.bot.fetch_user(173958345022111744)
@@ -58,15 +58,15 @@ class RaiderIO(commands.Cog):
                     
                 if pattern.search(args[0]) and args[0].count("-") == 1:
                     
-                    character = RaiderIOService.getCharacter(args[0].split("-")[0], args[0].split("-")[1])
-                    await ctx.channel.send(embed=character.getCharacterEmbed())
+                    character = RaiderIOService.get_character(args[0].split("-")[0], args[0].split("-")[1])
+                    await ctx.channel.send(embed=character.get_character_embed())
                     return
-                character = RaiderIOService.getCharacter(args[0])
+                character = RaiderIOService.get_character(args[0])
                 print(character.name)                                                  
-                await ctx.send(embed=character.getCharacterEmbed())                
+                await ctx.send(embed=character.get_character_embed())                
             if len(args) == 2:
-                character = RaiderIOService.getCharacter(args[0], args[1])                 
-                await ctx.channel.send(embed=character.getCharacterEmbed())
+                character = RaiderIOService.get_character(args[0], args[1])                 
+                await ctx.channel.send(embed=character.get_character_embed())
         except Exception as e:
             await ctx.channel.send(f' I was not able to find a character with name:  {args[0]}  Type !help to see how to use this command.')
             user = await ctx.bot.fetch_user(173958345022111744)
@@ -89,7 +89,7 @@ class RaiderIO(commands.Cog):
     @commands.command(name='affixes', help='Gets the current Mythic+ affixes.')
     async def affixes(self, ctx):
         try:
-            affixes = RaiderIOService.getMythicPlusAffixes()
+            affixes = RaiderIOService.get_mythic_plus_affixes()
             embed = discord.Embed(title='Current Mythic+ Affixes', description= '', color=discord.Color.green())
             for affix in affixes:
                 embed.add_field(name=affix.name, value=affix.description, inline=False)

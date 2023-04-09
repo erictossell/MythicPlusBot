@@ -12,7 +12,7 @@ engine = create_engine('sqlite:///tal.db', echo=True)
 Base.metadata.create_all(engine)
 Session = sessionmaker(bind=engine)
 
-def lookupCharacter(name, realm):
+def lookup_character(name, realm):
     print('DB: looking up character: ' + name + ' on realm: ' + realm)
     session = Session()
     try:        
@@ -30,7 +30,7 @@ def lookupCharacter(name, realm):
         return None
     finally:
         session.close()   
-def lookupRun(id):
+def lookup_run(id):
     session = Session()
     try:        
         existing_run = session.query(DungeonRunDB).filter(DungeonRunDB.id == id).first()
@@ -44,7 +44,7 @@ def lookupRun(id):
         return None
     finally:
         session.close()
-def addCharacter(character):
+def add_character(character):
     session = Session()
     try:        
         existing_character = session.query(CharacterDB).filter(CharacterDB.name == character.name and CharacterDB.realm == character.realm).first()
@@ -61,7 +61,7 @@ def addCharacter(character):
         return
     finally:
         session.close()
-def updateCharacter(character):
+def update_character(character):
     session = Session()
     try:        
         existing_character = session.query(CharacterDB).filter(CharacterDB.name == character.name and CharacterDB.realm == character.realm).first()
@@ -93,7 +93,7 @@ def updateCharacter(character):
         return
     finally:
         session.close()
-def updateCharacterReporting(character):
+def update_character_reporting(character):
     session = Session()
     try:
         
@@ -110,7 +110,7 @@ def updateCharacterReporting(character):
         return
     finally:
         session.close()
-def setGuildRun(run):
+def set_guild_run(run):
     session = Session()
     try:        
         existing_run = session.query(DungeonRunDB).filter(DungeonRunDB.id == run.id).first()
@@ -124,7 +124,7 @@ def setGuildRun(run):
         return
     finally:
         session.close()
-def removeCharacter(name, realm):
+def remove_character(name, realm):
     session = Session()
     try:
         existing_character = session.query(CharacterDB).filter(CharacterDB.name == name and CharacterDB.realm == realm).first()
@@ -140,13 +140,13 @@ def removeCharacter(name, realm):
         return None
     finally:
         session.close()
-def addDungeonRun(character, run):
+def add_dungeon_run(character, run):
     session = Session()
     try: 
         existing_character = session.query(CharacterDB).filter(CharacterDB.name == character.name and CharacterDB.realm == character.realm).first()
         if existing_character != None:
-            dungeon_Run = DungeonRunDB(run.id, run.season, run.name, run.short_name, run.mythic_level, run.completed_at, run.clear_time_ms, run.par_time_ms, run.num_keystone_upgrades, run.score, run.url, existing_character)
-            session.add(dungeon_Run)
+            dungeon_run = DungeonRunDB(run.id, run.season, run.name, run.short_name, run.mythic_level, run.completed_at, run.clear_time_ms, run.par_time_ms, run.num_keystone_upgrades, run.score, run.url, existing_character)
+            session.add(dungeon_run)
             session.commit()
             return True
         else:
@@ -157,22 +157,22 @@ def addDungeonRun(character, run):
         return None
     finally:
         session.close()
-def getAllCharacters():
+def get_all_characters():
     session = Session()
     try:        
-        characters = session.query(CharacterDB).all()
-        return characters
+        characters_list = session.query(CharacterDB).all()
+        return characters_list
     except Exception as e:
         print(e)
         session.rollback()
         return None
     finally:       
         session.close()
-def getAllRuns():
+def get_all_runs():
     session = Session()
     try:    
-        runs = session.query(DungeonRunDB).all()
-        return runs
+        runs_list = session.query(DungeonRunDB).all()
+        return runs_list
     except Exception as e:
         session.rollback()
         print(e)

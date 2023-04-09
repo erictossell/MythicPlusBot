@@ -1,4 +1,4 @@
-def convertMillis(millis):
+def convert_millis(millis):
     seconds=(millis/1000)%60
     minutes=(millis/(1000*60))%60
     hours=(millis/(1000*60*60))%24

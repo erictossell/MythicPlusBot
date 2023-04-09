@@ -26,7 +26,8 @@ class Character:
         
         self.last_crawled_at = last_crawled_at   
     
-    def getCharacterEmbed(self):        
+    def get_character_embed(self):
+        print('Character info embed created for ' + self.name + ' on ' + self.realm)        
         title = self.name.capitalize() + ' - ' + self.realm.capitalize() + ' - ' + self.faction.capitalize() 
         color = discord.Color.from_rgb(*hex_to_rgb(self.score_color))    
         embed = discord.Embed(title=title, description='', color=color, url=self.url)
@@ -42,7 +43,7 @@ class Character:
         
         return embed
                 
-    def getBestRunsEmbed(self):
+    def get_best_runs_embed(self):
         title = self.name.capitalize()+"'s Best Mythic+ Runs"
         
         embed = discord.Embed(title=title, description= '', color=discord.Color.from_rgb(*hex_to_rgb(self.score_color)), url=self.url)
@@ -53,7 +54,7 @@ class Character:
         embed.set_thumbnail(url=self.thumbnail_url)            
 
         for run in self.best_runs:
-            time = util.convertMillis(run.clear_time_ms)
+            time = util.convert_millis(run.clear_time_ms)
             name = run.name + ' - ' + str(run.mythic_level)    
             value = 'Time: **' + time + '** | Score: ' + str(run.score) +"\n" + run.affixes[0].name + ', ' + run.affixes[1].name + ', ' + run.affixes[2].name
                         
@@ -61,7 +62,7 @@ class Character:
         embed.set_footer(text='Last updated ' + self.last_crawled_at)
         return embed
     
-    def getRecentRunsEmbed(self):        
+    def get_recent_runs_embed(self):        
         title = self.name.capitalize()+"'s Recent Mythic+ Runs"                
         embed = discord.Embed(title=title, description= '', color=discord.Color.from_rgb(*hex_to_rgb(self.score_color)), url=self.url)
         embed.add_field(name='Class', value=self.class_name, inline=True)
@@ -71,7 +72,7 @@ class Character:
         embed.set_thumbnail(url=self.thumbnail_url)             
 
         for run in self.recent_runs:
-            time = util.convertMillis(run.clear_time_ms)
+            time = util.convert_millis(run.clear_time_ms)
             name = run.name + ' - ' + str(run.mythic_level)    
             value = 'Time: **' + time + '** | Score: ' + str(run.score) + "\n" + run.affixes[0].name + ', ' + run.affixes[1].name + ', ' + run.affixes[2].name
                         

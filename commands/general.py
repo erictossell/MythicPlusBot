@@ -3,6 +3,7 @@
 # Author: Eriim
 
 import time
+import asyncio
 from StringProgressBar import progressBar
 from discord.ext import commands
 from objects.dice import Dice
@@ -43,12 +44,10 @@ class generalCog(commands.Cog):
             start_time = time.time()
             await ctx.send('Crawling Raider.IO characters...')
             
-            RaiderIOCrawler.crawlCharacters(ctx)
+            await RaiderIOCrawler.crawl_characters(ctx)
             end_time = time.time()
             elapsed_time = end_time - start_time
             await ctx.send('Finished crawling Raider.IO guild members for new runs after ' + str(elapsed_time) + ' seconds.')
-            
-        
     
     @commands.command(name="crawlGuild")
     @commands.has_role("Guild Masters")      
@@ -58,7 +57,7 @@ class generalCog(commands.Cog):
             start_time = time.time()
             await ctx.send('Crawling Raider.IO guild members...')
             
-            RaiderIOCrawler.crawlGuildMembers()
+            result = await RaiderIOCrawler.crawl_guild_members()
             end_time = time.time()
             elapsed_time = end_time - start_time
             await ctx.send('Finished crawling Raider.IO guild members after ' + str(elapsed_time) + ' seconds.')
@@ -71,7 +70,7 @@ class generalCog(commands.Cog):
             await ctx.send('Crawling Raider.IO guild runs...')
             
             start_time = time.time()
-            RaiderIOCrawler.crawlRuns()
+            result = await RaiderIOCrawler.crawl_runs()
             end_time = time.time()
             elapsed_time = end_time - start_time
             await ctx.send('Finished crawling Raider.IO guild runs after ' + str(elapsed_time) + ' seconds.')
