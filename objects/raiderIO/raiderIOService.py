@@ -1,5 +1,6 @@
 import re
 import requests
+
 import json
 from util.binarySearch import binary_search_score_colors
 from util.searchMembers import search_member
@@ -23,9 +24,8 @@ def get_score_colors():
 class RaiderIOService:
     def __init__(self):
         self = self
-        
-              
-    def get_character(name, realm='Area-52', scoreColors=get_score_colors()):
+                
+    async def get_character(name, realm='Area-52', scoreColors=get_score_colors()):
         region = 'us'
         print('RIO Service: Looking up character: ' + name)
                
@@ -56,13 +56,13 @@ class RaiderIOService:
                     for affix in run['affixes']:
                         affixes.append(Affix(affix['name'], affix['description'], affix['wowhead_url']))
                     best_runs.append(DungeonRun(run['dungeon'], run['short_name'], run['mythic_level'], run['completed_at'], run['clear_time_ms'], run['par_time_ms'], run['num_keystone_upgrades'], run['score'], affixes, run['url']))
-                print('Best Runs: ' + str(len(best_runs)))
+                #print('Best Runs: ' + str(len(best_runs)))
                 for run in request.json()['mythic_plus_recent_runs']:
                     affixes = []
                     for affix in run['affixes']:
                         affixes.append(Affix(affix['name'], affix['description'], affix['wowhead_url']))
                     recent_runs.append(DungeonRun(run['dungeon'], run['short_name'], run['mythic_level'], run['completed_at'], run['clear_time_ms'], run['par_time_ms'], run['num_keystone_upgrades'], run['score'], affixes, run['url']))
-                print('Recent Runs: ' + str(len(recent_runs)))
+                #print('Recent Runs: ' + str(len(recent_runs)))
                 
                 score_color = binary_search_score_colors(scoreColors, int(score))
                 print('Score Color: ' + score_color)
@@ -92,7 +92,7 @@ class RaiderIOService:
             print(e)
             return None
                      
-    def get_members():        
+    async def get_members():        
         try:
             pattern = re.compile(r'^[^0-9]*$')
             members = []           
@@ -110,7 +110,7 @@ class RaiderIOService:
             print('Finished grabbing members.')
             return members
               
-    def get_mythic_plus_affixes():
+    async def get_mythic_plus_affixes():
         try:        
             request = requests.get('https://raider.io/api/v1/mythic-plus/affixes?region=us&locale=en')        
             affixes = []
@@ -121,7 +121,7 @@ class RaiderIOService:
             return       
         return affixes 
     
-    def get_guild_run(id, season):
+    async def get_guild_run(id, season):
         try:
             request = requests.get('https://raider.io/api/v1/mythic-plus/run-details?season='+season+'&id='+id)
                 

@@ -19,10 +19,10 @@ class RaiderIOCrawler:
             characters_list = db.get_all_characters()
                      
             for character in characters_list:
-                asyncio.sleep(0.3)
+                await asyncio.sleep(0.3)
                 if character.is_reporting == True and character.score > 0:
                     
-                    character_io= RaiderIOService.get_character(character.name, character.realm)
+                    character_io = await RaiderIOService.get_character(character.name, character.realm)
                     
                     for run in character_io.best_runs:
                         if run == None:
@@ -48,7 +48,7 @@ class RaiderIOCrawler:
     async def crawl_guild_members():
         print('Crawler: trying to crawl guild members')
         try:             
-            members_list = RaiderIOService.get_members()
+            members_list = await RaiderIOService.get_members()
             counter = 0
             print(len(members_list))
             for member in members_list:
@@ -56,11 +56,11 @@ class RaiderIOCrawler:
                       
             for member in members_list:
                 db_character = db.lookup_character(member.name, 'Area-52')
-                asyncio.sleep(0.3)
+                await asyncio.sleep(0.3)
                 
                 print('Crawler: calling RIO Service for: ' + member.name)
-                score_colors_list = get_score_colors()
-                character = RaiderIOService.get_character(str(member.name), 'Area-52', score_colors_list)
+                score_colors_list = await get_score_colors()
+                character = await RaiderIOService.get_character(str(member.name), 'Area-52', score_colors_list)
                 
                 if character == None:
                     print("Crawler: Character not found: " + member.name)
