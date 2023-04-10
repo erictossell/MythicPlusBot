@@ -6,8 +6,7 @@ from objects.raiderIO.dungeonRun import DungeonRun
 from util import convert_millis, hex_to_rgb
 
 class Character:
-    """The character class represents a character from the Raider.IO API.
-    """
+    """The character class represents a character from the Raider.IO API."""
     def __init__(self,
                  name: str,
                  realm: str,
@@ -25,26 +24,7 @@ class Character:
                  thumbnail_url: str,
                  url: str,
                  last_crawled_at: datetime):
-        """The init method for the Character class.
-
-        Args:
-            name (string): _description_
-            realm (string): _description_
-            faction (string): _description_
-            role (string): _description_
-            spec_name (string): _description_
-            class_name (string): _description_
-            achievement_points (int): _description_
-            item_level (int): _description_
-            score (int): _description_
-            score_color (ScoreColor): _description_
-            rank (int): _description_
-            best_runs (List[DungeonRun]): _description_
-            recent_runs (List[DungeonRun): _description_
-            thumbnail_url (string): _description_
-            url (string): _description_
-            last_crawled_at (datetime): _description_
-        """
+        """The init method for the Character class."""
         self.name = name
         self.realm = realm
         self.faction = faction.capitalize()

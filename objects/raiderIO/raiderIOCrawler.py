@@ -11,15 +11,9 @@ class RaiderIOCrawler:
     def __init__(self):
         self = self
 
-    async def crawl_characters(ctx) -> None:
-        """Crawl the Raider.IO API for new data on characters in the database.
+    async def crawl_characters() -> None:
+        """Crawl the Raider.IO API for new data on characters in the database.\n
         This method has a 0.3 second delay between each API call to avoid rate limiting.
-
-        Args:
-            ctx (context): The current context.
-
-        Returns:
-            None : 
         """
         try:
             print('trying to crawl characters')
@@ -30,13 +24,15 @@ class RaiderIOCrawler:
                 await asyncio.sleep(0.3)
                 if character.is_reporting is True and character.score > 0:
                     
-                    character_io = await RaiderIOService.get_character(character.name, character.realm)
+                    character_io = await RaiderIOService.get_character(character.name,
+                                                                       character.realm)
                     
                     for run in character_io.best_runs:
                         if run is None:
                             return
                         elif run is not None and db.lookup_run(run.id) is None:
-                            run.completed_at = datetime.strptime(run.completed_at,'%Y-%m-%dT%H:%M:%S.%fZ')
+                            run.completed_at = datetime.strptime(run.completed_at,
+                                                                 '%Y-%m-%dT%H:%M:%S.%fZ')
                             db.add_dungeon_run(character, run)
                         else:
                             print("No best runs for " + character.name)
@@ -44,7 +40,8 @@ class RaiderIOCrawler:
                         if run is None:
                             return
                         elif run is not None and db.lookup_run(run.id) is None:
-                            run.completed_at = datetime.strptime(run.completed_at,'%Y-%m-%dT%H:%M:%S.%fZ')
+                            run.completed_at = datetime.strptime(run.completed_at,
+                                                                 '%Y-%m-%dT%H:%M:%S.%fZ')
                             db.add_dungeon_run(character, run)
                         else:
                             print("No recent runs for " + character.name)
@@ -53,11 +50,8 @@ class RaiderIOCrawler:
             print(exception)            
     
     async def crawl_guild_members() -> None:
-        """Crawl the Raider.IO API for new guild members.
+        """Crawl the Raider.IO API for new guild members. \n
         This method has a 0.3 second delay between each API call to avoid rate limiting.
-
-        Returns:
-            None: 
         """
         print('Crawler: trying to crawl guild members')
         try:             
@@ -73,13 +67,31 @@ class RaiderIOCrawler:
                 
                 print('Crawler: calling RIO Service for: ' + member.name)
                 score_colors_list = await get_score_colors()
-                character = await RaiderIOService.get_character(str(member.name), 'Area-52', score_colors_list)
+                character = await RaiderIOService.get_character(str(member.name),
+                                                                'Area-52', score_colors_list)
                 
                 if character is None:
                     print("Crawler: Character not found: " + member.name)
                 elif character is not None and db_character is None:
                     print('Crawler: This is where I would add this character' + character.name)
-                    new_character = db.CharacterDB(173958345022111744, character.name, character.realm, character.faction, character.region, character.role, character.spec_name, character.class_name, character.achievement_points, character.item_level, character.score, character.rank, character.thumbnail_url, character.url, datetime.strptime(character.last_crawled_at,'%Y-%m-%dT%H:%M:%S.%fZ' ), True, [])
+                    new_character = db.CharacterDB(173958345022111744,
+                                                   character.name,
+                                                   character.realm,
+                                                   character.faction,
+                                                   character.region,
+                                                   character.role,
+                                                   character.spec_name,
+                                                   character.class_name,
+                                                   character.achievement_points,
+                                                   character.item_level,
+                                                   character.score,
+                                                   character.rank,
+                                                   character.thumbnail_url,
+                                                   character.url,
+                                                   datetime.strptime(character.last_crawled_at,
+                                                                     '%Y-%m-%dT%H:%M:%S.%fZ'),
+                                                   True,
+                                                   [])
                     print(type(new_character))
                     print(new_character)
                     db.add_character(new_character) 
@@ -95,6 +107,6 @@ class RaiderIOCrawler:
     def crawl_runs():
         try:
            print('executing crawl runs')
-        except Exception as e:
-            print(e)
+        except Exception as exception:
+            print(exception)
                                 

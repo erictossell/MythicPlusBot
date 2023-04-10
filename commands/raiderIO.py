@@ -49,10 +49,10 @@ class RaiderIO(commands.Cog):
             if len(args) == 0:
                 await ctx.channel.send('Please provide a character name and realm.')
             if len(args) == 1:
-                character = await RaiderIOService.get_character(args[0])                 
+                character = await RaiderIOService.get_character(args[0])
                 await ctx.channel.send(embed=character.get_recent_runs_embed())
             if len(args) == 2:
-                character = await RaiderIOService.get_character(args[0], args[1])                 
+                character = await RaiderIOService.get_character(args[0], args[1])
                 await ctx.channel.send(embed=character.get_recent_runs_embed())
         except Exception as exception:
             await ctx.channel.send('Type !help to see how to use this command.')
@@ -75,10 +75,10 @@ class RaiderIO(commands.Cog):
                     character = await RaiderIOService.get_character(args[0].split("-")[0], args[0].split("-")[1])
                     await ctx.channel.send(embed=character.get_character_embed())
                     return
-                character = await RaiderIOService.get_character(args[0])                                               
+                character = await RaiderIOService.get_character(args[0])
                 await ctx.send(embed=character.get_character_embed())                
             if len(args) == 2:
-                character = await RaiderIOService.get_character(args[0], args[1])                 
+                character = await RaiderIOService.get_character(args[0], args[1])
                 await ctx.channel.send(embed=character.get_character_embed())
         except Exception as exception:
             await ctx.channel.send(f' I was not able to find a character with name:  {args[0]}  Type !help to see how to use this command.')
@@ -121,6 +121,14 @@ class RaiderIO(commands.Cog):
             user = await ctx.bot.fetch_user(173958345022111744)
             channel = await user.create_dm()
             await channel.send(f'Error in !affixes command: {exception}')
+    @commands.command(name='default', help='Sets the default character for a user.')
+    async def default_character(self,ctx):
+        """Sets a user's default character.
+
+        Args:
+            ctx (context): The current discord context.
+        """
+        
 
 def setup(bot):
     """Setup function for the cog.

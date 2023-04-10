@@ -7,12 +7,14 @@ from sqlalchemy.orm import sessionmaker
 from db.base import Base
 from db.characterDB import CharacterDB
 from db.dungeonRunDB import DungeonRunDB
+from objects.raiderIO.character import Character
+from objects.raiderIO.dungeonRun import DungeonRun
 
 engine = create_engine('sqlite:///tal.db', echo=True)
 Base.metadata.create_all(engine)
 Session = sessionmaker(bind=engine)
 
-def lookup_character(name, realm) -> Optional[CharacterDB]:
+def lookup_character(name: str, realm: str) -> Optional[CharacterDB]:
     """Look up a specific character in the database.
 
     Args:
@@ -39,7 +41,7 @@ def lookup_character(name, realm) -> Optional[CharacterDB]:
         return None
     finally:
         session.close()
-def lookup_run(run_id) -> Optional[DungeonRunDB]:
+def lookup_run(run_id: int) -> Optional[DungeonRunDB]:
     """Look up a specific run in the database.
 
     Args:
@@ -61,7 +63,7 @@ def lookup_run(run_id) -> Optional[DungeonRunDB]:
         return None
     finally:
         session.close()
-def add_character(character) -> bool:
+def add_character(character: Character) -> bool:
     """Add a character to the database.
 
     Args:
@@ -102,7 +104,7 @@ def add_character(character) -> bool:
         return
     finally:
         session.close()
-def update_character(character) -> bool:
+def update_character(character: Character) -> bool:
     """Update an existing character in the database.
 
     Args:
@@ -142,7 +144,7 @@ def update_character(character) -> bool:
         return
     finally:
         session.close()
-def update_character_reporting(character) -> bool:
+def update_character_reporting(character: Character) -> bool:
     """Update the reporting status of an existing character in the database.
 
     Args:
@@ -169,7 +171,7 @@ def update_character_reporting(character) -> bool:
         return
     finally:
         session.close()
-def set_guild_run(run) -> bool:
+def set_guild_run(run: DungeonRun) -> bool:
     """Set a run as a guild run.
 
     Args:
@@ -218,7 +220,7 @@ def remove_character(name, realm) -> bool:
         return None
     finally:
         session.close()
-def add_dungeon_run(character, run) -> bool:
+def add_dungeon_run(character: Character, run: DungeonRun) -> bool:
     """Add a dungeon run to the database.
 
     Args:
