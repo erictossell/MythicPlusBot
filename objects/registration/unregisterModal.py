@@ -1,18 +1,26 @@
-import csv
 import discord
 import db
-
-
 from objects.raiderIO.raiderIOService import RaiderIOService
-filename = './members.csv'
+
 class UnregisterModal(discord.ui.Modal):
+    """The modal that is used to unregister a character.
+
+    Args:
+        discord (ui.Modal): A modal view.
+    """
     def __init__(self, *args, **kwargs) -> None:
+        """The constructor for the UnregisterModal class.
+        """
         super().__init__(*args, **kwargs)
-    
         self.add_item(discord.ui.InputText(label="Which character do you want to unregister?", required= True))
         self.add_item(discord.ui.InputText(label="Character Realm: (Defaults to Area-52)", required= False))
         
-    async def callback(self, interaction: discord.Interaction):
+    async def callback(self, interaction: discord.Interaction) -> None:
+        """The callback for the unregister modal.
+
+        Args:
+            interaction (discord.Interaction): A Discord interaction.
+        """
         try:
             name = self.children[0].value.capitalize()
             realm = self.children[1].value.capitalize()
@@ -22,11 +30,11 @@ class UnregisterModal(discord.ui.Modal):
                 realm = 'Area-52'
             character = RaiderIOService.get_character(name, realm)
             
-            if character == None:
+            if character is None:
                 await interaction.response.send_message('Character '+ name +' on ' + realm + ' not found', ephemeral=True)
                 return
             existing_character = db.lookup_character(name, realm)                    
-            if existing_character == None:
+            if existing_character is None:
                 await interaction.response.send_message('This character is not registered.', ephemeral=True)
                 return
             elif existing_character.discord_user_id != userID:                        

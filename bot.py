@@ -30,10 +30,13 @@ handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(me
 logger.addHandler(handler)
 
 def load_extensions():
+    """Load the cogs from the cogs_list.
+    """
     for cog in cogs_list:
         bot.load_extension(cog)
 
 def main():
+    """The main function for the bot."""
     load_extensions()
     bot.run(os.getenv('DISCORD_TOKEN'))
 
