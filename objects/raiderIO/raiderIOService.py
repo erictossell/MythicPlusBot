@@ -1,4 +1,5 @@
 import re
+from typing import List, Optional
 import requests
 
 import json
@@ -11,27 +12,57 @@ from objects.raiderIO.scoreColor import ScoreColor
 from objects.raiderIO.member import Member
 
 
-def get_score_colors():
-        scoreColors = []
-        try:        
-            request = requests.get('https://raider.io/api/v1/mythic-plus/score-tiers')            
-            for score in request.json():
-                scoreColors.append(ScoreColor(score['score'], score['rgbHex'])) 
-        except:
-            print('Error: Score colors not found.')
-        return scoreColors    
-    
+def get_score_colors() -> Optional[List[ScoreColor]]:
+    """This method gets the score colors from the Raider.IO API.
+
+    Returns:
+        Optional[List[ScoreColor]]: Returns a list of ScoreColor objects or None if an error occurs.
+    """
+    scoreColors = []
+    try:        
+        request = requests.get('https://raider.io/api/v1/mythic-plus/score-tiers')
+        for score in request.json():
+            scoreColors.append(ScoreColor(score['score'], score['rgbHex'])) 
+        return scoreColors 
+    except Exception as exception:
+        print(exception)
+        return None
+
 class RaiderIOService:
+    """The RaiderIOService class is responsible for making requests to the Raider.IO API.
+    """
     def __init__(self):
         self = self
                 
-    async def get_character(name, realm='Area-52', scoreColors=get_score_colors()):
+    async def get_character(name: str, realm='Area-52', scoreColors=get_score_colors()) -> Optional[Character]:
+        """Get a specific character from the Raider.IO API.
+
+        Args:
+            name (string): The name of the character.
+            realm (str, optional): The realm of the character. Defaults to 'Area-52'.
+            scoreColors (List[ScoreColor], optional): A list of the current score colors.
+                Pass this value into the method to avoid making multiple requests to the Raider.IO API.
+            
+                Defaults to get_score_colors().
+
+        Returns:
+            Character: Returns a Character object or None if an error occurs.
+        """
         region = 'us'
         print('RIO Service: Looking up character: ' + name)
                
         try:
             request = requests.get('https://raider.io/api/v1/characters/profile?region='+region+'&realm='+realm+'&name='+name+'&fields=gear,mythic_plus_scores_by_season:current,mythic_plus_ranks,mythic_plus_best_runs,mythic_plus_recent_runs') 
-            if request.status_code == 200:
+            if request.status_code == 404:
+                print('Character not found: ' + name)
+                return None
+            elif request.status_code == 429:
+                print('Too many requests.')
+                return None 
+            elif request.status_code == 500:
+                print('Internal server error.')
+                return None
+            elif request.status_code == 200:
                 print('RIO Service: 200')
                 faction = request.json()['faction'] 
                 print('Faction: ' + faction)
@@ -73,18 +104,24 @@ class RaiderIOService:
                 last_crawled_at = request.json()['last_crawled_at']
                 print('Last Crawled At: ' + last_crawled_at)              
                 
-                character = Character(name,realm, faction, role, spec, playerClass, achievementPoints, item_level, score, score_color, rank, best_runs, recent_runs,thumbnail, url, last_crawled_at )
+                character = Character(name,
+                                      realm,
+                                      faction,
+                                      role,
+                                      spec,
+                                      playerClass,
+                                      achievementPoints,
+                                      item_level,
+                                      score,
+                                      score_color,
+                                      rank,
+                                      best_runs,
+                                      recent_runs,
+                                      thumbnail,
+                                      url,
+                                      last_crawled_at)
                 print('Character found: ' + character.name)
-                return character
-            elif request.status_code == 404:
-                print('Character not found: ' + name)
-                return None
-            elif request.status_code == 429:
-                print('Too many requests.')
-                return None 
-            elif request.status_code == 500:
-                print('Internal server error.')
-                return None        
+                return character    
             else:
                 print('Error: Character not found.')
                 return None   
@@ -92,7 +129,8 @@ class RaiderIOService:
             print(e)
             return None
                      
-    async def get_members():        
+    async def get_members() -> Optional[List[Member]]:
+        """Get a list of members from the Raider.IO API."""    
         try:
             pattern = re.compile(r'^[^0-9]*$')
             members = []           
@@ -103,25 +141,50 @@ class RaiderIOService:
                         members.append(Member(member['rank'], str(member['character']['name']), member['character']['class'], member['character']['last_crawled_at'], member['character']['profile_url']))
                     else:                     
                         print('Found a character with a number in the name ' + member['character']['name'])
+            if len(members) > 0:
+                return members
+            elif len(members) == 0:
+                print('Error: No members found.')
+                return None
         except Exception as e:
             print(e)
             print('Error: Guild not found.')
         finally:
             print('Finished grabbing members.')
-            return members
+            
               
-    async def get_mythic_plus_affixes():
+    async def get_mythic_plus_affixes() -> Optional[List[Affix]]:
+        """Get a list of affixes from the Raider.IO API.
+
+        Returns:
+            Optional[List[Affix]]: Returns a list of affixes or none if an error occurs.
+        """
         try:        
-            request = requests.get('https://raider.io/api/v1/mythic-plus/affixes?region=us&locale=en')        
+            request = requests.get('https://raider.io/api/v1/mythic-plus/affixes?region=us&locale=en')
             affixes = []
             for affix in request.json()['affix_details']:
-                affixes.append(Affix(affix['name'], affix['description'], affix['wowhead_url']))            
-        except:
-            print('Error: Affixes not found.')
-            return       
-        return affixes 
-    
-    async def get_guild_run(id, season):
+                affixes.append(Affix(affix['name'], affix['description'], affix['wowhead_url']))
+            if len(affixes) > 0:
+                return affixes
+            else:
+                print('Error: No affixes found.')
+                return None
+        except Exception as exception:
+            print(exception)
+            return None       
+         
+    async def get_guild_run(id, season) -> Optional[bool]:
+        """Get a guild run from the Raider.IO API.
+
+        Args:
+            id (int): The RaiderIO id of the run.
+            season (string): A string representing the season. 
+            Examples: 'season-bfa-4'
+                      'season-df-1'
+
+        Returns:
+            Optional[bool]: True if a guild run is found, False if not.
+        """
         try:
             request = requests.get('https://raider.io/api/v1/mythic-plus/run-details?season='+season+'&id='+id)
                 
@@ -145,6 +208,6 @@ class RaiderIOService:
             else:
                 print('Guild run not found: ' + id)
                 return None           
-        except:
-            print('Error: Run not found.')
-            return
+        except Exception as exception:
+            print('Error: ' + exception)
+            return None

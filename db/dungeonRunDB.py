@@ -6,6 +6,14 @@ from sqlalchemy.orm import relationship
 from db.base import Base
 
 class DungeonRunDB(Base):
+    """DungeonRunDB class is used to create the dungeon_runs table in the database.
+
+    Args:
+        Base (Base): The base type for the DB.
+
+    Returns:
+        DungeonRunDB: Holds the dungeon_runs table in the database.
+    """
     __tablename__ = 'dungeon_runs'
     
     id = Column(Integer, primary_key=True)   
@@ -30,8 +38,20 @@ class DungeonRunDB(Base):
     character_id = Column(Integer, ForeignKey('characters.id'))   
     character = relationship("CharacterDB", back_populates="dungeon_runs")
     
-    
-    def __init__(self,id, season, name, short_name, mythic_level, completed_at, clear_time_ms, par_time_ms, num_keystone_upgrades, score, url, character):
+    def __init__(self,
+                 id,
+                 season,
+                 name,
+                 short_name,
+                 mythic_level,
+                 completed_at,
+                 clear_time_ms,
+                 par_time_ms,
+                 num_keystone_upgrades,
+                 score,
+                 url,
+                 character):
+        """DungeonRunDB constructor"""
         self.id = id
         self.season = season
         self.name = name
@@ -53,6 +73,11 @@ class DungeonRunDB(Base):
         self.character = character
         
     def __repr__(self):
+        """This method is used to print the DungeonRunDB object in a readable format.
+
+        Returns:
+            string: Readable format of the DungeonRunDB object.
+        """
         return f"DungeonRunDB(id={self.id}, season={self.season}, name={self.name}, short_name={self.short_name}, mythic_level={self.mythic_level}, completed_at={self.completed_at}, clear_time_ms={self.clear_time_ms}, par_time_ms={self.par_time_ms}, num_keystone_upgrades={self.num_keystone_upgrades}, score={self.score}, url={self.url}, character={self.character})" 
     
           

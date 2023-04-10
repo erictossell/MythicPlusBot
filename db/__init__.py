@@ -1,7 +1,7 @@
 ##---------------Take a Lap Discord Bot-----------------
 #Description: This file is used to create the database and tables for the bot. It is also used to query the database for information.
 #Author: Eriim
-
+from typing import Optional, List
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from db.base import Base
@@ -12,60 +12,109 @@ engine = create_engine('sqlite:///tal.db', echo=True)
 Base.metadata.create_all(engine)
 Session = sessionmaker(bind=engine)
 
-def lookup_character(name, realm):
+def lookup_character(name, realm) -> Optional[CharacterDB]:
+    """Look up a specific character in the database.
+
+    Args:
+        name (string): The name of the character to look up.
+        realm (string): The realm of the character to look up.
+
+    Returns:
+        existing_character: returns a character object if found, otherwise returns None.
+    """
     print('DB: looking up character: ' + name + ' on realm: ' + realm)
     session = Session()
-    try:        
+    try:
         existing_character = session.query(CharacterDB).filter(CharacterDB.name == name and CharacterDB.realm == realm).first()
-        if existing_character == None:
+        if existing_character is None:
             print('DB: character not found: ' + name + ' on realm: ' + realm)
-        elif str(existing_character.realm).capitalize() == str(realm).capitalize() and str(existing_character.name).capitalize() == str(name).capitalize(): 
-            print('DB: found character: ' + existing_character.name + ' on realm: ' + existing_character.realm)          
+        elif str(existing_character.realm).capitalize() == str(realm).capitalize() and str(existing_character.name).capitalize() == str(name).capitalize():
+            print('DB: found character: ' + existing_character.name + ' on realm: ' + existing_character.realm)
             return existing_character
-        else:            
+        else:
             return None
-    except Exception as e:
-        print(e)
-        session.rollback()
-        return None
-    finally:
-        session.close()   
-def lookup_run(id):
-    session = Session()
-    try:        
-        existing_run = session.query(DungeonRunDB).filter(DungeonRunDB.id == id).first()
-        if existing_run != None:            
-            return existing_run
-        else:            
-            return None
-    except Exception as e:
-        print(e)
+    except Exception as exception:
+        print(exception)
         session.rollback()
         return None
     finally:
         session.close()
-def add_character(character):
+def lookup_run(run_id) -> Optional[DungeonRunDB]:
+    """Look up a specific run in the database.
+
+    Args:
+        run_id (integer): The run id to look up.
+
+    Returns:
+        existing_run: returns a run object if found, otherwise returns None.
+    """
     session = Session()
-    try:        
+    try:
+        existing_run = session.query(DungeonRunDB).filter(DungeonRunDB.id == run_id).first()
+        if existing_run is not None:
+            return existing_run
+        else:
+            return None
+    except Exception as exception:
+        print(exception)
+        session.rollback()
+        return None
+    finally:
+        session.close()
+def add_character(character) -> bool:
+    """Add a character to the database.
+
+    Args:
+        character (Character): The Character.py object to add to the database.
+
+    Returns:
+        bool: Returns True if the character was added to the database, otherwise returns False.
+    """
+    session = Session()
+    try:
         existing_character = session.query(CharacterDB).filter(CharacterDB.name == character.name and CharacterDB.realm == character.realm).first()
         if existing_character.realm.capitalize() != character.realm.capitalize() or existing_character.name.capitalize() != character.name.capitalize():
-            characterDB = CharacterDB(character.discord_user_id, character.name, character.realm, character.faction, character.region, character.role, character.spec_name, character.class_name, character.achievement_points, character.item_level, character.score, character.rank, character.thumbnail_url, character.url, character.last_crawled_at, character.is_reporting, character.dungeon_runs)
-            session.add(characterDB)
+            character_db = CharacterDB(
+                character.discord_user_id,
+                character.name, character.realm,
+                character.faction,
+                character.region,
+                character.role,
+                character.spec_name,
+                character.class_name,
+                character.achievement_points,
+                character.item_level,
+                character.score,
+                character.rank,
+                character.thumbnail_url,
+                character.url,
+                character.last_crawled_at,
+                character.is_reporting,
+                character.dungeon_runs)
+            session.add(character_db)
             session.commit()            
             return True
         else:            
             return False
-    except Exception as e:
-        print(e)
+    except Exception as exception:
+        print(exception)
         session.rollback()
         return
     finally:
         session.close()
-def update_character(character):
+def update_character(character) -> bool:
+    """Update an existing character in the database.
+
+    Args:
+        character (Character): The Character.py object to update in the database.
+
+    Returns:
+        bool: Returns True if the character was updated in the database, otherwise returns False.
+    """
     session = Session()
     try:        
         existing_character = session.query(CharacterDB).filter(CharacterDB.name == character.name and CharacterDB.realm == character.realm).first()
-        if existing_character != None:
+        if existing_character is not None:
             existing_character.discord_user_id = character.discord_user_id
             existing_character.name = character.name
             existing_character.realm = character.realm
@@ -87,95 +136,143 @@ def update_character(character):
             return True
         else:
             return False
-    except Exception as e:
+    except Exception as exception:
         session.rollback()
-        print(e)
+        print(exception)
         return
     finally:
         session.close()
-def update_character_reporting(character):
+def update_character_reporting(character) -> bool:
+    """Update the reporting status of an existing character in the database.
+
+    Args:
+        character (Character): The Character.py object to update in the database.
+
+    Returns:
+        Bool: Returns True if the character was updated in the database, otherwise returns False.
+    """
     session = Session()
     try:
         
         existing_character = session.query(CharacterDB).filter(CharacterDB.name == character.name and CharacterDB.realm == character.realm).first()
-        if existing_character != None:
-            if existing_character.is_reporting == True:
+        if existing_character is not None:
+            if existing_character.is_reporting is True:
                 existing_character.is_reporting = False
             else:
                 existing_character.is_reporting = True
             session.commit()
             return True
-    except Exception as e:
-        print(e)
+        else:
+            return False
+    except Exception as exception:
+        print(exception)
         return
     finally:
         session.close()
-def set_guild_run(run):
+def set_guild_run(run) -> bool:
+    """Set a run as a guild run.
+
+    Args:
+        run (DungeonRun): The DungeonRun.py object to update in the database.
+
+    Returns:
+        Bool: Returns True if the run was updated in the database, otherwise returns False.
+    """
     session = Session()
     try:        
         existing_run = session.query(DungeonRunDB).filter(DungeonRunDB.id == run.id).first()
-        if existing_run != None:
+        if existing_run is not None:
             existing_run.is_guild_run = True
-        session.commit()
-        return True
-    except Exception as e:
+            session.commit()
+            return True
+        else:
+            return False
+    except Exception as exception:
         session.rollback()
-        print(e)
+        print(exception)
         return
     finally:
         session.close()
-def remove_character(name, realm):
+def remove_character(name, realm) -> bool:
+    """Remove a character from the database.
+
+    Args:
+        name (string): The name of the character to remove.
+        realm (string): The realm of the character to remove.
+
+    Returns:
+        bool: Returns True if the character was removed from the database, otherwise returns False.
+    """
     session = Session()
     try:
         existing_character = session.query(CharacterDB).filter(CharacterDB.name == name and CharacterDB.realm == realm).first()
-        if existing_character != None:
+        if existing_character is not None:
             session.delete(existing_character)
             session.commit()
             return True
         else:            
             return False
-    except Exception as e:
+    except Exception as exception:
         session.rollback()
-        print(e)
+        print(exception)
         return None
     finally:
         session.close()
-def add_dungeon_run(character, run):
+def add_dungeon_run(character, run) -> bool:
+    """Add a dungeon run to the database.
+
+    Args:
+        character (characterDB): The CharacterDB.py object for the character that completed the dungeon run.
+        run (DungeonRun): The DungeonRun.py object to add to the database.
+
+    Returns:
+        bool: Returns True if the dungeon run was added to the database, otherwise returns False.
+    """
     session = Session()
-    try: 
+    try:
         existing_character = session.query(CharacterDB).filter(CharacterDB.name == character.name and CharacterDB.realm == character.realm).first()
-        if existing_character != None:
+        if existing_character is not None:
             dungeon_run = DungeonRunDB(run.id, run.season, run.name, run.short_name, run.mythic_level, run.completed_at, run.clear_time_ms, run.par_time_ms, run.num_keystone_upgrades, run.score, run.url, existing_character)
             session.add(dungeon_run)
             session.commit()
             return True
         else:
             return False
-    except Exception as e:
+    except Exception as exception:
         session.rollback()
-        print(e)
+        print(exception)
         return None
     finally:
         session.close()
-def get_all_characters():
+def get_all_characters() -> List[CharacterDB]:
+    """Get all of the characters from the database.
+
+    Returns:
+        characters_list: a list of all of the characters in the database.
+    """
     session = Session()
     try:        
         characters_list = session.query(CharacterDB).all()
         return characters_list
-    except Exception as e:
-        print(e)
+    except Exception as exception:
+        print(exception)
         session.rollback()
         return None
-    finally:       
+    finally:
         session.close()
-def get_all_runs():
+def get_all_runs() -> List[DungeonRunDB]:
+    """Get all of the runs from the database.
+
+    Returns:
+        runs_list: A list of all of the runs in the database.
+    """
     session = Session()
-    try:    
+    try:
         runs_list = session.query(DungeonRunDB).all()
         return runs_list
-    except Exception as e:
+    except Exception as exception:
         session.rollback()
-        print(e)
+        print(exception)
         return None
     finally:
         session.close()

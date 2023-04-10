@@ -4,7 +4,12 @@
 
 from discord.ext import commands
 
-class membersCog(commands.Cog):
+class MembersCog(commands.Cog):
+    """The member events for the bot.
+
+    Args:
+        commands (commands.Cog): The parent discord class for the cog.
+    """
     def __init__(self, bot):
         self.bot = bot
         print("Member events are initialized")
@@ -20,12 +25,11 @@ class membersCog(commands.Cog):
     @commands.Cog.listener()
     async def on_member_update(self, before, after):
         print(f'{before} has updated their profile.')        
-   
-        
-    
-    
-    
-    
-    
+
 def setup(bot):
-    bot.add_cog(membersCog(bot))
+    """Set up the member events cog.
+
+    Args:
+        bot (bot): The current discord bot.
+    """
+    bot.add_cog(MembersCog(bot))

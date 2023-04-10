@@ -1,5 +1,3 @@
-from objects.raiderIO.scoreColor import ScoreColor
-
 def binary_search_score_colors(score_color_list, input_score):
         
     left = 0

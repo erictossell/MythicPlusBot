@@ -1,7 +1,11 @@
 import discord
-
+#This is not used currently. It is a placeholder for the future.
 class PollView(discord.ui.View):          
-    
+    """The PollView class represents the view for the poll command.
+
+    Args:
+        discord (ui.View): The parent class for the PollView class.
+    """
     @discord.ui.select(
         placeholder = 'Select a poll type',
         min_values = 1,

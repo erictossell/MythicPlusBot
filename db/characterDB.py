@@ -2,13 +2,12 @@
 #Description: This file contains the CharacterDB class which is used to create the character table in the database.
 #Author: Eriim
 
-from sqlalchemy import Column, DateTime, Integer, String, ForeignKey, Boolean
+from sqlalchemy import Column, DateTime, Integer, String, Boolean
 from sqlalchemy.orm import relationship
 from db.base import Base
-from db.dungeonRunDB import DungeonRunDB
-
 
 class CharacterDB(Base):
+    """CharacterDB class which is used to create the character table in the database."""
     __tablename__ = 'characters'
     
     id = Column(Integer, primary_key=True) 
@@ -36,7 +35,25 @@ class CharacterDB(Base):
     
     dungeon_runs = relationship("DungeonRunDB", back_populates="character")  
     
-    def __init__(self, discord_user_id, name, realm, faction, region, role, spec_name, class_name, achievement_points, item_level, score, rank, thumbnail_url, url, last_crawled_at, is_reporting, dungeon_runs):
+    def __init__(self,
+                 discord_user_id,
+                 name,
+                 realm,
+                 faction,
+                 region,
+                 role,
+                 spec_name,
+                 class_name,
+                 achievement_points,
+                 item_level,
+                 score,
+                 rank,
+                 thumbnail_url,
+                 url,
+                 last_crawled_at,
+                 is_reporting,
+                 dungeon_runs):
+        """CharacterDB constructor"""
         self.discord_user_id = discord_user_id
         
         self.name = name
