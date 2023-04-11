@@ -1,6 +1,6 @@
 import discord
 import db
-from objects.raiderIO.raiderIOService import RaiderIOService
+import raiderIO as RaiderIO
 
 class UnregisterModal(discord.ui.Modal):
     """The modal that is used to unregister a character.
@@ -28,7 +28,7 @@ class UnregisterModal(discord.ui.Modal):
             
             if self.children[1].value == '':
                 realm = 'Area-52'
-            character = RaiderIOService.get_character(name, realm)
+            character = RaiderIO.get_character(name, realm)
             
             if character is None:
                 await interaction.response.send_message('Character '+ name +' on ' + realm + ' not found', ephemeral=True)

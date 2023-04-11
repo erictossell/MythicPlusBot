@@ -5,10 +5,10 @@
 import re
 import discord
 from discord.ext import commands
-from objects.raiderIO.raiderIOService import RaiderIOService
+import raiderIO as RaiderIO
 from objects.registration.registerButton import RegisterButton
 
-class RaiderIO(commands.Cog):
+class RaiderIOCog(commands.Cog):
     """RaiderIO Commands Cog
 
     Args:
@@ -28,10 +28,10 @@ class RaiderIO(commands.Cog):
             if len(args) == 0:
                 await ctx.channel.send('Please provide a character name and realm.')
             if len(args) == 1:
-                character = await RaiderIOService.get_character(args[0])          
+                character = await RaiderIO.get_character(args[0])          
                 await ctx.channel.send(embed=character.get_best_runs_embed())    
             if len(args) == 2:
-                character = await RaiderIOService.get_character(args[0], args[1])
+                character = await RaiderIO.get_character(args[0], args[1])
                 await ctx.channel.send(embed=character.get_best_runs_embed())
         except Exception as exception:
             await ctx.channel.send('Type !help to see how to use this command.')
@@ -49,10 +49,10 @@ class RaiderIO(commands.Cog):
             if len(args) == 0:
                 await ctx.channel.send('Please provide a character name and realm.')
             if len(args) == 1:
-                character = await RaiderIOService.get_character(args[0])
+                character = await RaiderIO.get_character(args[0])
                 await ctx.channel.send(embed=character.get_recent_runs_embed())
             if len(args) == 2:
-                character = await RaiderIOService.get_character(args[0], args[1])
+                character = await RaiderIO.get_character(args[0], args[1])
                 await ctx.channel.send(embed=character.get_recent_runs_embed())
         except Exception as exception:
             await ctx.channel.send('Type !help to see how to use this command.')
@@ -72,13 +72,13 @@ class RaiderIO(commands.Cog):
                 await ctx.channel.send('Please provide a character name and realm.')
             if len(args) == 1:
                 if pattern.search(args[0]) and args[0].count("-") == 1:
-                    character = await RaiderIOService.get_character(args[0].split("-")[0], args[0].split("-")[1])
+                    character = await RaiderIO.get_character(args[0].split("-")[0], args[0].split("-")[1])
                     await ctx.channel.send(embed=character.get_character_embed())
                     return
-                character = await RaiderIOService.get_character(args[0])
+                character = await RaiderIO.get_character(args[0])
                 await ctx.send(embed=character.get_character_embed())                
             if len(args) == 2:
-                character = await RaiderIOService.get_character(args[0], args[1])
+                character = await RaiderIO.get_character(args[0], args[1])
                 await ctx.channel.send(embed=character.get_character_embed())
         except Exception as exception:
             await ctx.channel.send(f' I was not able to find a character with name:  {args[0]}  Type !help to see how to use this command.')
@@ -111,7 +111,7 @@ class RaiderIO(commands.Cog):
             ctx (context): The current discord context.
         """
         try:
-            affixes = await RaiderIOService.get_mythic_plus_affixes()
+            affixes = await RaiderIO.get_mythic_plus_affixes()
             embed = discord.Embed(title='Current Mythic+ Affixes', description= '', color=discord.Color.green())
             for affix in affixes:
                 embed.add_field(name=affix.name, value=affix.description, inline=False)
@@ -136,5 +136,5 @@ def setup(bot):
     Args:
         bot (discord.bot): The bot that is running the cog.
     """
-    bot.add_cog(RaiderIO(bot))
+    bot.add_cog(RaiderIOCog(bot))
     

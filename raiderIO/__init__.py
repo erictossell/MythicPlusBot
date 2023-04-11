@@ -1,19 +1,20 @@
+import asyncio
+from datetime import datetime
+import json
 import re
 from typing import List, Optional
+
 import requests
-
-import json
 import db
-from util.binarySearch import binary_search_score_colors
+from raiderIO.affix import Affix
+from raiderIO.character import Character
+from raiderIO.dungeonRun import DungeonRun
+from raiderIO.member import Member
+from raiderIO.scoreColor import ScoreColor
+import util
 
-from objects.raiderIO.affix import Affix
-from objects.raiderIO.character import Character
-from objects.raiderIO.dungeonRun import DungeonRun
-from objects.raiderIO.scoreColor import ScoreColor
-from objects.raiderIO.member import Member
 
 API_URL = 'https://raider.io/api/v1/'
-
 
 def get_score_colors() -> Optional[List[ScoreColor]]:
     """This method gets the score colors from the Raider.IO API.
@@ -30,14 +31,8 @@ def get_score_colors() -> Optional[List[ScoreColor]]:
     except Exception as exception:
         print(exception)
         return None
-
-class RaiderIOService:
-    """The RaiderIOService class is responsible for making requests to the Raider.IO API.
-    """
-    def __init__(self):
-        self = self
-                
-    async def get_character(name: str,
+    
+async def get_character(name: str,
                             realm='Area-52',
                             scoreColors=get_score_colors(),
                             region='us') -> Optional[Character]:
@@ -122,7 +117,7 @@ class RaiderIOService:
                                                   run['url']))
                 #print('Recent Runs: ' + str(len(recent_runs)))
                 
-                score_color = binary_search_score_colors(scoreColors, int(score))
+                score_color = util.binary_search_score_colors(scoreColors, int(score))
                 print('Score Color: ' + score_color)
                 thumbnail = request.json()['thumbnail_url']
                 print('Thumbnail: ' + thumbnail)
@@ -155,8 +150,8 @@ class RaiderIOService:
         except Exception as e:
             print(e)
             return None
-                     
-    async def get_members() -> Optional[List[Member]]:
+        
+async def get_members() -> Optional[List[Member]]:
         """Get a list of members from the Raider.IO API."""    
         try:
             pattern = re.compile(r'^[^0-9]*$')
@@ -182,9 +177,8 @@ class RaiderIOService:
             print('Error: Guild not found.')
         finally:
             print('Finished grabbing members.')
-            
-              
-    async def get_mythic_plus_affixes() -> Optional[List[Affix]]:
+
+async def get_mythic_plus_affixes() -> Optional[List[Affix]]:
         """Get a list of affixes from the Raider.IO API.
 
         Returns:
@@ -204,9 +198,9 @@ class RaiderIOService:
                 return None
         except Exception as exception:
             print(exception)
-            return None       
-         
-    async def get_run(id: int, season: str) -> Optional[bool]:
+            return None    
+        
+async def get_run(id: int, season: str) -> Optional[bool]:
         """Get a guild run from the Raider.IO API.
 
         Args:
@@ -244,4 +238,104 @@ class RaiderIOService:
                 return None           
         except Exception as exception:
             print('Error: ' + exception)
-            return None
+            return None   
+        
+async def crawl_characters() -> None:
+        """Crawl the Raider.IO API for new data on characters in the database.\n
+        This method has a 0.3 second delay between each API call to avoid rate limiting.
+        """
+        try:
+            print('trying to crawl characters')
+            
+            characters_list = db.get_all_characters()
+                     
+            for character in characters_list:
+                await asyncio.sleep(0.3)
+                if character.is_reporting is True and character.score > 0:
+                    
+                    character_io = await get_character(character.name,
+                                                                       character.realm)
+                    
+                    for run in character_io.best_runs:
+                        if run is None:
+                            return
+                        elif run is not None and db.lookup_run(run.id) is None:
+                            run.completed_at = datetime.strptime(run.completed_at,
+                                                                 '%Y-%m-%dT%H:%M:%S.%fZ')
+                            db.add_dungeon_run(character, run)
+                        else:
+                            print("No best runs for " + character.name)
+                    for run in character_io.recent_runs:
+                        if run is None:
+                            return
+                        elif run is not None and db.lookup_run(run.id) is None:
+                            run.completed_at = datetime.strptime(run.completed_at,
+                                                                 '%Y-%m-%dT%H:%M:%S.%fZ')
+                            db.add_dungeon_run(character, run)
+                        else:
+                            print("No recent runs for " + character.name)
+                            
+        except Exception as exception:
+            print(exception)          
+
+async def crawl_guild_members() -> None:
+    """Crawl the Raider.IO API for new guild members. \n
+    This method has a 0.3 second delay between each API call to avoid rate limiting.
+    """
+    print('Crawler: trying to crawl guild members')
+    try:             
+        members_list = await get_members()
+        counter = 0
+        print(len(members_list))
+        for member in members_list:
+            print(member.name)              
+                    
+        for member in members_list:
+            db_character = db.lookup_character(member.name, 'Area-52')
+            await asyncio.sleep(0.3)
+            
+            print('Crawler: calling RIO Service for: ' + member.name)
+            score_colors_list = await get_score_colors()
+            character = await get_character(str(member.name),
+                                                            'Area-52', score_colors_list)
+            
+            if character is None:
+                print("Crawler: Character not found: " + member.name)
+            elif character is not None and db_character is None:
+                print('Crawler: This is where I would add this character' + character.name)
+                new_character = db.CharacterDB(173958345022111744,
+                                                character.name,
+                                                character.realm,
+                                                character.faction,
+                                                character.region,
+                                                character.role,
+                                                character.spec_name,
+                                                character.class_name,
+                                                character.achievement_points,
+                                                character.item_level,
+                                                character.score,
+                                                character.rank,
+                                                character.thumbnail_url,
+                                                character.url,
+                                                datetime.strptime(character.last_crawled_at,
+                                                                    '%Y-%m-%dT%H:%M:%S.%fZ'),
+                                                True,
+                                                [])
+                print(type(new_character))
+                print(new_character)
+                db.add_character(new_character) 
+            else:
+                print("Crawler: Character already exists: " + member.name)
+            counter += 1    
+            print(f'Crawler: Character number: {counter} has been crawled.')        
+    except Exception as exception:
+        print(exception)
+        return False
+    finally:
+        print('Crawler: finished crawling guild members')
+            
+def crawl_runs():
+    try:
+        print('executing crawl runs')
+    except Exception as exception:
+        print(exception)            

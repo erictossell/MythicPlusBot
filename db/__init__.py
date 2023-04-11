@@ -1,14 +1,17 @@
 ##---------------Take a Lap Discord Bot-----------------
 #Description: This file is used to create the database and tables for the bot. It is also used to query the database for information.
-#Author: Eriim
+#Author: Eriim\
+    
 from typing import Optional, List
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from db.base import Base
+
 from db.characterDB import CharacterDB
 from db.dungeonRunDB import DungeonRunDB
-from objects.raiderIO.character import Character
-from objects.raiderIO.dungeonRun import DungeonRun
+from raiderIO.character import Character
+from raiderIO.dungeonRun import DungeonRun
+
 
 engine = create_engine('sqlite:///tal.db', echo=True)
 Base.metadata.create_all(engine)

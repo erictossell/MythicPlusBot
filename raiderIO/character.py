@@ -1,8 +1,10 @@
 from datetime import datetime
 from typing import List
 import discord
-from objects.raiderIO.scoreColor import ScoreColor
-from objects.raiderIO.dungeonRun import DungeonRun
+from raiderIO.dungeonRun import DungeonRun
+from raiderIO.scoreColor import ScoreColor
+
+
 from util import convert_millis, hex_to_rgb
 
 class Character:

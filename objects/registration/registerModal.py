@@ -1,7 +1,8 @@
 from datetime import datetime
 import discord 
 import db
-from objects.raiderIO.raiderIOService import RaiderIOService
+import raiderIO as RaiderIO
+
 filename = './members.csv'
 
 class RegisterModal(discord.ui.Modal):
@@ -31,7 +32,7 @@ class RegisterModal(discord.ui.Modal):
             
             if self.children[1].value == '':
                 realm = 'Area-52'
-            character = RaiderIOService.get_character(name, realm)
+            character = await RaiderIO.get_character(name, realm)
             existing_character = db.lookup_character(name, realm)            
                         
             if character is None:

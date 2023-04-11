@@ -1,9 +1,10 @@
 # Description: General commands for the bot.
 import time
+import raiderIO as RaiderIO
 from discord.ext import commands
 from objects.dice import Dice
 from objects.poll.createPollButton import CreatePollButton
-from objects.raiderIO.raiderIOCrawler import RaiderIOCrawler
+
 class GeneralCog(commands.Cog):
     """The general commands cog.
 
@@ -59,7 +60,7 @@ class GeneralCog(commands.Cog):
             print('crawl command called')
             start_time = time.time()
             await ctx.send('Crawling Raider.IO characters...')
-            await RaiderIOCrawler.crawl_characters(ctx)
+            await RaiderIO.crawl_characters(ctx)
             end_time = time.time()
             elapsed_time = end_time - start_time
             await ctx.send('Finished crawling Raider.IO guild members for new runs after ' + str(elapsed_time) + ' seconds.')
@@ -75,7 +76,7 @@ class GeneralCog(commands.Cog):
             print('crawl guild command called')
             start_time = time.time()
             await ctx.send('Crawling Raider.IO guild members...')
-            await RaiderIOCrawler.crawl_guild_members()
+            await RaiderIO.crawl_guild_members()
             end_time = time.time()
             elapsed_time = end_time - start_time
             await ctx.send('Finished crawling Raider.IO guild members after ' + str(elapsed_time) + ' seconds.')
@@ -91,7 +92,7 @@ class GeneralCog(commands.Cog):
             print('crawl runs command called')
             await ctx.send('Crawling Raider.IO guild runs...')
             start_time = time.time()
-            await RaiderIOCrawler.crawl_runs()
+            await RaiderIO.crawl_runs()
             end_time = time.time()
             elapsed_time = end_time - start_time
             await ctx.send('Finished crawling Raider.IO guild runs after ' + str(elapsed_time) + ' seconds.')
