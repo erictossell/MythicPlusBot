@@ -2,6 +2,8 @@
 #Description: This file is used to create the database and tables for the bot. It is also used to query the database for information.
 #Author: Eriim\
     
+
+from datetime import datetime
 from typing import Optional, List
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -10,6 +12,7 @@ from db.base import Base
 from db.character_db import CharacterDB
 from db.dungeon_run_db import DungeonRunDB
 from db.default_character_db import DefaultCharacterDB
+from db.character_run_db import CharacterRunDB
 from raiderIO.character import Character
 from raiderIO.dungeonRun import DungeonRun
 
@@ -231,7 +234,7 @@ def remove_character(name, realm) -> bool:
         return None
     finally:
         session.close()
-def add_dungeon_run(character: Character, run: DungeonRun) -> bool:
+def add_dungeon_run(dungeon_run: DungeonRun) -> bool:
     """Add a dungeon run to the database.
 
     Args:
@@ -243,25 +246,30 @@ def add_dungeon_run(character: Character, run: DungeonRun) -> bool:
     """
     session = Session()
     try:
-        existing_character = session.query(CharacterDB).filter(CharacterDB.name == character.name and CharacterDB.realm == character.realm).first()
-        if existing_character is not None:
-            dungeon_run = DungeonRunDB(run.id,
-                                       run.season,
-                                       run.name,
-                                       run.short_name,
-                                       run.mythic_level,
-                                       run.completed_at,
-                                       run.clear_time_ms,
-                                       run.par_time_ms,
-                                       run.num_keystone_upgrades,
-                                       run.score,
-                                       run.url,
-                                       existing_character)
+        existing_dungeon_run = session.query(DungeonRunDB).filter(DungeonRunDB.id == dungeon_run.id).first()
+        if existing_dungeon_run is None:
+            print('Run already exists in the database.')
+            dungeon_run = DungeonRunDB(dungeon_run.id,
+                                    dungeon_run.season,
+                                    dungeon_run.name,
+                                    dungeon_run.short_name,
+                                    dungeon_run.mythic_level,
+                                    dungeon_run.completed_at,
+                                    dungeon_run.clear_time_ms,
+                                    dungeon_run.par_time_ms,
+                                    dungeon_run.num_keystone_upgrades,
+                                    dungeon_run.score,
+                                    dungeon_run.url)
             session.add(dungeon_run)
             session.commit()
             return True
-        else:
+        elif existing_dungeon_run.id == dungeon_run.id:
+            print('Run already exists in the database.')
             return False
+        else:
+            print('Something went wrong.')
+            return False
+        
     except Exception as exception:
         session.rollback()
         print(exception)
@@ -307,7 +315,7 @@ def add_default_character(default_character: DefaultCharacterDB) -> bool:
         bool: Returns True if the character was added to the database, otherwise returns False.
     """
     session = Session()
-    try: 
+    try:
         existing_relationship = session.query(DefaultCharacterDB).filter((DefaultCharacterDB.discord_guild_id == default_character.discord_guild_id) and (DefaultCharacterDB.discord_user_id == default_character.discord_user_id)).first()
         if existing_relationship is None:
             session.add(default_character)
@@ -408,6 +416,44 @@ def get_top10_character_by_highest_item_level() -> List[CharacterDB]:
     except Exception as exception:
         print(exception)
         session.rollback()
+        return None
+    finally:
+        session.close()
+def add_character_run(character: CharacterDB, run: DungeonRunDB) -> bool:
+    """Add a character run to the database.
+
+    Args:
+        character (CharacterDB): The CharacterDB.py object to add to the database.
+        run (DungeonRunDB): The DungeonRunDB.py object to add to the database.
+
+    Returns:
+        bool: Returns True if the character run was added to the database, otherwise returns False.
+    """
+    session = Session()
+    try:
+        existing_character = session.query(CharacterDB).filter(CharacterDB.name == character.name and CharacterDB.realm == character.realm).one()
+        existing_run = session.query(DungeonRunDB).filter(DungeonRunDB.id == run.id).one()
+        if existing_character is None:
+            return False
+        elif existing_run is None:
+            return False
+        
+        else:
+            existing_character_run = session.query(CharacterRunDB).filter(CharacterRunDB.character_id == existing_character.id and CharacterRunDB.run_id == existing_run.id).one()
+            if existing_character_run is not None:
+                return False
+            else:
+                new_character_run = CharacterRunDB(existing_character.id,
+                                                existing_run.id,
+                                                datetime.datetime.now(),
+                                                datetime.datetime.now())
+                session.add(new_character_run)
+                existing_character.runs.append(existing_run)
+                session.commit()
+            return True
+    except Exception as exception:
+        session.rollback()
+        print(exception)
         return None
     finally:
         session.close()

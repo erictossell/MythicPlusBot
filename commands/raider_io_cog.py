@@ -142,7 +142,7 @@ class RaiderIOCog(commands.Cog):
             channel = await user.create_dm()
             await channel.send(f'Error in !affixes command: {exception}')
     @commands.command(name='setMain', help='Sets the default character for a user.')
-    async def default_character(self, ctx, *args):
+    async def set_main(self, ctx, *args):
         """Sets a user's default character.
 
         Args:
@@ -226,8 +226,7 @@ class RaiderIOCog(commands.Cog):
             await ctx.channel.send('Type !help to see how to use this command.')
             user = await ctx.bot.fetch_user(173958345022111744)
             channel = await user.create_dm()
-            await channel.send(f'Error in !leaderboard command: {exception}')
-    
+            await channel.send(f'Error in !leaderboard command: {exception}') 
 def setup(bot):
     """Setup function for the cog.
 
@@ -235,4 +234,3 @@ def setup(bot):
         bot (discord.bot): The bot that is running the cog.
     """
     bot.add_cog(RaiderIOCog(bot))
-    

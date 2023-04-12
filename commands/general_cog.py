@@ -22,6 +22,7 @@ class GeneralCog(commands.Cog):
             ctx (context): The current discord context.
         """
         await ctx.send(f'Pong! {round(self.bot.latency * 1000)}ms')            
+    
     @commands.command(name='roll', help='Rolls a dice with the specified number of sides.')
     async def roll(self,ctx, num_sides):
         """Roll a dice with the specified number of sides.
@@ -38,6 +39,7 @@ class GeneralCog(commands.Cog):
             user = await ctx.bot.fetch_user(173958345022111744)
             channel = await user.create_dm()
             await channel.send(f'Error in !roll command: {exception}')
+    
     @commands.command(name='testPoll', help='Sends a poll to the channel.')
     async def test_poll (self,ctx):
         """A poll using the new modal features.
@@ -48,6 +50,7 @@ class GeneralCog(commands.Cog):
         print('testPoll command called')
         view = CreatePollButton()
         await ctx.send('Take a Lap Discord Poll', view=view)
+    
     @commands.command(name="crawl")
     @commands.has_role("Guild Masters")
     async def crawl(self, ctx):
@@ -60,10 +63,13 @@ class GeneralCog(commands.Cog):
             print('crawl command called')
             start_time = time.time()
             await ctx.send('Crawling Raider.IO characters...')
-            await RaiderIO.crawl_characters(ctx.guild.id)
+            output = await RaiderIO.crawl_characters(ctx.guild.id)
+            await ctx.send(output)
             end_time = time.time()
             elapsed_time = end_time - start_time
+            
             await ctx.send('Finished crawling Raider.IO guild members for new runs after ' + str(elapsed_time) + ' seconds.')
+    
     @commands.command(name="crawlGuild")
     @commands.has_role("Guild Masters")
     async def crawl_guild(self, ctx):
@@ -80,6 +86,7 @@ class GeneralCog(commands.Cog):
             end_time = time.time()
             elapsed_time = end_time - start_time
             await ctx.send('Finished crawling Raider.IO guild members after ' + str(elapsed_time) + ' seconds.')
+    
     @commands.command(name="crawlRuns")
     @commands.has_role("Guild Masters")
     async def crawl_runs(self, ctx):

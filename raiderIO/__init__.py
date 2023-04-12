@@ -241,17 +241,20 @@ async def get_run(id: int, season: str) -> Optional[bool]:
             print('Error: ' + exception)
             return None   
         
-async def crawl_characters(discord_guild_id: int) -> None:
+async def crawl_characters(discord_guild_id: int) -> str:
         """Crawl the Raider.IO API for new data on characters in the database.\n
         This method has a 0.3 second delay between each API call to avoid rate limiting.
         This method will only crawl characters with a score greater than 0
         and that rows that are flagged for reporting.
         """
+        
+        run_counter = 0            
+        update_character_counter = 0  
         try:
             print('trying to crawl characters')
             
             characters_list = db.get_all_characters()
-                     
+                   
             for character in characters_list:
                 await asyncio.sleep(0.3)
                 
@@ -260,20 +263,22 @@ async def crawl_characters(discord_guild_id: int) -> None:
                                                        character.realm)                    
                     for run in character_io.best_runs:
                         if run is None:
-                            return
-                        elif run is not None and db.lookup_run(run.id) is None:
+                            return f'Error: An error occurred while crawling {character.name}'
+                        if run is not None and db.lookup_run(run.id) is None:
                             run.completed_at = datetime.strptime(run.completed_at,
                                                                  '%Y-%m-%dT%H:%M:%S.%fZ')
-                            db.add_dungeon_run(character, run)
+                            db.add_dungeon_run(run)
+                            run_counter += 1
                         else:
                             print("No best runs for " + character.name)
                     for run in character_io.recent_runs:
                         if run is None:
-                            return
+                            return f'Error: An error occurred while crawling {character.name}'
                         elif run is not None and db.lookup_run(run.id) is None:
                             run.completed_at = datetime.strptime(run.completed_at,
                                                                  '%Y-%m-%dT%H:%M:%S.%fZ')
-                            db.add_dungeon_run(character, run)
+                            db.add_dungeon_run(run)
+                            run_counter += 1
                         else:
                             print("No recent runs for " + character.name)
                     if character.name == character_io.name and character.realm == character_io.realm:
@@ -289,10 +294,15 @@ async def crawl_characters(discord_guild_id: int) -> None:
                         character.discord_guild_id = discord_guild_id
                         character.guild_name = character_io.guild_name
                         db.update_character(character)
+                        update_character_counter += 1
+            
 
                             
         except Exception as exception:
-            print(exception)          
+            print(exception) 
+        finally:
+            print('Finished crawling characters.')  
+            return f'Updated {update_character_counter} characters and added {run_counter} runs.'       
 
 async def crawl_guild_members(discord_guild_id) -> None:
     """Crawl the Raider.IO API for new guild members. \n
