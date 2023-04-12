@@ -201,8 +201,19 @@ async def get_mythic_plus_affixes() -> Optional[List[Affix]]:
         except Exception as exception:
             print(exception)
             return None    
+
+async def get_run_details(run_id: int, season: str):
+    """Get a specific run's details from the Raider.IO API.
+    """    
+    try:
+        request = requests.get(API_URL+f'mythic-plus/run-details?season={season}&id={run_id}')
+        print(request.json())
         
-async def get_run(id: int, season: str) -> Optional[bool]:
+    except Exception as exception:
+        print(exception)
+    
+        
+async def is_guild_run(run_id: int, season: str) -> Optional[bool]:
         """Get a guild run from the Raider.IO API.
 
         Args:
@@ -215,28 +226,32 @@ async def get_run(id: int, season: str) -> Optional[bool]:
             Optional[bool]: True if a guild run is found, False if not.
         """
         try:
-            request = requests.get(API_URL +'mythic-plus/run-details?season='+season+'&id='+id)
-                
-            data = json.loads(request.text)
-            
-            guild_member_counter = 0
-            
-            for roster in data['roster']:                            
-                if roster['guild']['id'] == 1616915:
-                    guild_member_counter += 1
-                    print('Guild member found: ' + roster['character']['name'])
-                elif db.lookup_character(roster['character']['name'],
-                                   roster['character']['realm']) is not None:
-                    guild_member_counter += 1
-                    print('Guild member found: ' + roster['character']['name'])
-            if guild_member_counter >= 5:
-                print('Guild run found: ' + id)
-                
-                return True
-                
-            else:
-                print('Guild run not found: ' + id)
-                return None           
+            request = requests.get(API_URL +f'mythic-plus/run-details?season={season}&id={run_id}')
+            if request.status_code != 200:
+                print('Error: Run not found.')
+                return None
+            elif request.status_code == 200:
+                guild_member_counter = 0
+                if request.json()['roster'] is None:
+                    print('No roster found for run: ' + str(run_id))
+                    return False
+                for roster in request.json()['roster']:
+                    if roster['guild'] is None:
+                        print('No Guild for ' + roster['character']['name'])
+                    elif roster['guild'] is not None:
+                        if roster['guild']['id'] == 1616915:
+                            guild_member_counter += 1
+                            print('Guild member found: ' + roster['character']['name'])
+                        elif db.lookup_character(roster['character']['name'],
+                                        roster['character']['realm']['name']) is not None:
+                            guild_member_counter += 1
+                            print('Guild member found: ' + roster['character']['name'])
+                if guild_member_counter >= 4:
+                    print('Guild run found: ' + str(run_id))
+                    return True
+                else:
+                    print('Guild run not found: ' + str(run_id))
+                    return False           
         except Exception as exception:
             print('Error: ' + exception)
             return None   
@@ -247,7 +262,7 @@ async def crawl_characters(discord_guild_id: int) -> str:
         This method will only crawl characters with a score greater than 0
         and that rows that are flagged for reporting.
         """
-        
+        characters_crawled = 0
         run_counter = 0            
         update_character_counter = 0  
         try:
@@ -257,7 +272,7 @@ async def crawl_characters(discord_guild_id: int) -> str:
                    
             for character in characters_list:
                 await asyncio.sleep(0.3)
-                
+                characters_crawled += 1                
                 if character.is_reporting is True and character.score > 0:
                     character_io = await get_character(character.name,
                                                        character.realm)                    
@@ -302,7 +317,7 @@ async def crawl_characters(discord_guild_id: int) -> str:
             print(exception) 
         finally:
             print('Finished crawling characters.')  
-            return f'Updated {update_character_counter} characters and added {run_counter} runs.'       
+            return f'Characters crawled: {characters_crawled} |  Updated {update_character_counter} characters and added {run_counter} runs.'
 
 async def crawl_guild_members(discord_guild_id) -> None:
     """Crawl the Raider.IO API for new guild members. \n
@@ -361,8 +376,27 @@ async def crawl_guild_members(discord_guild_id) -> None:
     finally:
         print('Crawler: finished crawling guild members')
             
-def crawl_runs():
+async def crawl_runs():
+    runs_crawled = 0
+    guild_run_counter = 0
+    
+    character_run_counter = 0
     try:
         print('executing crawl runs')
+        runs_list = db.get_all_runs()
+        for run in runs_list:
+            await asyncio.sleep(0.4)
+            is_guild = await is_guild_run(run.id, run.season)
+            runs_crawled += 1
+            if is_guild is True:
+                run.is_guild_run = True
+                db.update_dungeon_run(run)
+                guild_run_counter += 1
+            else:
+                run.is_guild_run = False
+                db.update_dungeon_run(run)   
     except Exception as exception:
-        print(exception)            
+        print(exception)
+    finally:
+        return f'Runs crawled: {runs_crawled}  | Added {character_run_counter} character runs.'
+    

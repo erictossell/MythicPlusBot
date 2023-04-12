@@ -276,6 +276,28 @@ def add_dungeon_run(dungeon_run: DungeonRun) -> bool:
         return None
     finally:
         session.close()
+def update_dungeon_run(dungeon_run : DungeonRunDB) -> bool:
+    """Update an existing dungeon run.
+
+    Args:
+        dungeon_run (DungeonRunDB): _description_
+    """
+    session = Session()
+    try: 
+        existing_dungeon_run = session.query(DungeonRunDB).filter(DungeonRunDB.id == dungeon_run.id).first()
+        if existing_dungeon_run is not None:
+            existing_dungeon_run.is_guild_run = dungeon_run.is_guild_run
+            existing_dungeon_run.is_crawled = True
+            session.commit() 
+            return True
+        else:
+            return False          
+    except Exception as exception:
+        print(exception)
+        session.rollback()
+    finally: 
+        session.close()
+        
 def get_all_characters() -> List[CharacterDB]:
     """Get all of the characters from the database.
 
@@ -451,6 +473,36 @@ def add_character_run(character: CharacterDB, run: DungeonRunDB) -> bool:
                 existing_character.runs.append(existing_run)
                 session.commit()
             return True
+    except Exception as exception:
+        session.rollback()
+        print(exception)
+        return None
+    finally:
+        session.close()
+def lookup_character_run(character: CharacterDB, run: DungeonRunDB) -> CharacterRunDB:
+    """Lookup a character run from the database.
+
+    Args:
+        character (CharacterDB): The CharacterDB.py object to lookup in the database.
+        run (DungeonRunDB): The DungeonRunDB.py object to lookup in the database.
+
+    Returns:
+        CharacterRunDB: Returns a CharacterRunDB.py object if the character run exists, otherwise returns None.
+    """
+    session = Session()
+    try:
+        existing_character = session.query(CharacterDB).filter(CharacterDB.name == character.name and CharacterDB.realm == character.realm).one()
+        existing_run = session.query(DungeonRunDB).filter(DungeonRunDB.id == run.id).one()
+        if existing_character is None:
+            return None
+        elif existing_run is None:
+            return None
+        else:
+            existing_character_run = session.query(CharacterRunDB).filter(CharacterRunDB.character_id == existing_character.id and CharacterRunDB.run_id == existing_run.id).one()
+            if existing_character_run is not None:
+                return existing_character_run
+            else:
+                return None
     except Exception as exception:
         session.rollback()
         print(exception)
