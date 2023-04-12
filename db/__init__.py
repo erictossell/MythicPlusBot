@@ -446,6 +446,18 @@ def get_top10_character_by_highest_item_level() -> List[CharacterDB]:
         return None
     finally:
         session.close()
+def get_top10_guild_runs() -> List[DungeonRunDB]:
+    session = Session()
+    try: 
+        top10_guild_runs = session.query(DungeonRunDB).filter(DungeonRunDB.is_guild_run == True).order_by(DungeonRunDB.score.desc()).limit(10).all()
+        return top10_guild_runs
+    except Exception as exception:
+        print(exception)
+        session.rollback()
+        return None
+    finally:
+        session.close()    
+    
 def add_character_run(character: CharacterDB, run_id: int) -> bool:
     """Add a character run to the database.
 

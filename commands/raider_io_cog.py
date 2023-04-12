@@ -215,18 +215,39 @@ class RaiderIOCog(commands.Cog):
             ctx (context): The current discord context.
         """
         try:
+            description = 'This leaderboard is based on the top 10 registered characters from the Take a Lap Guild.\n If you have no registered your off-realm or out-of-guild character, please do so with !register.'
             characters_list = db.get_top10_character_by_mythic_plus()
-            embed = discord.Embed(title='Current Mythic+ Leaderboard', description= '', color=discord.Color.green())
-            embed.add_field(name='Taken from Raider.IO', value='[Raider.IO](https://raider.io/)', inline=False)
-            embed.add_field(name='Name - Score ', value='Last Updated - Profile', inline=False)
+            embed = discord.Embed(title='Current Mythic+ Leaderboard', description= description, color=discord.Color.green())
             for leader in characters_list:
                 embed.add_field(name=leader.name + ' - ' + str(leader.score), value='Last updated: '+str(leader.last_crawled_at) +f"  |  [Profile]({leader.url})", inline=False)
+            embed.set_footer(text='Data from [Raider.IO](https://raider.io/)')
             await ctx.channel.send(embed=embed)
         except Exception as exception:
             await ctx.channel.send('Type !help to see how to use this command.')
             user = await ctx.bot.fetch_user(173958345022111744)
             channel = await user.create_dm()
             await channel.send(f'Error in !leaderboard command: {exception}') 
+    @commands.command(name='guildRuns', help='Gets the best Mythic+ runs for the guild.')
+    async def guild_runs(self,ctx):
+        """Get the best Mythic+ runs for the guild.
+
+        Args:
+            ctx (_type_): _description_
+        """
+        try:
+            description = 'This leaderboard is based on the top 10 registered characters from the Take a Lap Guild.\n If you have not registered your off-realm or out-of-guild character, please do so with !register.'
+            dungeon_list = db.get_top10_guild_runs()
+            embed = discord.Embed(title='Best TaL Guild Runs', description= description, color=discord.Color.green())
+            for run in dungeon_list:
+                embed.add_field(name=run.name + ' ' + str(run.mythic_level)+' +'+str(run.num_keystone_upgrades), value=f'[URL]({run.url})', inline=False)
+            embed.set_footer(text='Data from Raider.IO(https://raider.io/)')
+            await ctx.channel.send(embed=embed)
+        except Exception as exception:
+            await ctx.channel.send('Type !help to see how to use this command.')
+            user = await ctx.bot.fetch_user(173958345022111744)
+            channel = await user.create_dm()
+            await channel.send(f'Error in !guildRuns command: {exception}')
+            
 def setup(bot):
     """Setup function for the cog.
 
