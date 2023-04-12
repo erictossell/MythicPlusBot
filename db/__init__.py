@@ -2,7 +2,7 @@
 #Description: This file is used to create the database and tables for the bot. It is also used to query the database for information.
 #Author: Eriim\
     
-
+import logging
 from datetime import datetime
 from typing import Optional, List
 from sqlalchemy import create_engine
@@ -16,8 +16,13 @@ from db.character_run_db import CharacterRunDB
 from raiderIO.character import Character
 from raiderIO.dungeonRun import DungeonRun
 
+logging.basicConfig(filename='tal.log',
+                    level=logging.DEBUG,
+                    format='%(asctime)s %(levelname)s %(name)s %(message)s')
 
-engine = create_engine('sqlite:///tal.db', echo=True)
+engine = create_engine('sqlite:///tal.db', echo=True,
+                       logging_name='sqlalchemy.engine',
+                       echo_pool=True, pool_pre_ping=True)
 Base.metadata.create_all(engine)
 Session = sessionmaker(bind=engine)
 
@@ -34,10 +39,10 @@ def lookup_character(name: str, realm: str) -> Optional[CharacterDB]:
     print('DB: looking up character: ' + name + ' on realm: ' + realm)
     session = Session()
     try:
-        existing_character = session.query(CharacterDB).filter(CharacterDB.name == name and CharacterDB.realm == realm).first()
+        existing_character = session.query(CharacterDB).filter(CharacterDB.name == name, CharacterDB.realm == realm).first()
         if existing_character is None:
             print('DB: character not found: ' + name + ' on realm: ' + realm)
-        elif str(existing_character.realm).capitalize() == str(realm).capitalize() and str(existing_character.name).capitalize() == str(name).capitalize():
+        elif existing_character is not None:
             print('DB: found character: ' + existing_character.name + ' on realm: ' + existing_character.realm)
             return existing_character
         else:
@@ -81,7 +86,7 @@ def add_character(character: CharacterDB) -> bool:
     """
     session = Session()
     try:
-        existing_character = session.query(CharacterDB).filter(CharacterDB.name == character.name and CharacterDB.realm == character.realm).first()
+        existing_character = session.query(CharacterDB).filter(CharacterDB.name == character.name, CharacterDB.realm == character.realm).first()
         if existing_character.realm.capitalize() != character.realm.capitalize() or existing_character.name.capitalize() != character.name.capitalize():
             character_db = CharacterDB(
                 character.discord_user_id,
@@ -126,7 +131,7 @@ def update_character(character: Character) -> bool:
     session = Session()
     try:
                 
-        existing_character = session.query(CharacterDB).filter(CharacterDB.name == character.name and CharacterDB.realm == character.realm).first()
+        existing_character = session.query(CharacterDB).filter(CharacterDB.name == character.name, CharacterDB.realm == character.realm).first()
         
         if existing_character is not None:
             existing_character.discord_user_id = character.discord_user_id
@@ -170,7 +175,7 @@ def update_character_reporting(character: Character) -> bool:
     session = Session()
     try:
         
-        existing_character = session.query(CharacterDB).filter(CharacterDB.name == character.name and CharacterDB.realm == character.realm).first()
+        existing_character = session.query(CharacterDB).filter(CharacterDB.name == character.name, CharacterDB.realm == character.realm).first()
         if existing_character is not None:
             if existing_character.is_reporting is True:
                 existing_character.is_reporting = False
@@ -221,7 +226,7 @@ def remove_character(name, realm) -> bool:
     """
     session = Session()
     try:
-        existing_character = session.query(CharacterDB).filter(CharacterDB.name == name and CharacterDB.realm == realm).first()
+        existing_character = session.query(CharacterDB).filter(CharacterDB.name == name, CharacterDB.realm == realm).first()
         if existing_character is not None:
             session.delete(existing_character)
             session.commit()
@@ -338,7 +343,7 @@ def add_default_character(default_character: DefaultCharacterDB) -> bool:
     """
     session = Session()
     try:
-        existing_relationship = session.query(DefaultCharacterDB).filter((DefaultCharacterDB.discord_guild_id == default_character.discord_guild_id) and (DefaultCharacterDB.discord_user_id == default_character.discord_user_id)).first()
+        existing_relationship = session.query(DefaultCharacterDB).filter(DefaultCharacterDB.discord_guild_id == default_character.discord_guild_id, DefaultCharacterDB.discord_user_id == default_character.discord_user_id).first()
         if existing_relationship is None:
             session.add(default_character)
             session.commit()
@@ -359,7 +364,7 @@ def remove_default_character(default_character: DefaultCharacterDB) -> bool:
     """
     session = Session()
     try:
-        existing_relationship = session.query(DefaultCharacterDB).filter((DefaultCharacterDB.discord_guild_id == default_character.discord_guild_id) and (DefaultCharacterDB.discord_user_id == default_character.discord_user_id)).first()
+        existing_relationship = session.query(DefaultCharacterDB).filter(DefaultCharacterDB.discord_guild_id == default_character.discord_guild_id, DefaultCharacterDB.discord_user_id == default_character.discord_user_id).first()
         if existing_relationship is not None:
             
             session.delete(existing_relationship)
@@ -381,7 +386,7 @@ def lookup_default_character(discord_guild_id, discord_user_id) -> Character:
     """
     session = Session()
     try:
-        default_character = session.query(DefaultCharacterDB).filter(DefaultCharacterDB.discord_guild_id == discord_guild_id and DefaultCharacterDB.discord_user_id == discord_user_id).first()
+        default_character = session.query(DefaultCharacterDB).filter(DefaultCharacterDB.discord_guild_id == discord_guild_id, DefaultCharacterDB.discord_user_id == discord_user_id).first()
         if default_character is not None:
             character = session.query(CharacterDB).filter(CharacterDB.id == default_character.character.id).first()
             return character
@@ -441,7 +446,7 @@ def get_top10_character_by_highest_item_level() -> List[CharacterDB]:
         return None
     finally:
         session.close()
-def add_character_run(character: CharacterDB, run: DungeonRunDB) -> bool:
+def add_character_run(character: CharacterDB, run_id: int) -> bool:
     """Add a character run to the database.
 
     Args:
@@ -453,26 +458,30 @@ def add_character_run(character: CharacterDB, run: DungeonRunDB) -> bool:
     """
     session = Session()
     try:
-        existing_character = session.query(CharacterDB).filter(CharacterDB.name == character.name and CharacterDB.realm == character.realm).one()
-        existing_run = session.query(DungeonRunDB).filter(DungeonRunDB.id == run.id).one()
+        print('Trying to add character run')
+        existing_character = session.query(CharacterDB).filter(CharacterDB.name == character.name, CharacterDB.realm == character.realm).first()
+        existing_run = session.query(DungeonRunDB).filter(DungeonRunDB.id == run_id).first()
         if existing_character is None:
+            print('------------------------------No character found-----------------------------')
             return False
         elif existing_run is None:
+            print('------------------------------No run found-----------------------------')
             return False
-        
         else:
-            existing_character_run = session.query(CharacterRunDB).filter(CharacterRunDB.character_id == existing_character.id and CharacterRunDB.run_id == existing_run.id).one()
+            existing_character_run = session.query(CharacterRunDB).filter(CharacterRunDB.character_id == existing_character.id, CharacterRunDB.dungeon_run_id == existing_run.id).first()
             if existing_character_run is not None:
+                print(f'------------------------------Character run already exists for {existing_character_run.dungeon_run.name} {existing_character_run.character.name}-----------------------------')
+                print(existing_character_run)
                 return False
-            else:
-                new_character_run = CharacterRunDB(existing_character.id,
-                                                existing_run.id,
-                                                datetime.datetime.now(),
-                                                datetime.datetime.now())
-                session.add(new_character_run)
-                existing_character.runs.append(existing_run)
+            elif existing_character_run is None:
+                new_character_run = CharacterRunDB(existing_character,
+                                                existing_run,
+                                                datetime.now(),
+                                                datetime.now())
+                print('Adding character run')
+                session.add(new_character_run)                
                 session.commit()
-            return True
+                return True
     except Exception as exception:
         session.rollback()
         print(exception)
@@ -491,14 +500,14 @@ def lookup_character_run(character: CharacterDB, run: DungeonRunDB) -> Character
     """
     session = Session()
     try:
-        existing_character = session.query(CharacterDB).filter(CharacterDB.name == character.name and CharacterDB.realm == character.realm).one()
-        existing_run = session.query(DungeonRunDB).filter(DungeonRunDB.id == run.id).one()
+        existing_character = session.query(CharacterDB).filter(CharacterDB.name == character.name, CharacterDB.realm == character.realm).first()
+        existing_run = session.query(DungeonRunDB).filter(DungeonRunDB.id == run.id).first()
         if existing_character is None:
             return None
         elif existing_run is None:
             return None
         else:
-            existing_character_run = session.query(CharacterRunDB).filter(CharacterRunDB.character_id == existing_character.id and CharacterRunDB.run_id == existing_run.id).one()
+            existing_character_run = session.query(CharacterRunDB).filter(CharacterRunDB.character_id == existing_character.id, CharacterRunDB.run_id == existing_run.id).one()
             if existing_character_run is not None:
                 return existing_character_run
             else:
@@ -509,3 +518,4 @@ def lookup_character_run(character: CharacterDB, run: DungeonRunDB) -> Character
         return None
     finally:
         session.close()
+        

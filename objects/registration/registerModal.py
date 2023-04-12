@@ -40,7 +40,23 @@ class RegisterModal(discord.ui.Modal):
                 return 
             
             elif existing_character is None:
-                new_character = db.CharacterDB(userID, character.name, character.realm, character.faction, character.region, character.role, character.spec_name, character.class_name, character.achievement_points, character.item_level, character.score, character.rank, character.thumbnail_url, character.url, datetime.strptime(character.last_crawled_at,'%Y-%m-%dT%H:%M:%S.%fZ' ), True, [])
+                new_character = db.CharacterDB(userID,
+                                               character.name,
+                                               character.realm.lower(),
+                                               character.faction,
+                                               character.region,
+                                               character.role,
+                                               character.spec_name,
+                                               character.class_name,
+                                               character.achievement_points,
+                                               character.item_level,
+                                               character.score,
+                                               character.rank,
+                                               character.thumbnail_url,
+                                               character.url,
+                                               datetime.strptime(character.last_crawled_at,'%Y-%m-%dT%H:%M:%S.%fZ' ),
+                                               True,
+                                               [])
                 db.add_character(new_character)        
                 await interaction.response.send_message('You have registered the character ' + new_character.name + ' on realm ' + new_character.realm + ' for Tal-Bot reporting.', ephemeral=True)
                 return 

@@ -12,14 +12,14 @@ class CharacterRunDB(Base):
         Base (base): _description_
     """
     __tablename__ = 'character_runs'
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True)    
+    is_personal_best = Column(Boolean)
+    created_at = Column(DateTime)
+    modified_at = Column(DateTime)
     character_id = Column(Integer, ForeignKey('characters.id'))
     character = relationship("CharacterDB", back_populates="character_runs")
     dungeon_run_id = Column(Integer, ForeignKey('dungeon_runs.id'))
     dungeon_run = relationship("DungeonRunDB", back_populates="character_runs")
-    is_personal_best = Column(Boolean)
-    created_at = Column(DateTime)
-    modified_at = Column(DateTime)
     
     
     def __init__(self,

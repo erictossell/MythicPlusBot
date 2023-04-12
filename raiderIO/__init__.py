@@ -1,6 +1,5 @@
 import asyncio
 from datetime import datetime
-import json
 import re
 from typing import List, Optional
 
@@ -235,17 +234,14 @@ async def is_guild_run(run_id: int, season: str) -> Optional[bool]:
                 if request.json()['roster'] is None:
                     print('No roster found for run: ' + str(run_id))
                     return False
-                for roster in request.json()['roster']:
-                    if roster['guild'] is None:
-                        print('No Guild for ' + roster['character']['name'])
-                    elif roster['guild'] is not None:
-                        if roster['guild']['id'] == 1616915:
-                            guild_member_counter += 1
-                            print('Guild member found: ' + roster['character']['name'])
-                        elif db.lookup_character(roster['character']['name'],
-                                        roster['character']['realm']['name']) is not None:
-                            guild_member_counter += 1
-                            print('Guild member found: ' + roster['character']['name'])
+                for roster in request.json()['roster']:                    
+                    print('is_Guild_Run: Searching for ' + roster['character']['name'])
+                    character_db = db.lookup_character(roster['character']['name'],
+                                                        roster['character']['realm']['slug'])                      
+                    if character_db is not None:
+                        guild_member_counter += 1
+                        print('Guild member found: ' + roster['character']['name'])
+                        db.add_character_run(character_db, run_id)
                 if guild_member_counter >= 4:
                     print('Guild run found: ' + str(run_id))
                     return True
@@ -310,6 +306,7 @@ async def crawl_characters(discord_guild_id: int) -> str:
                         character.guild_name = character_io.guild_name
                         db.update_character(character)
                         update_character_counter += 1
+            print('Finished crawling characters.')
             
 
                             
@@ -378,9 +375,7 @@ async def crawl_guild_members(discord_guild_id) -> None:
             
 async def crawl_runs():
     runs_crawled = 0
-    guild_run_counter = 0
-    
-    character_run_counter = 0
+    guild_run_counter = 0    
     try:
         print('executing crawl runs')
         runs_list = db.get_all_runs()
@@ -394,9 +389,10 @@ async def crawl_runs():
                 guild_run_counter += 1
             else:
                 run.is_guild_run = False
-                db.update_dungeon_run(run)   
+                db.update_dungeon_run(run)  
+        print('Finished crawling runs.') 
     except Exception as exception:
         print(exception)
     finally:
-        return f'Runs crawled: {runs_crawled}  | Added {character_run_counter} character runs.'
+        return f'Runs crawled: {runs_crawled}  | Identified {guild_run_counter} guild runs.'
     
