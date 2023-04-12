@@ -4,8 +4,8 @@
 
 #Imports
 import os
-import discord
 import logging
+import discord
 from dotenv import load_dotenv
 from discord.ext import commands
 
@@ -18,10 +18,19 @@ GUILD = os.getenv('DISCORD_GUILD')
 intents = discord.Intents(messages=True, guilds=True, members=True)
 intents.message_content = True #v2
 intents.presences = True #v2
+intents.guilds = True
+intents.guild_messages = True
 
-bot = commands.Bot(command_prefix='!', intents=intents, activity=discord.Activity(type=discord.ActivityType.watching, name="for !help"))
+bot = commands.Bot(command_prefix='!',
+                   intents=intents,
+                   activity=discord.Activity(type=discord.ActivityType.watching,
+                                             name="for !help"))
 
-cogs_list = ['commands.general', 'commands.poll', 'events.errors', 'commands.raiderIO']
+cogs_list = ['commands.general_cog',
+             'commands.poll_cog',
+             'commands.errors_cog',
+             'commands.raider_io_cog',
+             'commands.member_events_cog']
 
 logger = logging.getLogger('discord')
 logger.setLevel(logging.DEBUG)

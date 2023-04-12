@@ -60,7 +60,7 @@ class GeneralCog(commands.Cog):
             print('crawl command called')
             start_time = time.time()
             await ctx.send('Crawling Raider.IO characters...')
-            await RaiderIO.crawl_characters(ctx)
+            await RaiderIO.crawl_characters(ctx.guild.id)
             end_time = time.time()
             elapsed_time = end_time - start_time
             await ctx.send('Finished crawling Raider.IO guild members for new runs after ' + str(elapsed_time) + ' seconds.')

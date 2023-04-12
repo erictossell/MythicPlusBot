@@ -53,7 +53,7 @@ async def get_character(name: str,
         print('RIO Service: Looking up character: ' + name)
                
         try:
-            request = requests.get(API_URL + 'characters/profile?region='+region+'&realm='+realm+'&name='+name+'&fields=gear,mythic_plus_scores_by_season:current,mythic_plus_ranks,mythic_plus_best_runs,mythic_plus_recent_runs') 
+            request = requests.get(API_URL + 'characters/profile?region='+region+'&realm='+realm+'&name='+name+'&fields=guild,gear,mythic_plus_scores_by_season:current,mythic_plus_ranks,mythic_plus_best_runs,mythic_plus_recent_runs') 
             if request.status_code == 404:
                 print('Character not found: ' + name)
                 return None
@@ -65,6 +65,7 @@ async def get_character(name: str,
                 return None
             elif request.status_code == 200:
                 print('RIO Service: 200')
+                guild_name = request.json()['guild']['name']
                 faction = request.json()['faction'] 
                 print('Faction: ' + faction)
                 role = request.json()['active_spec_role']
@@ -128,6 +129,7 @@ async def get_character(name: str,
                 
                 character = Character(name,
                                       realm,
+                                      guild_name,
                                       faction,
                                       role,
                                       spec,
@@ -230,7 +232,6 @@ async def get_run(id: int, season: str) -> Optional[bool]:
             if guild_member_counter >= 5:
                 print('Guild run found: ' + id)
                 
-                #run = DungeonRun(data['dungeon'], data['short_name'], data['mythic_level'], data['completed_at'], data['clear_time_ms'], data['par_time_ms'], data['num_keystone_upgrades'], data['score'], data['affixes'], data['url'])
                 return True
                 
             else:
@@ -240,9 +241,11 @@ async def get_run(id: int, season: str) -> Optional[bool]:
             print('Error: ' + exception)
             return None   
         
-async def crawl_characters() -> None:
+async def crawl_characters(discord_guild_id: int) -> None:
         """Crawl the Raider.IO API for new data on characters in the database.\n
         This method has a 0.3 second delay between each API call to avoid rate limiting.
+        This method will only crawl characters with a score greater than 0
+        and that rows that are flagged for reporting.
         """
         try:
             print('trying to crawl characters')
@@ -251,11 +254,10 @@ async def crawl_characters() -> None:
                      
             for character in characters_list:
                 await asyncio.sleep(0.3)
+                
                 if character.is_reporting is True and character.score > 0:
-                    
                     character_io = await get_character(character.name,
-                                                                       character.realm)
-                    
+                                                       character.realm)                    
                     for run in character_io.best_runs:
                         if run is None:
                             return
@@ -274,11 +276,25 @@ async def crawl_characters() -> None:
                             db.add_dungeon_run(character, run)
                         else:
                             print("No recent runs for " + character.name)
+                    if character.name == character_io.name and character.realm == character_io.realm:
+                    
+                        character.last_crawled_at = datetime.strptime(character_io.last_crawled_at,
+                                                                        '%Y-%m-%dT%H:%M:%S.%fZ')
+                        character.score = character_io.score
+                        character.item_level = character_io.item_level
+                        character.achievement_points = character_io.achievement_points
+                        character.spec_name = character_io.spec_name
+                        character.role = character_io.role
+                        character.rank = character_io.rank
+                        character.discord_guild_id = discord_guild_id
+                        character.guild_name = character_io.guild_name
+                        db.update_character(character)
+
                             
         except Exception as exception:
             print(exception)          
 
-async def crawl_guild_members() -> None:
+async def crawl_guild_members(discord_guild_id) -> None:
     """Crawl the Raider.IO API for new guild members. \n
     This method has a 0.3 second delay between each API call to avoid rate limiting.
     """
@@ -302,8 +318,9 @@ async def crawl_guild_members() -> None:
             if character is None:
                 print("Crawler: Character not found: " + member.name)
             elif character is not None and db_character is None:
-                print('Crawler: This is where I would add this character' + character.name)
                 new_character = db.CharacterDB(173958345022111744,
+                                                discord_guild_id,
+                                                character.guild_name,
                                                 character.name,
                                                 character.realm,
                                                 character.faction,

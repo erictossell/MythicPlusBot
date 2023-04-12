@@ -12,6 +12,7 @@ class Character:
     def __init__(self,
                  name: str,
                  realm: str,
+                 guild_name: str,
                  faction: str,
                  role: str,
                  spec_name: str,
@@ -29,6 +30,7 @@ class Character:
         """The init method for the Character class."""
         self.name = name
         self.realm = realm
+        self.guild_name = guild_name
         self.faction = faction.capitalize()
         self.region = 'us'
         self.role = role
