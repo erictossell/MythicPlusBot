@@ -1,9 +1,9 @@
+import discord
 from datetime import datetime
-import discord 
 import db
 import raiderIO as RaiderIO
 
-filename = './members.csv'
+
 
 class RegisterModal(discord.ui.Modal):
     """The modal that is used to register a character.
@@ -11,11 +11,11 @@ class RegisterModal(discord.ui.Modal):
     Args:
         discord (ui.Modal): Represents a Discord modal.
     """
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, discord_guild_id:int, *args, **kwargs) -> None:
         """The constructor for the RegisterModal class.
         """
         super().__init__(*args, **kwargs)
-
+        self.discord_guild_id = discord_guild_id
         self.add_item(discord.ui.InputText(label="What is your character name?", required= True))
         self.add_item(discord.ui.InputText(label="Character realm: (Default is Area-52)", required= False))
         
@@ -33,14 +33,16 @@ class RegisterModal(discord.ui.Modal):
             if self.children[1].value == '':
                 realm = 'Area-52'
             character = await RaiderIO.get_character(name, realm)
-            existing_character = db.lookup_character(name, realm)            
+            existing_character = db.lookup_character(name, realm)
                         
             if character is None:
                 await interaction.response.send_message('Character '+ name +' on ' + realm + ' not found.', ephemeral=True)
-                return 
+                return
             
             elif existing_character is None:
                 new_character = db.CharacterDB(userID,
+                                               self.discord_guild_id,
+                                               character.guild_name,
                                                character.name,
                                                character.realm.lower(),
                                                character.faction,
@@ -55,15 +57,15 @@ class RegisterModal(discord.ui.Modal):
                                                character.thumbnail_url,
                                                character.url,
                                                datetime.strptime(character.last_crawled_at,'%Y-%m-%dT%H:%M:%S.%fZ' ),
-                                               True,
-                                               [])
-                db.add_character(new_character)        
-                await interaction.response.send_message('You have registered the character ' + new_character.name + ' on realm ' + new_character.realm + ' for Tal-Bot reporting.', ephemeral=True)
-                return 
+                                               True)
+                                               
+                db.add_character(new_character)
+                await interaction.response.send_message('You have registered the character ' + new_character.name + ' on realm ' + new_character.realm.capitalize() + ' for Tal-Bot reporting.', ephemeral=True)
+                return
             elif existing_character.is_reporting is False:
                 db.update_character_reporting(existing_character)
-                await interaction.response.send_message('You have registered the character ' + existing_character.name + ' on realm ' + existing_character.realm + ' for Tal-Bot reporting.', ephemeral=True)
-            else: 
-                await interaction.response.send_message('The character ' + existing_character.name + ' on realm ' + existing_character.realm + ' has already been registered for Tal-Bot reporting.', ephemeral=True)                   
+                await interaction.response.send_message('You have registered the character ' + existing_character.name + ' on realm ' + existing_character.realm.capitalize() + ' for Tal-Bot reporting.', ephemeral=True)
+            else:
+                await interaction.response.send_message('The character ' + existing_character.name + ' on realm ' + existing_character.realm.capitalize() + ' has already been registered for Tal-Bot reporting.', ephemeral=True)                   
         except Exception as e:
             print(e)

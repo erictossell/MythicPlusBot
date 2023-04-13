@@ -20,7 +20,7 @@ logging.basicConfig(filename='tal.log',
                     level=logging.DEBUG,
                     format='%(asctime)s %(levelname)s %(name)s %(message)s')
 
-engine = create_engine('sqlite:///tal.db', echo=True,
+engine = create_engine('sqlite:///tal.db', echo=False,
                        logging_name='sqlalchemy.engine',
                        echo_pool=True, pool_pre_ping=True)
 Base.metadata.create_all(engine)
@@ -86,14 +86,14 @@ def add_character(character: CharacterDB) -> bool:
     """
     session = Session()
     try:
-        existing_character = session.query(CharacterDB).filter(CharacterDB.name == character.name, CharacterDB.realm == character.realm).first()
-        if existing_character.realm.capitalize() != character.realm.capitalize() or existing_character.name.capitalize() != character.name.capitalize():
+        existing_character = session.query(CharacterDB).filter(CharacterDB.name == character.name, CharacterDB.realm == character.realm.lower()).first()
+        if existing_character is None:
             character_db = CharacterDB(
                 character.discord_user_id,
                 character.discord_guild_id,
                 character.guild_name,
                 character.name,
-                character.realm,
+                character.realm.lower(),
                 character.faction,
                 character.region,
                 character.role,
@@ -106,8 +106,7 @@ def add_character(character: CharacterDB) -> bool:
                 character.thumbnail_url,
                 character.url,
                 character.last_crawled_at,
-                character.is_reporting,
-                character.dungeon_runs)
+                character.is_reporting)
             session.add(character_db)
             session.commit()            
             return True
@@ -483,7 +482,6 @@ def add_character_run(character: CharacterDB, run_id: int) -> bool:
             existing_character_run = session.query(CharacterRunDB).filter(CharacterRunDB.character_id == existing_character.id, CharacterRunDB.dungeon_run_id == existing_run.id).first()
             if existing_character_run is not None:
                 print(f'------------------------------Character run already exists for {existing_character_run.dungeon_run.name} {existing_character_run.character.name}-----------------------------')
-                print(existing_character_run)
                 return False
             elif existing_character_run is None:
                 new_character_run = CharacterRunDB(existing_character,
@@ -522,6 +520,36 @@ def lookup_character_run(character: CharacterDB, run: DungeonRunDB) -> Character
             existing_character_run = session.query(CharacterRunDB).filter(CharacterRunDB.character_id == existing_character.id, CharacterRunDB.run_id == existing_run.id).one()
             if existing_character_run is not None:
                 return existing_character_run
+            else:
+                return None
+    except Exception as exception:
+        session.rollback()
+        print(exception)
+        return None
+    finally:
+        session.close()
+def get_all_characters_for_run(run_id: int) -> List[CharacterRunDB]:
+    """Get all characters for a run.
+
+    Args:
+        run (DungeonRunDB): The DungeonRunDB.py object to lookup in the database.
+
+    Returns:
+        List[CharacterRunDB]: Returns a list of CharacterRunDB.py objects if the character run exists, otherwise returns None.
+    """
+    session = Session()
+    try:
+        existing_run = session.query(DungeonRunDB).filter(DungeonRunDB.id == run_id).first()
+        if existing_run is None:
+            return None
+        else:
+            existing_character_runs = session.query(CharacterRunDB).filter(CharacterRunDB.dungeon_run_id == existing_run.id).all()
+            if existing_character_runs is not None:
+                character_list = []
+                for character_run in existing_character_runs:
+                    character = session.query(CharacterDB).filter(CharacterDB.id == character_run.character_id).first()
+                    character_list.append(character)
+                return character_list
             else:
                 return None
     except Exception as exception:

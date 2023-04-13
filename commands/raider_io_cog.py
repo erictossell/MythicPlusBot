@@ -116,8 +116,11 @@ class RaiderIOCog(commands.Cog):
         try:
             user = await ctx.bot.fetch_user(ctx.author.id)
             channel = await user.create_dm()
-            view = RegisterButton()
-            await channel.send('Please click the button below to register your character. This message will self destruct in 60 seconds.', view=view, delete_after=60)
+            if ctx.guild is None:
+                await channel.send('Call the register command from within the Discord server you would like to register a character to.\nThis is used for analytics purposes.')
+            else:
+                view = RegisterButton(ctx.guild.id)
+                await channel.send('Please click the button below to register your character. This message will self destruct in 60 seconds.', view=view, delete_after=60)
         except Exception as exception:
             await ctx.channel.send('Type !help to see how to use this command.')
             user = await ctx.bot.fetch_user(173958345022111744)
@@ -215,11 +218,13 @@ class RaiderIOCog(commands.Cog):
             ctx (context): The current discord context.
         """
         try:
-            description = 'This leaderboard is based on the top 10 registered characters from the Take a Lap Guild.\n If you have no registered your off-realm or out-of-guild character, please do so with !register.'
+            description = 'This leaderboard is based on the top 10 registered characters from the Take a Lap Guild.\n If you have not registered your off-realm or out-of-guild character, please do so with !register.'
             characters_list = db.get_top10_character_by_mythic_plus()
             embed = discord.Embed(title='Current Mythic+ Leaderboard', description= description, color=discord.Color.green())
+            counter = 1
             for leader in characters_list:
-                embed.add_field(name=leader.name + ' - ' + str(leader.score), value='Last updated: '+str(leader.last_crawled_at) +f"  |  [Profile]({leader.url})", inline=False)
+                embed.add_field(name=str(counter) + '.  '+str(leader.score)+  ' - '+ leader.name, value='Last updated: ['+str(leader.last_crawled_at) +f"]({leader.url})", inline=False)
+                counter+=1
             embed.set_footer(text='Data from [Raider.IO](https://raider.io/)')
             await ctx.channel.send(embed=embed)
         except Exception as exception:
@@ -235,11 +240,18 @@ class RaiderIOCog(commands.Cog):
             ctx (_type_): _description_
         """
         try:
-            description = 'This leaderboard is based on the top 10 registered characters from the Take a Lap Guild.\n If you have not registered your off-realm or out-of-guild character, please do so with !register.'
+            description = '📄 This leaderboard is based on the top 10 registered characters from the Take a Lap Guild.\n ⚠️ If you have not registered your off-realm or out-of-guild character, please do so with !register.'
             dungeon_list = db.get_top10_guild_runs()
-            embed = discord.Embed(title='Best TaL Guild Runs', description= description, color=discord.Color.green())
+            
+            embed = discord.Embed(title='🏆 Best Take a Lap Guild Runs', description= description, color=discord.Color.green())
+            counter = 1
             for run in dungeon_list:
-                embed.add_field(name=run.name + ' ' + str(run.mythic_level)+' +'+str(run.num_keystone_upgrades), value=f'[URL]({run.url})', inline=False)
+                characters_list = db.get_all_characters_for_run(run.id)
+                run_characters = '| '
+                for character in characters_list:
+                    run_characters += '['+character.name + f']({character.url})  | '
+                embed.add_field(name=str(counter)+ '.  '+ run.name + '  |  ' + str(run.mythic_level)+'  |  +'+str(run.num_keystone_upgrades), value=run_characters+f'\n[Link to run]({run.url})', inline=False)
+                counter+=1
             embed.set_footer(text='Data from Raider.IO(https://raider.io/)')
             await ctx.channel.send(embed=embed)
         except Exception as exception:

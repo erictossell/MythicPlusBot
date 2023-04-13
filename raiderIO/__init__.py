@@ -66,21 +66,21 @@ async def get_character(name: str,
                 print('RIO Service: 200')
                 guild_name = request.json()['guild']['name']
                 faction = request.json()['faction'] 
-                print('Faction: ' + faction)
+                #print('Faction: ' + faction)
                 role = request.json()['active_spec_role']
-                print('Role: ' + role)          
+                #print('Role: ' + str(role))          
                 spec = request.json()['active_spec_name']
-                print('Spec: ' + spec)
+                #print('Spec: ' + spec)
                 playerClass = request.json()['class']
-                print('Class: ' + playerClass)
+                #print('Class: ' + playerClass)
                 achievementPoints = request.json()['achievement_points']
-                print('Achievement Points: ' + str(achievementPoints))
+                #print('Achievement Points: ' + str(achievementPoints))
                 item_level = request.json()['gear']['item_level_equipped']    
-                print('Item Level: ' + str(item_level))            
+                #print('Item Level: ' + str(item_level))            
                 score = request.json()['mythic_plus_scores_by_season'][0]['scores']['all']
-                print('Score: ' + str(score))
+                #print('Score: ' + str(score))
                 rank = request.json()['mythic_plus_ranks']['class']['realm']
-                print('Rank: ' + str(rank))
+                #print('Rank: ' + str(rank))
                 best_runs = []
                 recent_runs = []
                 for run in request.json()['mythic_plus_best_runs']:
@@ -118,13 +118,13 @@ async def get_character(name: str,
                 #print('Recent Runs: ' + str(len(recent_runs)))
                 
                 score_color = util.binary_search_score_colors(scoreColors, int(score))
-                print('Score Color: ' + score_color)
+                #print('Score Color: ' + score_color)
                 thumbnail = request.json()['thumbnail_url']
-                print('Thumbnail: ' + thumbnail)
+                #print('Thumbnail: ' + thumbnail)
                 url = request.json()['profile_url']
-                print('URL: ' + url)
+                #print('URL: ' + url)
                 last_crawled_at = request.json()['last_crawled_at']
-                print('Last Crawled At: ' + last_crawled_at)              
+                #print('Last Crawled At: ' + last_crawled_at)              
                 
                 character = Character(name,
                                       realm,
@@ -333,7 +333,7 @@ async def crawl_guild_members(discord_guild_id) -> None:
             await asyncio.sleep(0.3)
             
             print('Crawler: calling RIO Service for: ' + member.name)
-            score_colors_list = await get_score_colors()
+            score_colors_list = get_score_colors()
             character = await get_character(str(member.name),
                                                             'Area-52', score_colors_list)
             
@@ -358,8 +358,9 @@ async def crawl_guild_members(discord_guild_id) -> None:
                                                 character.url,
                                                 datetime.strptime(character.last_crawled_at,
                                                                     '%Y-%m-%dT%H:%M:%S.%fZ'),
-                                                True,
-                                                [])
+                                                True
+                                                )
+                                                
                 print(type(new_character))
                 print(new_character)
                 db.add_character(new_character) 

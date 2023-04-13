@@ -9,6 +9,14 @@ class RegisterButton(discord.ui.View):
     Args:
         discord (ui.View): The parent class for the view.
     """
+    def __init__(self, discord_guild_id: int, *args, **kwargs) -> None:
+        """The constructor for the RegisterButton class.
+
+        Args:
+            discord_guild_id (int): The discord guild id.
+        """
+        super().__init__(*args, **kwargs)
+        self.discord_guild_id = discord_guild_id
     @discord.ui.button(label='Unregister', style=discord.ButtonStyle.red, emoji='🗑️')
     async def unregister_callback(self, button: discord.ui.Button, interaction: discord.Interaction):
         """Unregister button callback.
@@ -34,7 +42,7 @@ class RegisterButton(discord.ui.View):
             interaction (discord.Interaction): Interaction that was triggered.
         """
         try:     
-            await interaction.response.send_modal(RegisterModal(title="Register your character"))
+            await interaction.response.send_modal(RegisterModal(title="Register your character", discord_guild_id=self.discord_guild_id))
         except Exception as exception:
             print('Error occured:', exception)
             await interaction.message.delete()
