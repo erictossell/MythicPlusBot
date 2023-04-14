@@ -156,7 +156,7 @@ class RaiderIOCog(commands.Cog):
                 await ctx.channel.send('Please provide a character name and realm.')
             if len(args) == 1:
                 character = await RaiderIO.get_character(args[0])
-                character_db = db.lookup_character(character.name, character.realm)
+                character_db = db.lookup_character(character.name, character.realm.lower())
                 default_character = db.lookup_default_character(ctx.guild.id, ctx.author.id)
                 if default_character is None:
                     new_default_character = db.DefaultCharacterDB(ctx.author.id,
@@ -181,7 +181,7 @@ class RaiderIOCog(commands.Cog):
                     await ctx.channel.send('Something went wrong.')
             elif len(args) == 2:
                 character = await RaiderIO.get_character(args[0], args[1])
-                character_db = db.lookup_character(character.name, character.realm)
+                character_db = db.lookup_character(character.name, character.realm.lower())
                 default_character = db.lookup_default_character(ctx.guild.id, ctx.author.id)
                 if default_character is None:
                     new = db.DefaultCharacterDB(ctx.author.id,
@@ -211,22 +211,50 @@ class RaiderIOCog(commands.Cog):
             channel = await user.create_dm()
             await channel.send(f'Error in !default command: {exception}')
     @commands.command(name='leaderboard', help='Gets the current Mythic+ leaderboard.')
-    async def leaderboard(self,ctx):
+    async def leaderboard(self,ctx, *args):
         """Gets the current Mythic+ leaderboard.
 
         Args:
             ctx (context): The current discord context.
         """
         try:
-            description = 'This leaderboard is based on the top 10 registered characters from the Take a Lap Guild.\n If you have not registered your off-realm or out-of-guild character, please do so with !register.'
-            characters_list = db.get_top10_character_by_mythic_plus()
-            embed = discord.Embed(title='Current Mythic+ Leaderboard', description= description, color=discord.Color.green())
-            counter = 1
-            for leader in characters_list:
-                embed.add_field(name=str(counter) + '.  '+str(leader.score)+  ' - '+ leader.name, value='Last updated: ['+str(leader.last_crawled_at) +f"]({leader.url})", inline=False)
-                counter+=1
-            embed.set_footer(text='Data from [Raider.IO](https://raider.io/)')
-            await ctx.channel.send(embed=embed)
+            if len(args) == 0:
+                description = '📄 This leaderboard is based on the top 10 registered characters from the Take a Lap Guild.\n\n ⚠️ If you have not registered your off-realm or out-of-guild character, please do so with !register.'
+                characters_list = db.get_top10_character_by_mythic_plus()
+                embed = discord.Embed(title='Mythic+ Score Leaderboard', description= description, color=discord.Color.green())
+                thumbnail = characters_list[0].thumbnail_url
+                embed.set_thumbnail(url=thumbnail) 
+                counter = 1
+                for leader in characters_list:
+                    embed.add_field(name=f'{counter}. {leader.score} - {leader.name} | {leader.spec_name} - {leader.class_name}', value=f'[Class Rank on {leader.realm.capitalize()}: {leader.rank}]({leader.url})', inline=False)
+                    counter+=1
+                embed.set_footer(text='Data from [Raider.IO](https://raider.io/)')
+                await ctx.channel.send(embed=embed)
+            elif len(args) == 1:
+                if args[0] == 'achievements':
+                    description = '📄 This leaderboard is based on the top 10 registered characters from the Take a Lap Guild.\n\n ⚠️ If you have not registered your off-realm or out-of-guild character, please do so with !register.'
+                    characters_list = db.get_top10_character_by_achievement()
+                    embed = discord.Embed(title='Achievement Point Leaderboard', description= description, color=discord.Color.green())
+                    thumbnail = characters_list[0].thumbnail_url
+                    embed.set_thumbnail(url=thumbnail)
+                    counter = 1
+                    for leader in characters_list:
+                        embed.add_field(name=f'{counter}. {leader.achievement_points} - {leader.name} | {leader.spec_name} - {leader.class_name}', value='Last updated: ['+str(leader.last_crawled_at) +f"]({leader.url})", inline=False)
+                        counter+=1
+                    embed.set_footer(text='Data from [Raider.IO](https://raider.io/)')
+                    await ctx.channel.send(embed=embed)
+                elif args[0] == 'itemlevel':
+                    description = '📄 This leaderboard is based on the top 10 registered characters from the Take a Lap Guild.\n\n ⚠️ If you have not registered your off-realm or out-of-guild character, please do so with !register.'
+                    characters_list = db.get_top10_character_by_highest_item_level()
+                    embed = discord.Embed(title='Item Level Leaderboard', description= description, color=discord.Color.green())
+                    thumbnail = characters_list[0].thumbnail_url
+                    embed.set_thumbnail(url=thumbnail)
+                    counter = 1
+                    for leader in characters_list:
+                        embed.add_field(name=f'{counter}. {leader.item_level} - {leader.name} | {leader.spec_name} - {leader.class_name}', value=f'[Class Rank on {leader.realm.capitalize()}: {leader.rank}]({leader.url})', inline=False)
+                        counter+=1
+                    embed.set_footer(text='Data from [Raider.IO](https://raider.io/)')
+                    await ctx.channel.send(embed=embed)
         except Exception as exception:
             await ctx.channel.send('Type !help to see how to use this command.')
             user = await ctx.bot.fetch_user(173958345022111744)
@@ -240,7 +268,7 @@ class RaiderIOCog(commands.Cog):
             ctx (_type_): _description_
         """
         try:
-            description = '📄 This leaderboard is based on the top 10 registered characters from the Take a Lap Guild.\n ⚠️ If you have not registered your off-realm or out-of-guild character, please do so with !register.'
+            description = '📄 This leaderboard is based on the top 10 registered characters from the Take a Lap Guild.\n\n  ⚠️ If you have not registered your off-realm or out-of-guild character, please do so with !register.'
             dungeon_list = db.get_top10_guild_runs()
             
             embed = discord.Embed(title='🏆 Best Take a Lap Guild Runs', description= description, color=discord.Color.green())
