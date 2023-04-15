@@ -21,8 +21,8 @@ intents.presences = True #v2
 intents.guilds = True
 intents.guild_messages = True
 
-bot = commands.Bot(command_prefix='!',
-                   intents=intents,
+
+bot = commands.Bot(intents=intents,
                    activity=discord.Activity(type=discord.ActivityType.watching,
                                              name="for !help"))
 
@@ -30,7 +30,9 @@ cogs_list = ['commands.general_cog',
              'commands.poll_cog',
              'commands.errors_cog',
              'commands.raider_io_cog',
-             'commands.member_events_cog']
+             'commands.member_events_cog',
+             'commands.leaderboard_cog',
+             'commands.character_cog']
 
 logger = logging.getLogger('discord')
 logger.setLevel(logging.DEBUG)

@@ -27,4 +27,5 @@ class CreatePollModal(discord.ui.Modal):
         for i, child in enumerate(self.children[1:]):
             if child.value:
                 await interaction.message.add_reaction(chr(0x1F1E6 + i))
+       
                 

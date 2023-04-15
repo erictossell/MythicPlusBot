@@ -14,7 +14,7 @@ class PollCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         print("Poll cog is initialized")
-    @commands.command(name='poll', help='Lets users run a self-made poll for others to vote on.')
+    @commands.slash_command(name='poll', help='Lets users run a self-made poll for others to vote on.')
     @commands.has_role('Guild Members')
     async def poll(self, ctx, *args):
         """Generate a poll with the given arguments
