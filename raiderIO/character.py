@@ -85,7 +85,7 @@ class Character:
         for run in self.best_runs:
             time = convert_millis(run.clear_time_ms)
             name = run.name + ' - ' + str(run.mythic_level)    
-            value = f'Time: ** {time} + ** | Score: {run.score} \n  {run.affixes[0].name} ,  {run.affixes[1].name} ,  {run.affixes[2].name}'
+            value = f'Time: ** {time} ** | Score: {run.score} \n  {run.affixes[0].name} ,  {run.affixes[1].name} ,  {run.affixes[2].name}'
                         
             embed.add_field(name=name, value=value, inline=False)
         embed.set_footer(text='Last updated ' + self.last_crawled_at)
@@ -108,7 +108,7 @@ class Character:
         for run in self.recent_runs:
             time = convert_millis(run.clear_time_ms)
             name = run.name + ' - ' + str(run.mythic_level)    
-            value = f'Time: ** {time} + ** | Score: {run.score} \n  {run.affixes[0].name} ,  {run.affixes[1].name} ,  {run.affixes[2].name}'
+            value = f'Time: ** {time} ** | Score: {run.score} \n  {run.affixes[0].name} ,  {run.affixes[1].name} ,  {run.affixes[2].name}'
                         
             embed.add_field(name=name, value=value, inline=False)
         embed.set_footer(text='Last updated ' + self.last_crawled_at) 

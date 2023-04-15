@@ -1,6 +1,6 @@
 from unittest import TestCase
-from objects.raiderIO.raiderIOService import get_score_colors
-from util.binarySearch import binary_search_score_colors
+from raiderIO import get_score_colors
+from util import binary_search_score_colors
 
 class TestBinarySearch(TestCase):
     

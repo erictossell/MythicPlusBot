@@ -29,7 +29,7 @@ def hex_to_rgb(hex) -> Tuple[int]:
 
 
 
-def binary_search_score_colors(score_color_list: List[ScoreColor], input_score: int):
+def binary_search_score_colors(score_color_list: List[ScoreColor], input_score: int) -> ScoreColor:
     """Search for the color that corresponds to the input score.
 
     Args:

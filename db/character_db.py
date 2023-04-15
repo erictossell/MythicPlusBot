@@ -13,26 +13,32 @@ class CharacterDB(Base):
     __tablename__ = 'characters'
     
     id = Column(Integer, primary_key=True)
-    discord_user_id = Column(Integer)
-    discord_guild_id = Column(Integer)    
-    guild_name = Column(String)    
-    name = Column(String)
-    realm = Column(String)
-    faction = Column(String)
-    region = Column(String)
-    role = Column(String)
-    spec_name = Column(String)
-    class_name = Column(String)
-    achievement_points = Column(Integer)
-    item_level = Column(Integer)
-    score = Column(Integer)
-    rank = Column(Integer)  
-    thumbnail_url = Column(String)
-    url = Column(String)
-    last_crawled_at = Column(DateTime)
-    is_reporting = Column(Boolean)
-    character_runs = relationship("CharacterRunDB", back_populates="character")
-    default_character = relationship("DefaultCharacterDB", back_populates="character")
+    discord_user_id = Column(Integer, nullable=False)
+    discord_guild_id = Column(Integer, nullable=False)    
+    guild_name = Column(String, nullable=False)    
+    name = Column(String, nullable=False)
+    realm = Column(String, nullable=False)
+    faction = Column(String, nullable=False)
+    region = Column(String, nullable=False)
+    role = Column(String, nullable=False)
+    spec_name = Column(String, nullable=False)
+    class_name = Column(String, nullable=False)
+    achievement_points = Column(Integer, nullable=False)
+    item_level = Column(Integer, nullable=False)
+    score = Column(Integer, nullable=False)
+    rank = Column(Integer, nullable=False)  
+    thumbnail_url = Column(String, nullable=False)
+    url = Column(String, nullable=False)
+    last_crawled_at = Column(DateTime, nullable=False)
+    is_reporting = Column(Boolean, nullable=False, default=False)
+    character_runs = relationship("CharacterRunDB",
+                                  back_populates="character",
+                                  cascade="all, delete-orphan")
+    default_character = relationship("DefaultCharacterDB",
+                                     back_populates="character",
+                                     uselist=False,
+                                     cascade="all, delete-orphan")
+
     def __init__(self,
                  discord_user_id: int,
                  discord_guild_id: int,                 
@@ -71,8 +77,6 @@ class CharacterDB(Base):
         self.url = url
         self.last_crawled_at = last_crawled_at
         self.is_reporting = is_reporting
-        self.character_runs = []
-        
         
     def __repr__(self):
-        return f"CharacterDB(discord_user_id={self.discord_user_id}, name={self.name}, realm={self.realm}, faction={self.faction}, region={self.region}, role={self.role}, spec_name={self.spec_name}, class_name={self.class_name}, achievement_points={self.achievement_points}, item_level={self.item_level}, score={self.score}, rank={self.rank}, thumbnail_url={self.thumbnail_url}, url={self.url}, last_crawled_at={self.last_crawled_at}, is_reporting={self.is_reporting}, dungeon_runs={self.character_runs})"
+        return f"<CharacterDB(id={self.id}, discord_user_id={self.discord_user_id}, name={self.name}, realm={self.realm}, faction={self.faction}, region={self.region}, role={self.role}, spec_name={self.spec_name}, class_name={self.class_name}, achievement_points={self.achievement_points}, item_level={self.item_level}, score={self.score}, rank={self.rank}, thumbnail_url={self.thumbnail_url}, url={self.url}, last_crawled_at={self.last_crawled_at}, is_reporting={self.is_reporting})>"
