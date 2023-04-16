@@ -18,7 +18,7 @@ class Character(commands.Cog):
         """Gets the best Mythic+ runs for a character."""
         try:           
             
-            character_title = db.lookup_character(character_name, 'area-52')
+            character_title = db.lookup_character(character_name, realm)
             run_list = db.get_all_runs_for_character(character_title)
             for run in run_list:
                 characters_list = db.get_all_characters_for_run(run.id)
@@ -49,31 +49,26 @@ class Character(commands.Cog):
             character_realm (str, optional): The character realm. Defaults to 'Area-52'.
         """
         try:
-            character = await raiderIO.get_character(character_name, character_realm)
-            character_db = db.lookup_character(character.name, character.realm.lower())
-            default_character = db.lookup_default_character(ctx.guild.id, ctx.author.id)
-
-            if character_db:
-                if default_character:
-                    default_character.character = character_db
-                    default_character = db.update_default_character(default_character)
-                else:
-                    default_character = db.add_default_character(db.DefaultCharacterDB(ctx.author.id,
-                                                                                       ctx.guild.id,
-                                                                                        character_db,
-                                                                                       1,
-                                                                                       True))
-                                                                                      
-
-                await ctx.respond(f'Your main character has been set to {character.name}-{character.realm}.')
+            discord_user_id = ctx.author.id
+            discord_guild_id = ctx.guild.id
+            character_io = await raiderIO.get_character(character_name, character_realm)
+            if character_io is None:
+                await ctx.respond(f'Character {character_name}-{character_realm} does not exist.')
+                return
             else:
-                await ctx.respond('Something went wrong. Make sure if your character is not in the guild, you have registered it with !register.')
+                main_char = db.update_default_character(discord_user_id, discord_guild_id, db.lookup_character(character_name, character_realm))
+                if main_char is None:
+                    await ctx.respond(f'Character {character_name}-{character_realm} is not registered in the guild.')
+                    return
+                else:
+                    await ctx.respond(f'Your main character is now {main_char[1]}-{main_char[2]}.')
 
         except Exception as exception:
-            await ctx.respond('Type !help to see how to use this command.')
+            await ctx.channel.send('Type !help to see how to use this command.')
             user = await ctx.bot.fetch_user(173958345022111744)
             channel = await user.create_dm()
-            await channel.send(f'Error in !default command: {exception}')
+            await channel.send(f'Error in !register command: {exception}')
+
             
     @character.command(name='register', help='Register a character that is not in the guild.')
     async def register(self, ctx):
@@ -170,7 +165,8 @@ class Character(commands.Cog):
         """
         try:
             if not character_name:
-                main_char = db.lookup_default_character(ctx.guild.id, ctx.author.id)
+                main_char_relationship = db.lookup_default_character(ctx.guild.id, ctx.author.id)
+                main_char = db.lookup_character(main_char_relationship.character.name, main_char_relationship.character.realm)
                 char = db.lookup_character(main_char.character.name, main_char.character.realm)
                 if char:
                     character_name, realm = char.name, char.realm

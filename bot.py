@@ -24,7 +24,7 @@ intents.guild_messages = True
 
 bot = commands.Bot(intents=intents,
                    activity=discord.Activity(type=discord.ActivityType.watching,
-                                             name="for !help"))
+                                             name="for slash commands!"))
 
 cogs_list = ['commands.general_cog',
              'commands.poll_cog',

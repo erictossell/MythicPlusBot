@@ -225,12 +225,12 @@ async def is_guild_run(run_id: int, season: str) -> Optional[bool]:
     try:
         request = requests.get(API_URL +f'mythic-plus/run-details?season={season}&id={run_id}')
         if request.status_code != 200:
-            print('Error: Run not found.')
+            print('RaiderIO : Error: Run not found.')
             return None
         elif request.status_code == 200:
             guild_member_counter = 0
             if request.json()['roster'] is None:
-                print('No roster found for run: ' + str(run_id))
+                print('RaiderIO : No roster found for run: ' + str(run_id))
                 return False
             for roster in request.json()['roster']:                    
                 #print('is_Guild_Run: Searching for ' + roster['character']['name'])
@@ -238,16 +238,16 @@ async def is_guild_run(run_id: int, season: str) -> Optional[bool]:
                                                     roster['character']['realm']['slug'])                      
                 if character_db is not None:
                     guild_member_counter += 1
-                    print('Guild member found: ' + roster['character']['name'])
+                    print('RaiderIO : Guild member found: ' + roster['character']['name'])
                     db.add_character_run(character_db, run_id)
             if guild_member_counter >= 4:
-                print('Guild run found: ' + str(run_id))
+                print('RaiderIO : Guild run found: ' + str(run_id))
                 return True
             else:
-                print('Guild run not found: ' + str(run_id))
+                print('RaiderIO : Guild run not found: ' + str(run_id))
                 return False           
     except Exception as exception:
-        print('Error: ' + exception)
+        print('RaiderIO : Error: ' + exception)
         return None   
         
 async def crawl_characters(discord_guild_id: int) -> str:
