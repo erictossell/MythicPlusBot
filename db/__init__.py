@@ -1,18 +1,21 @@
 ##---------------Take a Lap Discord Bot-----------------
 #Description: This file is used to create the database and tables for the bot. It is also used to query the database for information.
 #Author: Eriim\
-from contextlib import contextmanager
 import logging
+from contextlib import contextmanager
+from datetime import datetime, timedelta
 from typing import Optional, List
 from sqlalchemy import create_engine
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import sessionmaker, joinedload
+
 from db.base import Base
 
 from db.character_db import CharacterDB
 from db.dungeon_run_db import DungeonRunDB
 from db.default_character_db import DefaultCharacterDB
 from db.character_run_db import CharacterRunDB
+from db.announcement_db import AnnouncementDB
 from raiderIO.character import Character
 from raiderIO.dungeonRun import DungeonRun
 
@@ -152,6 +155,20 @@ def lookup_default_character(discord_guild_id, discord_user_id) -> DefaultCharac
     except SQLAlchemyError as error:
         print(f'Error while querying the database: {error}')
         return None 
+def lookup_next_announcement(discord_guild_id: int) -> AnnouncementDB:
+    print(f'Tal_DB : looking up next announcement for guild: {discord_guild_id}')
+    try:
+        with session_scope() as session:
+            existing_announcement = session.query(AnnouncementDB).filter(AnnouncementDB.discord_guild_id == discord_guild_id).order_by(AnnouncementDB.created_at.asc()).first()
+            
+            if existing_announcement is None:
+                print(f'Tal_DB : announcement not found for guild: {discord_guild_id}')
+            else:
+                print(f'Tal_DB : found announcement: {existing_announcement.id} for guild: {existing_announcement.discord_guild_id}')
+            return existing_announcement
+    except SQLAlchemyError as error:
+        print(f'Error while querying the database: {error}')
+        return None
     
 def add_character(character: CharacterDB) -> CharacterDB:
     """Add a character to the database.
@@ -286,7 +303,24 @@ def add_default_character(default_character: DefaultCharacterDB) -> bool:
     except SQLAlchemyError as error:
         print(f'Error while querying the database: {error}')
         return False 
-    
+def add_announcement(announcement: AnnouncementDB) -> bool:
+    """Add an announcement to the database.
+
+    Returns:
+        bool: Returns True if the announcement was added to the database, otherwise returns False.
+    """
+    print(f'Tal_DB : adding announcement: {announcement.id}')
+    try:
+        with session_scope() as session:
+            existing_announcement = session.query(AnnouncementDB).filter(AnnouncementDB.id == announcement.id).first()
+            if existing_announcement is None:
+                session.add(announcement)
+                return True
+            else:
+                return False
+    except SQLAlchemyError as error:
+        print(f'Error while querying the database: {error}')
+        return False
 def update_character(character: Character) -> CharacterDB:
     """Update an existing character in the database.
 
@@ -724,11 +758,14 @@ def get_top10_character_by_highest_item_level() -> List[CharacterDB]:
     except SQLAlchemyError as error:
         print(f'Error while querying the database: {error}')
         return None 
-def get_top10_guild_runs() -> List[DungeonRunDB]:
+def get_top10_guild_runs_this_week() -> List[DungeonRunDB]:
     print('Tal_DB : getting top 10 guild runs')
     try: 
         with session_scope() as session:
-            query = session.query(DungeonRunDB).options(joinedload('*')).filter(DungeonRunDB.is_guild_run == True).order_by(DungeonRunDB.score.desc()).limit(10).all()
+            one_week_ago = datetime.now() - timedelta(weeks=1)
+            query = session.query(DungeonRunDB).options(joinedload('*')).filter(DungeonRunDB.is_guild_run == True,
+                                                                                DungeonRunDB.num_keystone_upgrades >= 1,
+                                                                                DungeonRunDB.completed_at >= one_week_ago).order_by(DungeonRunDB.score.desc()).limit(10).all()
             
             top10_runs = [DungeonRunDB(run.id,
                                        run.season,
@@ -744,5 +781,27 @@ def get_top10_guild_runs() -> List[DungeonRunDB]:
             return top10_runs
     except SQLAlchemyError as error:
         print(f'Error while querying the database: {error}')
-        return None        
+        return None
+def get_top10_guild_runs_all_time() -> List[DungeonRunDB]:
+    print('Tal_DB : getting top 10 guild runs')
+    try: 
+        with session_scope() as session:
+            query = session.query(DungeonRunDB).options(joinedload('*')).filter(DungeonRunDB.is_guild_run == True,
+                                                                                DungeonRunDB.num_keystone_upgrades >= 1).order_by(DungeonRunDB.score.desc()).limit(10).all()
+            
+            top10_runs = [DungeonRunDB(run.id,
+                                       run.season,
+                                       run.name,
+                                       run.short_name,
+                                       run.mythic_level,
+                                       run.completed_at,
+                                       run.clear_time_ms,
+                                       run.par_time_ms,
+                                       run.num_keystone_upgrades,
+                                       run.score,
+                                       run.url) for run in query] 
+            return top10_runs
+    except SQLAlchemyError as error:
+        print(f'Error while querying the database: {error}')
+        return None
         
