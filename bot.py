@@ -27,11 +27,9 @@ bot = commands.Bot(intents=intents,
                                              name="for slash commands!"))
 
 cogs_list = ['commands.general_cog',
-             'commands.poll_cog',
-             'commands.errors_cog',
-             'commands.raider_io_cog',
+             'commands.admin_cog',
              'commands.member_events_cog',
-             'commands.leaderboard_cog',
+             'commands.guild_cog',
              'commands.character_cog']
 
 logger = logging.getLogger('discord')
