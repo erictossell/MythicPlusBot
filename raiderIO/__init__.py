@@ -369,12 +369,15 @@ async def crawl_guild_members(discord_guild_id) -> None:
     finally:
         print('Crawler: finished crawling guild members')
             
-async def crawl_runs():
+async def crawl_runs(discord_guild_id: int) -> str:
     runs_crawled = 0
     guild_run_counter = 0    
     try:
         print('executing crawl runs')
-        runs_list = db.get_all_runs()
+        runs_list = db.get_all_runs_not_crawled()
+        if runs_list is None:
+            print('No runs to crawl.')
+            return 'No runs to crawl.'
         for run in runs_list:
             await asyncio.sleep(0.4)
             is_guild = await is_guild_run(run.id, run.season)
@@ -382,13 +385,21 @@ async def crawl_runs():
             if is_guild is True:
                 run.is_guild_run = True
                 db.update_dungeon_run(run)
+                announcement = db.AnnouncementDB(discord_guild_id,
+                                                 'Take a Lap',
+                                                 1074546599239356498,
+                                                 f'New guild run: {run.name} on {run.completed_at}',
+                                                 run.id,
+                                                 run.completed_at,
+                                                 datetime.utcnow())
+                db.add_announcement(announcement)
                 guild_run_counter += 1
             else:
                 run.is_guild_run = False
                 db.update_dungeon_run(run)  
         print('Finished crawling runs.') 
+        return f'Runs crawled: {runs_crawled}  | Identified {guild_run_counter} guild runs.'
     except Exception as exception:
         print(exception)
-    finally:
-        return f'Runs crawled: {runs_crawled}  | Identified {guild_run_counter} guild runs.'
+        return f'Error: An error occurred while crawling runs.'
     

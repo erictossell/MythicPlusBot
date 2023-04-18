@@ -133,8 +133,8 @@ class Character(commands.Cog):
 
         Args:
             ctx (context): The current discord context.
-        """ 
-        try: 
+        """
+        try:
             if not name:
                 main_char = db.lookup_default_character(ctx.guild.id, ctx.author.id)
                 if main_char:

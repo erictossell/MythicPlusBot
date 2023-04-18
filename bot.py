@@ -30,7 +30,8 @@ cogs_list = ['commands.general_cog',
              'commands.admin_cog',
              'commands.member_events_cog',
              'commands.guild_cog',
-             'commands.character_cog']
+             'commands.character_cog',
+             'commands.announcement_cog']
 
 logger = logging.getLogger('discord')
 logger.setLevel(logging.DEBUG)

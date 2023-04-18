@@ -26,7 +26,7 @@ class GeneralCog(commands.Cog):
     @commands.slash_command(name="roll", description="Rolls a dice with the specified number of sides.")
     async def roll(self,
                    ctx,
-                   sides: discord.Option(discord.SlashCommandOptionType.integer)):
+                   sides: int):
         """Roll a dice with the specified number of sides.
 
         Args:

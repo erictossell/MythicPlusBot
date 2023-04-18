@@ -38,8 +38,8 @@ class Guild(commands.Cog):
             channel = await user.create_dm()
             await channel.send(f'Error in !guildRuns command: {exception}')
     
-    @guild.command(name='top_10', help='Gets the top 10 Mythic+ runs for the guild.')
-    async def top_10(self, ctx):
+    @guild.command(name='top_runs', help='Gets the top 10 Mythic+ runs for the guild.')
+    async def top_runs(self, ctx):
         """_summary_
 
         Args:
@@ -65,8 +65,6 @@ class Guild(commands.Cog):
             user = await ctx.bot.fetch_user(173958345022111744)
             channel = await user.create_dm()
             await channel.send(f'Error in !guildRuns command: {exception}')
-        
-    
     
     @guild.command(name='achievements')
     async def achievements(self, ctx):

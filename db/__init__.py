@@ -159,16 +159,26 @@ def lookup_next_announcement(discord_guild_id: int) -> AnnouncementDB:
     print(f'Tal_DB : looking up next announcement for guild: {discord_guild_id}')
     try:
         with session_scope() as session:
-            existing_announcement = session.query(AnnouncementDB).filter(AnnouncementDB.discord_guild_id == discord_guild_id).order_by(AnnouncementDB.created_at.asc()).first()
-            
-            if existing_announcement is None:
+            query_result = session.query(AnnouncementDB).filter(AnnouncementDB.discord_guild_id == discord_guild_id, AnnouncementDB.has_been_sent == False).order_by(AnnouncementDB.created_at.asc()).first()
+        
+            if query_result is None:
                 print(f'Tal_DB : announcement not found for guild: {discord_guild_id}')
+                return None
             else:
-                print(f'Tal_DB : found announcement: {existing_announcement.id} for guild: {existing_announcement.discord_guild_id}')
-            return existing_announcement
+                existing_announcement = AnnouncementDB(query_result.id,
+                                                       query_result.discord_guild_id,
+                                                       query_result.guild_name,
+                                                       query_result.announcement_channel_id,
+                                                       query_result.title,
+                                                       query_result.description,
+                                                       query_result.message,
+                                                       query_result.modified_at)
+                                                       
+                print(f'Tal_DB : found announcement: {query_result.id} for guild: {query_result.discord_guild_id}')
+                return existing_announcement
     except SQLAlchemyError as error:
         print(f'Error while querying the database: {error}')
-        return None
+        return None            
     
 def add_character(character: CharacterDB) -> CharacterDB:
     """Add a character to the database.
@@ -314,6 +324,7 @@ def add_announcement(announcement: AnnouncementDB) -> bool:
         with session_scope() as session:
             existing_announcement = session.query(AnnouncementDB).filter(AnnouncementDB.id == announcement.id).first()
             if existing_announcement is None:
+                announcement.created_at = datetime.now()
                 session.add(announcement)
                 return True
             else:
@@ -321,6 +332,7 @@ def add_announcement(announcement: AnnouncementDB) -> bool:
     except SQLAlchemyError as error:
         print(f'Error while querying the database: {error}')
         return False
+    
 def update_character(character: Character) -> CharacterDB:
     """Update an existing character in the database.
 
@@ -445,6 +457,29 @@ def update_default_character(discord_user_id:int, discord_guild_id:int, characte
     except SQLAlchemyError as error:
         print(f'Error while querying the database: {error}')
         return None, False
+def update_announcement_has_been_sent(announcement_id: int) -> bool:
+    """Update the announcement_has_been_sent field of an announcement.
+
+    Args:
+        announcement_id (int): The id of the announcement to update.
+
+    Returns:
+        Bool: Returns True if the announcement was updated in the database, otherwise returns False.
+    """
+    print(f'Tal_DB : updating announcement_has_been_sent for announcement: {announcement_id}')
+    try:
+        with session_scope() as session:
+            existing_announcement = session.query(AnnouncementDB).filter(AnnouncementDB.id == announcement_id).first()
+            if existing_announcement is not None:
+                existing_announcement.has_been_sent = True
+                print('Tal_DB : updated announcement_has_been_sent for announcement: ' + str(announcement_id))
+                return True
+            else:
+                print('Tal_DB : announcement not found: ' + str(announcement_id))
+                return False
+    except SQLAlchemyError as error:
+        print(f'Error while querying the database: {error}')
+        return False
     
 def set_guild_run(run: DungeonRun) -> bool:
     """Set a run as a guild run.
@@ -543,14 +578,78 @@ def get_all_characters() -> List[CharacterDB]:
             return characters_list
     except SQLAlchemyError as error:
         print(f'Error while querying the database: {error}')
-        return None 
+        return None
+def get_all_characters_active_in_last_30_days() -> List[CharacterDB]:
+    """Get all of the characters from the database.
+
+    Returns:
+        characters_list: a list of all of the characters in the database.
+    """
+    print ('Tal_DB : getting all characters')
+    try:
+        with session_scope() as session:
+            characters_query = session.query(CharacterDB).options(joinedload('*')).filter(CharacterDB.last_crawled_at > datetime.now() - timedelta(days=30)).all()
+            characters_list = [CharacterDB(character.discord_user_id,
+                                           character.discord_guild_id,
+                                           character.guild_name,
+                                           character.name,
+                                           character.realm,
+                                           character.faction,
+                                           character.region,
+                                           character.role,
+                                           character.spec_name,
+                                           character.class_name,
+                                           character.achievement_points,
+                                           character.item_level,
+                                           character.score,
+                                           character.rank,
+                                           character.thumbnail_url,
+                                           character.url,
+                                           character.last_crawled_at,
+                                           character.is_reporting) for character in characters_query]
+            return characters_list
+    except SQLAlchemyError as error:
+        print(f'Error while querying the database: {error}')
+        return None
+def get_all_characters_not_recently_crawled() -> List[CharacterDB]:
+    """Get all of the characters from the database that have not been crawled recently.
+
+    Returns:
+        List[CharacterDB]: A list of all of the characters in the database that have not been crawled recently.
+    """
+    print('Tal_DB : getting all characters not recently crawled')
+    try:
+        with session_scope() as session: 
+            characters_query = session.query(CharacterDB).options(joinedload('*')).filter(CharacterDB.last_crawled_at < datetime.now() - timedelta(days=1)).all()
+            characters_list = [CharacterDB(character.discord_user_id,
+                                           character.discord_guild_id,
+                                           character.guild_name,
+                                           character.name,
+                                           character.realm,
+                                           character.faction,
+                                           character.region,
+                                           character.role,
+                                           character.spec_name,
+                                           character.class_name,
+                                           character.achievement_points,
+                                           character.item_level,
+                                           character.score,
+                                           character.rank,
+                                           character.thumbnail_url,
+                                           character.url,
+                                           character.last_crawled_at,
+                                           character.is_reporting) for character in characters_query]
+            return characters_list
+    except SQLAlchemyError as error:
+        print(f'Error while querying the database: {error}')
+        return None
 def get_all_runs() -> List[DungeonRunDB]:
     """Get all of the runs from the database.
 
     Returns:
         runs_list: A list of all of the runs in the database.
     """
-    print(f'Tal_DB : getting all runs')
+    print('Tal_DB : getting all runs')
     try:
         with session_scope() as session:
             runs_query = session.query(DungeonRunDB).options(joinedload('*')).all()
@@ -568,7 +667,32 @@ def get_all_runs() -> List[DungeonRunDB]:
             return runs_list
     except SQLAlchemyError as error:
         print(f'Error while querying the database: {error}')
-        return None 
+        return None
+def get_all_runs_not_crawled() -> List[DungeonRunDB]:
+    """Get all of the runs that have not been crawled.
+
+    Returns:
+        List[DungeonRunDB]: A list of all of the runs that have not been crawled.
+    """
+    print('Tal_DB : getting all runs that have not been crawled')
+    try:
+        with session_scope() as session:
+            runs_query = session.query(DungeonRunDB).filter(DungeonRunDB.is_crawled == False).all()
+            runs_list = [DungeonRunDB(run.id,
+                                      run.season,
+                                      run.name,
+                                      run.short_name,
+                                      run.mythic_level,
+                                      run.completed_at,
+                                      run.clear_time_ms,
+                                      run.par_time_ms,
+                                      run.num_keystone_upgrades,
+                                      run.score,
+                                      run.url) for run in runs_query]
+            return runs_list
+    except SQLAlchemyError as error:
+        print(f'Error while querying the database: {error}')
+        return None
 def get_all_characters_for_run(run_id: int) -> List[CharacterRunDB]:
     """Get all characters for a run.
 

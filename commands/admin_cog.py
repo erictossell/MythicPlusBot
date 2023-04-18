@@ -15,7 +15,7 @@ class Admin(commands.Cog):
         
     admin = SlashCommandGroup("admin", description="Admin commands for the bot.")
     
-    @admin.command(name="crawl")
+    @admin.command(name="crawl")    
     async def crawl(self, ctx):
         """Crawl the guild for new runs.
 
@@ -60,7 +60,7 @@ class Admin(commands.Cog):
             print('crawl runs command called')
             await ctx.respond('Crawling Raider.IO guild runs...')
             start_time = time.time()
-            output = await raiderIO.crawl_runs()
+            output = await raiderIO.crawl_runs(ctx.guild.id)
             await ctx.respond(output)
             end_time = time.time()
             elapsed_time = end_time - start_time
