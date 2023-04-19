@@ -26,12 +26,12 @@ bot = commands.Bot(intents=intents,
                    activity=discord.Activity(type=discord.ActivityType.watching,
                                              name="for slash commands!"))
 
-cogs_list = ['commands.general_cog',
-             'commands.admin_cog',
-             'commands.member_events_cog',
-             'commands.guild_cog',
-             'commands.character_cog',
-             'commands.announcement_cog']
+cogs_list = ['app.commands.general_cog',
+             'app.commands.admin_cog',
+             'app.commands.member_events_cog',
+             'app.commands.guild_cog',
+             'app.commands.character_cog',
+             'app.commands.announcement_cog']
 
 logger = logging.getLogger('discord')
 logger.setLevel(logging.DEBUG)

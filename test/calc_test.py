@@ -1,10 +1,7 @@
 from unittest import TestCase
-from objects.dice import Dice
+from app.objects.dice import Dice
 
-class TestDice(TestCase):
-    
-    def test_always_fail(self):
-        assert False
+class TestDice(TestCase):   
         
     def test_roll_valid(self):
         dice = Dice(6)

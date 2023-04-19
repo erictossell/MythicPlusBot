@@ -1,12 +1,9 @@
 from unittest import TestCase
-from raiderIO import get_score_colors
-from util import binary_search_score_colors
+from app.raiderIO import get_score_colors
+from app.util import binary_search_score_colors
 
 class TestBinarySearch(TestCase):
-    
-    def test_always_fail(self):
-        self.assertTrue(False)
-    
+           
     def test_binary_search_score_colors_200(self):
         scoreColors = get_score_colors()
         result = binary_search_score_colors(scoreColors, 200)
