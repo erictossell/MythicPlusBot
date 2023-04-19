@@ -13,7 +13,6 @@ from raiderIO.member import Member
 from raiderIO.scoreColor import ScoreColor
 import util
 
-
 API_URL = 'https://raider.io/api/v1/'
 
 def get_score_colors() -> Optional[List[ScoreColor]]:
@@ -31,7 +30,7 @@ def get_score_colors() -> Optional[List[ScoreColor]]:
     except Exception as exception:
         print(exception)
         return None
-    
+
 async def get_character(name: str,
                             realm='Area-52',
                             scoreColors=get_score_colors(),
@@ -150,7 +149,7 @@ async def get_character(name: str,
     except Exception as exception:
         print(exception)
         return None
-        
+
 async def get_members() -> Optional[List[Member]]:
     """Get a list of members from the Raider.IO API."""    
     try:
@@ -209,7 +208,7 @@ async def get_run_details(run_id: int, season: str):
         
     except Exception as exception:
         print(exception)
-          
+
 async def is_guild_run(run_id: int, season: str) -> Optional[bool]:
     """Get a guild run from the Raider.IO API.
 
@@ -249,7 +248,7 @@ async def is_guild_run(run_id: int, season: str) -> Optional[bool]:
     except Exception as exception:
         print('RaiderIO : Error: ' + exception)
         return None   
-        
+
 async def crawl_characters(discord_guild_id: int) -> str:
     """Crawl the Raider.IO API for new data on characters in the database.\n
     This method has a 0.3 second delay between each API call to avoid rate limiting.
@@ -267,7 +266,7 @@ async def crawl_characters(discord_guild_id: int) -> str:
         for character in characters_list:
             await asyncio.sleep(0.3)
             characters_crawled += 1                
-            if character.is_reporting is True and character.score > 0:
+            if character.is_reporting is True:
                 character_io = await get_character(character.name,
                                                     character.realm)                    
                 for run in character_io.best_runs:
@@ -321,7 +320,7 @@ async def crawl_guild_members(discord_guild_id) -> None:
         counter = 0
         print(len(members_list))
         for member in members_list:
-            print(member.name)              
+            print(member.name)
                     
         for member in members_list:
             db_character = db.lookup_character(member.name, 'Area-52')
@@ -331,36 +330,26 @@ async def crawl_guild_members(discord_guild_id) -> None:
             score_colors_list = get_score_colors()
             character = await get_character(str(member.name),
                                                             'Area-52', score_colors_list)
-            
-            if character is None:
-                print("Crawler: Character not found: " + member.name)
-            elif character is not None and db_character is None:
-                new_character = db.CharacterDB(173958345022111744,
-                                                discord_guild_id,
-                                                character.guild_name,
-                                                character.name,
-                                                character.realm,
-                                                character.faction,
-                                                character.region,
-                                                character.role,
-                                                character.spec_name,
-                                                character.class_name,
-                                                character.achievement_points,
-                                                character.item_level,
-                                                character.score,
-                                                character.rank,
-                                                character.thumbnail_url,
-                                                character.url,
-                                                datetime.strptime(character.last_crawled_at,
-                                                                    '%Y-%m-%dT%H:%M:%S.%fZ'),
-                                                True
-                                                )
-                                                
-                print(type(new_character))
-                print(new_character)
-                db.add_character(new_character) 
-            else:
-                print("Crawler: Character already exists: " + member.name)
+            new_character = db.CharacterDB(173958345022111744,
+                                            discord_guild_id,
+                                            character.guild_name,
+                                            character.name,
+                                            character.realm,
+                                            character.faction,
+                                            character.region,
+                                            character.role,
+                                            character.spec_name,
+                                            character.class_name,
+                                            character.achievement_points,
+                                            character.item_level,
+                                            character.score,
+                                            character.rank,
+                                            character.thumbnail_url,
+                                            character.url,
+                                            datetime.strptime(character.last_crawled_at,
+                                                                '%Y-%m-%dT%H:%M:%S.%fZ'),
+                                            True)  
+            db.add_character(new_character)
             counter += 1    
             print(f'Crawler: Character number: {counter} has been crawled.')        
     except Exception as exception:
@@ -368,7 +357,7 @@ async def crawl_guild_members(discord_guild_id) -> None:
         return False
     finally:
         print('Crawler: finished crawling guild members')
-            
+
 async def crawl_runs(discord_guild_id: int) -> str:
     runs_crawled = 0
     guild_run_counter = 0    
@@ -385,13 +374,13 @@ async def crawl_runs(discord_guild_id: int) -> str:
             if is_guild is True:
                 run.is_guild_run = True
                 db.update_dungeon_run(run)
-                announcement = db.AnnouncementDB(discord_guild_id,
-                                                 'Take a Lap',
-                                                 1074546599239356498,
-                                                 f'New guild run: {run.name} on {run.completed_at}',
-                                                 run.id,
-                                                 run.completed_at,
-                                                 datetime.utcnow())
+                announcement = db.AnnouncementDB(discord_guild_id = discord_guild_id,
+                                                 guild_name = 'Take a Lap',
+                                                 announcement_channel_id = 1074546599239356498,
+                                                 title = f'🧙‍♂️ New guild run: {run.name} on {run.completed_at}',
+                                                 description = 'Description',
+                                                 message = "Message")
+                announcement.dungeon_run_id = run.id
                 db.add_announcement(announcement)
                 guild_run_counter += 1
             else:
@@ -402,4 +391,3 @@ async def crawl_runs(discord_guild_id: int) -> str:
     except Exception as exception:
         print(exception)
         return f'Error: An error occurred while crawling runs.'
-    

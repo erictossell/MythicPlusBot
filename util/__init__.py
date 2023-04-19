@@ -1,3 +1,4 @@
+import datetime
 from typing import Tuple, List
 from raiderIO.scoreColor import ScoreColor
 
@@ -55,3 +56,13 @@ def binary_search_score_colors(score_color_list: List[ScoreColor], input_score: 
         if nearest is None or abs(score_color_list[mid].score - input_score) < abs(nearest.score - input_score):
             nearest = score_color_list[mid]
     return nearest.color
+
+def seconds_until(hours, minutes):
+    given_time = datetime.time(hours, minutes)
+    now = datetime.datetime.now()
+    future_exec = datetime.datetime.combine(now, given_time)
+    if (future_exec - now).days < 0:
+        future_exec = datetime.datetime.combine(now + datetime.timedelta(days=1), given_time)
+
+    return (future_exec - now).total_seconds()
+

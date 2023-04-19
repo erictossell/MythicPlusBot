@@ -1,6 +1,7 @@
 #---------------Take a Lap Discord Bot-----------------
 # Description: This file contains the DungeonRunDB class which is used to create the dungeon_runs table in the database.
 # Author: Eriim
+import datetime
 from sqlalchemy import Column, DateTime, Integer, String, Boolean
 from sqlalchemy.orm import relationship
 from db.base import Base
@@ -24,7 +25,10 @@ class DungeonRunDB(Base):
     url = Column(String)
     is_guild_run = Column(Boolean, default=False)
     is_crawled = Column(Boolean, default=False)
+    modified_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
     character_runs = relationship("CharacterRunDB", back_populates="dungeon_run")
+    announcements = relationship("AnnouncementDB", back_populates="dungeon_run")
 
     def __init__(self, id, season, name, short_name, mythic_level, completed_at, clear_time_ms, par_time_ms, num_keystone_upgrades, score, url):
         """

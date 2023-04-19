@@ -3,10 +3,9 @@ import asyncio
 import discord
 from discord.ext import commands, tasks
 from datetime import time
-
 import db
 import raiderIO
-
+import util
 
 class Announcement(commands.Cog):
     """This cog contains commands for announcements.
@@ -18,7 +17,8 @@ class Announcement(commands.Cog):
         self.bot = bot
         print("Announcement cog is initializing....")
         self.announcement_channel_id = 1074546599239356498
-        self.bg_task = self.bot.loop.create_task(self.send_announcements())
+        self.announcement_task = self.bot.loop.create_task(self.send_announcements())
+        self.crawl_task = self.bot.loop.create_task(self.crawl_for_data())
         self.is_closed = bot.is_closed
     
     @tasks.loop(time=time(hour=22, minute=5, second=0))
@@ -30,7 +30,7 @@ class Announcement(commands.Cog):
             
             if announcement is None:
                 print("No announcement found.")
-                await asyncio.sleep(60)
+                await asyncio.sleep(300)
                 continue
 
             channel = self.bot.get_channel(channel_id)
@@ -40,20 +40,27 @@ class Announcement(commands.Cog):
             
             db.update_announcement_has_been_sent(announcement.id)
             await channel.send(embed=embed)
-            await asyncio.sleep(60)
-    
-    @tasks.loop(time=time(hour=0, minute=0, second=0))
-    async def small_crawl_characters(self):
-        await self.bot.wait_until_ready()
-        channel_id = self.announcement_channel_id
+            await asyncio.sleep(300)
+
+    @tasks.loop(time=time(hour=16, minute=34, second=0))
+    async def crawl_for_data(self):
+        await self.bot.wait_until_ready()        
+        channel = self.bot.get_channel(self.announcement_channel_id)
         while not self.is_closed():
-            raiderIO.crawl
+            character_crawl = await raiderIO.crawl_characters(804157941732474901)
             
+            await channel.send(character_crawl)
             
-            await asyncio.sleep(60)
+            await asyncio.sleep(20)
+            
+            dungeon_run_crawl = await raiderIO.crawl_runs(804157941732474901)
+            
+            await channel.send(dungeon_run_crawl)
+            if util.seconds_until(0,0) < 1200:
+                # If it's less than 20 minutes until midnight, run this code.
+                print("It's less than 20 minutes until midnight.")        
+            await asyncio.sleep(3600)            
             continue
-        
-            
                 
 def setup(bot):
     bot.add_cog(Announcement(bot))    

@@ -1,16 +1,12 @@
-#---------------Take a Lap Discord Bot-----------------
-#Description: This file contains the CharacterDB class which is used to create the character table in the database.
-#Author: Eriim
-
 import datetime
-from sqlalchemy import Column, DateTime, Integer, String, Boolean
+from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Boolean
 from sqlalchemy.orm import relationship
 from db.base import Base
 
 
-class CharacterDB(Base):
+class CharacterHistoryDB(Base):
     """CharacterDB class which is used to create the character table in the database."""
-    __tablename__ = 'characters'
+    __tablename__ = 'character_history'
     
     id = Column(Integer, primary_key=True)
     discord_user_id = Column(Integer, nullable=False)
@@ -31,18 +27,12 @@ class CharacterDB(Base):
     url = Column(String, nullable=False)
     last_crawled_at = Column(DateTime, nullable=False)
     is_reporting = Column(Boolean, nullable=False, default=False)
-    modified_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
-    character_runs = relationship("CharacterRunDB",
-                                  back_populates="character",
-                                  cascade="all, delete-orphan")
-    default_character = relationship("DefaultCharacterDB",
-                                     back_populates="character",
-                                     uselist=False,
-                                     cascade="all, delete-orphan")
-    character_history = relationship("CharacterHistoryDB",
-                                     back_populates="character",
-                                     cascade="all, delete-orphan")
+    character_id = Column(Integer, ForeignKey('characters.id'))   
+    character = relationship("CharacterDB",
+                                  back_populates="character_history")  
+    created_at = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
+    modified_at = Column(DateTime, nullable=False, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow) 
+    
 
     def __init__(self,
                  discord_user_id: int,

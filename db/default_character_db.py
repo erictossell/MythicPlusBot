@@ -15,6 +15,7 @@ class DefaultCharacterDB(Base):
     is_default_character = Column(Boolean, default=True)
     version = Column(Integer)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    modified_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
     character_id = Column(Integer, ForeignKey('characters.id'))
     character = relationship("CharacterDB", back_populates="default_character")
 
