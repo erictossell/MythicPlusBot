@@ -1,8 +1,8 @@
 from datetime import datetime
 from typing import List
 import discord
-from app.raiderIO.dungeon_run import DungeonRun
-from app.raiderIO.score_color import ScoreColor
+from app.raiderIO.models.dungeon_run import DungeonRun
+from app.raiderIO.models.score_color import ScoreColor
 
 
 from app.util import convert_millis, hex_to_rgb

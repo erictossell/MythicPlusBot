@@ -1,6 +1,6 @@
 import datetime
 from typing import Tuple, List
-from app.raiderIO.score_color import ScoreColor
+from app.raiderIO.models.score_color import ScoreColor
 
 def convert_millis(millis) -> str:
     """Convert milliseconds to hours, minutes, seconds.
@@ -28,8 +28,6 @@ def hex_to_rgb(hex) -> Tuple[int]:
     hex = hex.lstrip('#')
     return tuple(int(hex[i:i+2], 16) for i in (0, 2, 4))
 
-
-
 def binary_search_score_colors(score_color_list: List[ScoreColor], input_score: int) -> ScoreColor:
     """Search for the color that corresponds to the input score.
 
@@ -40,11 +38,10 @@ def binary_search_score_colors(score_color_list: List[ScoreColor], input_score: 
     Returns:
         ScoreColor: The ScoreColor object with the nearest value to the input score.
     """
-
     left = 0
     right = len(score_color_list) - 1
     nearest = None
-    
+ 
     while left <= right:
         mid = (left + right) // 2
         if score_color_list[mid].score == input_score:
@@ -63,6 +60,4 @@ def seconds_until(hours, minutes):
     future_exec = datetime.datetime.combine(now, given_time)
     if (future_exec - now).days < 0:
         future_exec = datetime.datetime.combine(now + datetime.timedelta(days=1), given_time)
-
     return (future_exec - now).total_seconds()
-

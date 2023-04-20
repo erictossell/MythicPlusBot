@@ -2,8 +2,8 @@ import datetime
 from sqlalchemy import Column, DateTime, Integer, ForeignKey, Boolean
 from sqlalchemy.orm import relationship
 from app.db.base import Base
-from app.db.character_db import CharacterDB
-from app.db.dungeon_run_db import DungeonRunDB
+from app.db.models.character_db import CharacterDB
+from app.db.models.dungeon_run_db import DungeonRunDB
 
 
 class CharacterRunDB(Base):

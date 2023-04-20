@@ -11,14 +11,14 @@ from sqlalchemy.orm import sessionmaker, joinedload
 
 from app.db.base import Base
 
-from app.db.character_db import CharacterDB
-from app.db.character_history_db import CharacterHistoryDB
-from app.db.dungeon_run_db import DungeonRunDB
-from app.db.default_character_db import DefaultCharacterDB
-from app.db.character_run_db import CharacterRunDB
-from app.db.announcement_db import AnnouncementDB
-from app.raiderIO.character import Character
-from app.raiderIO.dungeon_run import DungeonRun
+from app.db.models.character_db import CharacterDB
+from app.db.models.character_history_db import CharacterHistoryDB
+from app.db.models.dungeon_run_db import DungeonRunDB
+from app.db.models.default_character_db import DefaultCharacterDB
+from app.db.models.character_run_db import CharacterRunDB
+from app.db.models.announcement_db import AnnouncementDB
+from app.raiderIO.models.character import Character
+from app.raiderIO.models.dungeon_run import DungeonRun
 
 logging.basicConfig(filename='tal.log',
                     level=logging.DEBUG,
@@ -164,7 +164,8 @@ def lookup_next_announcement(discord_guild_id: int) -> AnnouncementDB:
                 #print(f'Tal_DB : announcement not found for guild: {discord_guild_id}')
                 return None
             else:
-                announcement = AnnouncementDB(discord_guild_id = query_result.discord_guild_id,
+                announcement = AnnouncementDB(id = query_result.id,
+                                              discord_guild_id = query_result.discord_guild_id,
                                               guild_name = query_result.guild_name,
                                               announcement_channel_id = query_result.announcement_channel_id,
                                               title = query_result.title,
@@ -172,6 +173,19 @@ def lookup_next_announcement(discord_guild_id: int) -> AnnouncementDB:
                                               message = query_result.message,
                                               dungeon_run = query_result.dungeon_run,
                                               has_been_sent = query_result.has_been_sent)
+                if query_result.dungeon_run is not None:
+                    dungeon_run = DungeonRunDB(id = query_result.dungeon_run.id,
+                                                    season = query_result.dungeon_run.season,
+                                                    name= query_result.dungeon_run.name,
+                                                    short_name= query_result.dungeon_run.short_name,
+                                                    mythic_level= query_result.dungeon_run.mythic_level,
+                                                    completed_at= query_result.dungeon_run.completed_at,
+                                                    clear_time_ms= query_result.dungeon_run.clear_time_ms,
+                                                    par_time_ms= query_result.dungeon_run.par_time_ms,
+                                                    num_keystone_upgrades= query_result.dungeon_run.num_keystone_upgrades,
+                                                    score= query_result.dungeon_run.score,
+                                                    url= query_result.dungeon_run.url)
+                    announcement.dungeon_run = dungeon_run
                 #print(f'Tal_DB : found announcement: {query_result.id} for guild: {query_result.discord_guild_id}')
                 return announcement
     except SQLAlchemyError as error:
@@ -317,7 +331,6 @@ def add_character_run(character: CharacterDB, dungeon_run: DungeonRunDB) -> Opti
     except SQLAlchemyError as error:
         print(error)
         return None
-
 def add_default_character(default_character: DefaultCharacterDB) -> bool:
     """Add a default character to the database.
 
@@ -345,7 +358,12 @@ def add_announcement(announcement: AnnouncementDB) -> bool:
     """
     #print(f'Tal_DB : adding announcement: {announcement.id}')
     try:
-        with session_scope() as session:                         
+        with session_scope() as session:
+            existing_dungeon_run = session.query(DungeonRunDB).filter(DungeonRunDB.id == announcement.dungeon_run_id).first()
+            if existing_dungeon_run is None:
+                return False
+            
+            announcement.dungeon_run_id = existing_dungeon_run.id                       
             session.add(announcement)
             return True
             

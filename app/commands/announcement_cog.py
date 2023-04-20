@@ -34,10 +34,10 @@ class Announcement(commands.Cog):
                 continue
 
             
-            dungeon_run = db.lookup_run(announcement.dungeon_run_id)
-            characters = db.get_all_characters_for_run(announcement.dungeon_run_id)
+            
+            characters = db.get_all_characters_for_run(announcement.dungeon_run.id)
             embed = announce_guild_run_embed(announcement=announcement,
-                                             dungeon_run=dungeon_run,
+                                             dungeon_run=announcement.dungeon_run,
                                              characters = characters)
             
             db.update_announcement_has_been_sent(announcement.id)

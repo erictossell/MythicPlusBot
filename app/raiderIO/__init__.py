@@ -6,12 +6,13 @@ from typing import List, Optional
 
 import requests
 import app.db as db
-from app.raiderIO.affix import Affix
-from app.raiderIO.character import Character
-from app.raiderIO.dungeon_run import DungeonRun
-from app.raiderIO.member import Member
+from app.db.models.dungeon_run_db import DungeonRunDB
+from app.raiderIO.models.affix import Affix
+from app.raiderIO.models.character import Character
+from app.raiderIO.models.dungeon_run import DungeonRun
+from app.raiderIO.models.member import Member
 
-from app.raiderIO.score_color import ScoreColor
+from app.raiderIO.models.score_color import ScoreColor
 import app.util as util
 
 API_URL = 'https://raider.io/api/v1/'
@@ -205,7 +206,7 @@ async def get_run_details(run_id: int, season: str):
     except Exception as exception:
         print(exception)
 
-async def is_guild_run(run_id: int, season: str) -> Optional[bool]:
+async def is_guild_run(dungeon_run : DungeonRunDB) -> Optional[bool]:
     """Get a guild run from the Raider.IO API.
 
     Args:
@@ -218,7 +219,7 @@ async def is_guild_run(run_id: int, season: str) -> Optional[bool]:
         Optional[bool]: True if a guild run is found, False if not.
     """
     try:
-        request = requests.get(API_URL +f'mythic-plus/run-details?season={season}&id={run_id}')
+        request = requests.get(API_URL +f'mythic-plus/run-details?season={dungeon_run.season}&id={dungeon_run.id}')
         if request.status_code != 200:
             #print('RaiderIO : Error: Run not found.')
             return None
@@ -234,7 +235,7 @@ async def is_guild_run(run_id: int, season: str) -> Optional[bool]:
                 if character_db is not None:
                     guild_member_counter += 1
                     #print('RaiderIO : Guild member found: ' + roster['character']['name'])
-                    db.add_character_run(character_db, run_id)
+                    db.add_character_run(character_db, dungeon_run)
             if guild_member_counter >= 4:
                 #print('RaiderIO : Guild run found: ' + str(run_id))
                 return True
@@ -363,24 +364,26 @@ async def crawl_runs(discord_guild_id: int) -> str:
     guild_run_counter = 0
     try:
         runs_list = db.get_all_runs_not_crawled()
-        if runs_list is None:            
+        if runs_list is None:
             return 'No runs to crawl.'
         print('RaiderIO Crawler: Crawling runs.')
         for run in tqdm(runs_list):
             await asyncio.sleep(0.2)
-            is_guild = await is_guild_run(run.id, run.season)
+            is_guild = await is_guild_run(run)
             runs_crawled += 1
             if is_guild is True:
                 run.is_guild_run = True
                 db.update_dungeon_run(run)
-                announcement = db.AnnouncementDB(discord_guild_id = discord_guild_id,
-                                                 guild_name = 'Take a Lap',
-                                                 announcement_channel_id = 1074546599239356498,
-                                                 title = f'🧙‍♂️ New guild run:{run.mythic_level} - {run.name} on {run.completed_at}',
-                                                 description = f'**{run.name}** completed on {run.completed_at} by Take a Lap.\n\n**Dungeon:** {run.short_name}\n**Score:** {run.score}\n**URL:** {run.url}',
-                                                 message = "Message",
-                                                 dungeon_run=run)                
+                announcement = db.AnnouncementDB(discord_guild_id=discord_guild_id,
+                                                guild_name='Take a Lap',
+                                                announcement_channel_id=1074546599239356498,
+                                                title=f'🧙‍♂️ New guild run:{run.mythic_level} - {run.name} on {run.completed_at}',
+                                                description=f'**{run.name}** completed on {run.completed_at} by Take a Lap.\n\n**Dungeon:** {run.short_name}\n**Score:** {run.score}\n**URL:** {run.url}',
+                                                message="Message",
+                                                dungeon_run_id=run.id)
+                print(f"Created announcement with dungeon_run_id: {announcement.dungeon_run_id}")  # Print statement to verify dungeon_run_id
                 db.add_announcement(announcement)
+
                 guild_run_counter += 1
             else:
                 run.is_guild_run = False
