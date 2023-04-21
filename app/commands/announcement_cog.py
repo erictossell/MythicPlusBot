@@ -24,18 +24,18 @@ class Announcement(commands.Cog):
     @tasks.loop(time=time(hour=22, minute=5, second=0))
     async def send_announcements(self):
         await self.bot.wait_until_ready()
-        channel = self.bot.get_channel(self.announcement_channel_id ) 
+        channel = self.bot.get_channel(self.announcement_channel_id)
+        await asyncio.sleep(15)
         while not self.is_closed():
             announcement = db.lookup_next_announcement(804157941732474901)
             
             if announcement is None:
                 print("No announcement found.")
                 await asyncio.sleep(300)
-                continue
-
-            
+                continue            
             
             characters = db.get_all_characters_for_run(announcement.dungeon_run.id)
+            
             embed = announce_guild_run_embed(announcement=announcement,
                                              dungeon_run=announcement.dungeon_run,
                                              characters = characters)

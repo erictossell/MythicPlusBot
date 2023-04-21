@@ -3,7 +3,7 @@ from tqdm import tqdm
 from datetime import datetime
 import re
 from typing import List, Optional
-
+from ratelimit import limits, sleep_and_retry
 import requests
 import app.db as db
 from app.db.models.dungeon_run_db import DungeonRunDB
@@ -16,7 +16,11 @@ from app.raiderIO.models.score_color import ScoreColor
 import app.util as util
 
 API_URL = 'https://raider.io/api/v1/'
+CALLS = 299
+RATE_LIMIT=60
 
+@sleep_and_retry
+@limits(calls=CALLS, period=RATE_LIMIT)
 def get_score_colors() -> Optional[List[ScoreColor]]:
     """This method gets the score colors from the Raider.IO API.
 
@@ -32,7 +36,9 @@ def get_score_colors() -> Optional[List[ScoreColor]]:
     except Exception as exception:
         print(exception)
         return None
-
+    
+@sleep_and_retry
+@limits(calls=CALLS, period=RATE_LIMIT)
 async def get_character(name: str,
                             realm='Area-52',
                             scoreColors=get_score_colors(),
@@ -150,6 +156,8 @@ async def get_character(name: str,
         print(exception)
         return None
 
+@sleep_and_retry
+@limits(calls=CALLS, period=RATE_LIMIT)
 async def get_members() -> Optional[List[Member]]:
     """Get a list of members from the Raider.IO API."""    
     try:
@@ -174,6 +182,8 @@ async def get_members() -> Optional[List[Member]]:
     finally:
         print('Finished grabbing members.')
 
+@sleep_and_retry
+@limits(calls=CALLS, period=RATE_LIMIT)
 async def get_mythic_plus_affixes() -> Optional[List[Affix]]:
     """Get a list of affixes from the Raider.IO API.
 
@@ -196,6 +206,8 @@ async def get_mythic_plus_affixes() -> Optional[List[Affix]]:
         print(exception)
         return None    
 
+@sleep_and_retry
+@limits(calls=CALLS, period=RATE_LIMIT)
 async def get_run_details(run_id: int, season: str):
     """Get a specific run's details from the Raider.IO API.
     """    
@@ -206,6 +218,8 @@ async def get_run_details(run_id: int, season: str):
     except Exception as exception:
         print(exception)
 
+@sleep_and_retry
+@limits(calls=CALLS, period=RATE_LIMIT)
 async def is_guild_run(dungeon_run : DungeonRunDB) -> Optional[bool]:
     """Get a guild run from the Raider.IO API.
 
@@ -260,7 +274,7 @@ async def crawl_characters(discord_guild_id: int) -> str:
         characters_list = db.get_all_characters()
         print('RaiderIO Crawler: Crawling ' + str(len(characters_list)) + ' characters.')
         for character in tqdm(characters_list):
-            await asyncio.sleep(0.2)
+            #await asyncio.sleep(0.2)
             characters_crawled += 1
             if character.is_reporting is True:
                 character_io = await get_character(character.name,
@@ -343,7 +357,7 @@ async def crawl_guild_members(discord_guild_id) -> None:
                                                 True)  
                 db.add_character(new_character)
                 counter += 1
-                await asyncio.sleep(0.2)
+                #await asyncio.sleep(0.2)
                 #print(f'Crawler: Character number: {counter} has been crawled.')
     except Exception as exception:
         print(exception)
@@ -368,22 +382,19 @@ async def crawl_runs(discord_guild_id: int) -> str:
             return 'No runs to crawl.'
         print('RaiderIO Crawler: Crawling runs.')
         for run in tqdm(runs_list):
-            await asyncio.sleep(0.2)
+            #await asyncio.sleep(0.2)
             is_guild = await is_guild_run(run)
             runs_crawled += 1
             if is_guild is True:
-                run.is_guild_run = True
-                db.update_dungeon_run(run)
+                run.is_guild_run = True                
                 announcement = db.AnnouncementDB(discord_guild_id=discord_guild_id,
-                                                guild_name='Take a Lap',
                                                 announcement_channel_id=1074546599239356498,
                                                 title=f'🧙‍♂️ New guild run:{run.mythic_level} - {run.name} on {run.completed_at}',
-                                                description=f'**{run.name}** completed on {run.completed_at} by Take a Lap.\n\n**Dungeon:** {run.short_name}\n**Score:** {run.score}\n**URL:** {run.url}',
-                                                message="Message",
+                                                content=f'**{run.name}** completed on {run.completed_at} by Take a Lap.\n\n**Dungeon:** {run.short_name}\n**Score:** {run.score}\n**URL:** {run.url}',
                                                 dungeon_run_id=run.id)
                 print(f"Created announcement with dungeon_run_id: {announcement.dungeon_run_id}")  # Print statement to verify dungeon_run_id
                 db.add_announcement(announcement)
-
+                db.update_dungeon_run(run)
                 guild_run_counter += 1
             else:
                 run.is_guild_run = False

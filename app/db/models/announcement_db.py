@@ -1,55 +1,50 @@
-import datetime
-from sqlalchemy import Column, ForeignKey, Integer, String, DateTime, Boolean
+from datetime import datetime
+from sqlalchemy import Boolean, Column, Integer, String, ForeignKey, DateTime
 from sqlalchemy.orm import relationship
 from app.db.base import Base
 from app.db.models.dungeon_run_db import DungeonRunDB
 
 class AnnouncementDB(Base):
-    """Stores information about announcements."""
-    __tablename__ = 'announcements'
-    
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    discord_guild_id = Column(Integer, nullable=False)
-    guild_name = Column(String, nullable=False)
-    announcement_channel_id = Column(Integer, nullable=False)
-    title = Column(String, nullable=False)
-    description = Column(String, nullable=False)    
-    message = Column(String, nullable=False)
-    has_been_sent = Column(Boolean, nullable=False, default=False)
-    dungeon_run_id = Column(Integer, ForeignKey('dungeon_runs.id'), nullable=False)
-    dungeon_run = relationship("DungeonRunDB", back_populates="announcements")
-    created_at = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
-    modified_at = Column(DateTime, nullable=False, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
-    
-    def __init__(
-            self,
-            discord_guild_id: int,
-            guild_name: str,
-            announcement_channel_id: int,
-            title: str,
-            description: str,
-            message: str,
-            dungeon_run: DungeonRunDB = None,
-            dungeon_run_id: int = None,
-            has_been_sent: bool = False,
-            id: int = None,
-    ):
-        """AnnouncementDB constructor"""
-        self.id = id
-        self.discord_guild_id = discord_guild_id
-        self.guild_name = guild_name
-        self.announcement_channel_id = announcement_channel_id
-        self.title = title
-        self.description = description
-        self.message = message
-        self.dungeon_run = dungeon_run
-        self.dungeon_run_id = dungeon_run_id
-        self.has_been_sent = has_been_sent
+    """Model representing an announcement in the database."""
 
-    def __repr__(self):
-        return (
-            f"AnnouncementDB(id={self.id}, discord_guild_id={self.discord_guild_id}, "
-            f"guild_name={self.guild_name}, announcement_channel_id={self.announcement_channel_id}, "
-            f"title={self.title}, description={self.description}, message={self.message}, "
-            f"created_at={self.created_at}, modified_at={self.modified_at}, has_been_sent={self.has_been_sent})"
-        )
+    __tablename__ = 'announcements'
+
+    id = Column(Integer, primary_key=True)
+    title = Column(String)
+    content = Column(String)
+    discord_guild_id = Column(Integer)
+    announcement_channel_id = Column(Integer)
+    has_been_sent = Column(Boolean)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    modified_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    dungeon_run_id = Column(Integer, ForeignKey('dungeon_runs.id'))
+    dungeon_run = relationship("DungeonRunDB", back_populates="announcements")
+
+    def __init__(self,
+                 title: str,
+                 content: str,
+                 discord_guild_id :int,
+                 announcement_channel_id:int,
+                 has_been_sent : bool = False ,
+                 id: int = None,
+                 dungeon_run_id: int = None,
+                 dunegon_run: DungeonRunDB = None):
+        """
+        AnnouncementDB constructor.
+
+        Args:
+            id (int): The unique ID of the announcement.
+            title (str): The title of the announcement.
+            content (str): The content of the announcement.
+            dungeon_run_id (int): The ID of the related dungeon run.
+        """
+        self.id = id
+        self.title = title
+        self.content = content
+        self.discord_guild_id = discord_guild_id
+        self.announcement_channel_id = announcement_channel_id
+        self.has_been_sent = has_been_sent
+        if dungeon_run_id:
+            self.dungeon_run_id = dungeon_run_id
+        else:
+            self.dungeon_run = dunegon_run

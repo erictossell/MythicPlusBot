@@ -33,7 +33,4 @@ def convert_dungeon_run_io(run: raiderIO.DungeonRun) -> db.DungeonRun:
                            par_time_ms = run.par_time_ms,
                            num_keystone_upgrades = run.num_keystone_upgrades,
                            score = run.score,
-                           url = run.url,
-                           is_guild_run = False,
-                           is_crawled = False,
-                           character_runs = [])
+                           url = run.url)

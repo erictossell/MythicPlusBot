@@ -166,12 +166,9 @@ def lookup_next_announcement(discord_guild_id: int) -> AnnouncementDB:
             else:
                 announcement = AnnouncementDB(id = query_result.id,
                                               discord_guild_id = query_result.discord_guild_id,
-                                              guild_name = query_result.guild_name,
                                               announcement_channel_id = query_result.announcement_channel_id,
                                               title = query_result.title,
-                                              description = query_result.description,
-                                              message = query_result.message,
-                                              dungeon_run = query_result.dungeon_run,
+                                              content = query_result.content,
                                               has_been_sent = query_result.has_been_sent)
                 if query_result.dungeon_run is not None:
                     dungeon_run = DungeonRunDB(id = query_result.dungeon_run.id,
@@ -361,11 +358,14 @@ def add_announcement(announcement: AnnouncementDB) -> bool:
         with session_scope() as session:
             existing_dungeon_run = session.query(DungeonRunDB).filter(DungeonRunDB.id == announcement.dungeon_run_id).first()
             if existing_dungeon_run is None:
-                return False
-            
-            announcement.dungeon_run_id = existing_dungeon_run.id                       
-            session.add(announcement)
-            return True
+                return False            
+            new_announcement = AnnouncementDB(discord_guild_id = announcement.discord_guild_id,
+                                              announcement_channel_id=announcement.announcement_channel_id,
+                                              title=announcement.title,
+                                              content=announcement.content,
+                                              dungeon_run_id=existing_dungeon_run.id)                
+            session.add(new_announcement)
+            return new_announcement
             
     except SQLAlchemyError as error:
         print(f'Error while querying the database: {error}')
