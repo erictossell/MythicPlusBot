@@ -1,8 +1,15 @@
-import app.db as db
-import app.raiderIO as raiderIO
 
-def convert_character_io(character: raiderIO.Character, discord_user_id: int, discord_guild_id: int) -> db.Character:
-    character_db = db.CharacterDB(discord_user_id = discord_user_id,
+
+
+from app.db.models.character_db import CharacterDB
+from app.db.models.character_run_db import CharacterRunDB
+from app.db.models.dungeon_run_db import DungeonRunDB
+from app.raiderIO.models.character import Character
+from app.raiderIO.models.dungeon_run import DungeonRun
+
+
+def convert_character_io(character: Character, discord_user_id: int, discord_guild_id: int) -> Character:
+    character_db = CharacterDB(discord_user_id = discord_user_id,
                           discord_guild_id = discord_guild_id,
                           guild_name = character.guild_name,
                           name = character.name,
@@ -22,8 +29,8 @@ def convert_character_io(character: raiderIO.Character, discord_user_id: int, di
                           is_reporting= True)
     return character_db
 
-def convert_dungeon_run_io(run: raiderIO.DungeonRun) -> db.DungeonRun:
-    return db.DungeonRunDB(id = run.id,
+def convert_dungeon_run_io(run: DungeonRun) -> DungeonRun:
+    return DungeonRunDB(id = run.id,
                            season = run.season,
                            name = run.name,
                            short_name = run.short_name,
@@ -34,3 +41,21 @@ def convert_dungeon_run_io(run: raiderIO.DungeonRun) -> db.DungeonRun:
                            num_keystone_upgrades = run.num_keystone_upgrades,
                            score = run.score,
                            url = run.url)
+    
+    
+def convert_character_run_io(character_db: Character,
+                             dungeon_run_db: DungeonRun,
+                             spec_name: str = None,
+                             role : str = None,
+                             rank_world: int = None,
+                             rank_region: int = None,
+                             rank_realm: int = None,
+                             is_personal_best: bool = False) -> CharacterRunDB:
+    return CharacterRunDB(character = character_db,
+                             dungeon_run= dungeon_run_db,
+                             spec_name= spec_name,
+                             role= role,
+                             rank_world= rank_world,
+                             rank_region= rank_region,
+                             rank_realm= rank_realm,
+                             is_personal_best= is_personal_best)

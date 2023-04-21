@@ -20,5 +20,5 @@ def announce_guild_run_embed(announcement : db.AnnouncementDB = None,
     embed = discord.Embed(title=announcement.title, description=announcement.content, color=color)
     if characters is not None:
         for character in characters:
-            embed.add_field(name=f'{character.name} - {character.spec_name}' , value=f'Score: {character.score}\nClass Rank: {character.rank}', inline=False)
+            embed.add_field(name=f'{character.name} - {character.class_name}' , value=f'Score: {character.score}\nClass Rank: {character.rank}', inline=False)
     return embed

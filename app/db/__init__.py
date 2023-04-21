@@ -305,12 +305,12 @@ def add_dungeon_run(dungeon_run: DungeonRun) -> bool:
     except SQLAlchemyError as error:
         print(f'Error while querying the database: {error}')
         return False
-def add_character_run(character: CharacterDB, dungeon_run: DungeonRunDB) -> Optional[CharacterRunDB]:
+def add_character_run(character_run: CharacterRunDB) -> Optional[CharacterRunDB]:
     try:
         with session_scope() as session:
             existing_character = session.query(CharacterDB).filter(
-                CharacterDB.name == character.name, CharacterDB.realm == character.realm).first()
-            existing_run = session.query(DungeonRunDB).filter(DungeonRunDB.id == dungeon_run.id).first()
+                CharacterDB.name == character_run.character.name, CharacterDB.realm == character_run.character.realm).first()
+            existing_run = session.query(DungeonRunDB).filter(DungeonRunDB.id == character_run.dungeon_run.id).first()
 
             if existing_character is None or existing_run is None:
                 return None
@@ -322,9 +322,10 @@ def add_character_run(character: CharacterDB, dungeon_run: DungeonRunDB) -> Opti
             if existing_character_run is not None:
                 return None
 
-            new_character_run = CharacterRunDB(existing_character, existing_run)
-            session.add(new_character_run)
-            return new_character_run
+            character_run.character = existing_character
+            character_run.dungeon_run = existing_run
+            session.add(character_run)
+            return character_run
     except SQLAlchemyError as error:
         print(error)
         return None

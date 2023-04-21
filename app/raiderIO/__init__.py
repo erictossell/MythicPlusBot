@@ -5,6 +5,7 @@ import re
 from typing import List, Optional
 from ratelimit import limits, sleep_and_retry
 import requests
+from app import converter
 import app.db as db
 from app.db.models.dungeon_run_db import DungeonRunDB
 from app.raiderIO.models.affix import Affix
@@ -16,7 +17,7 @@ from app.raiderIO.models.score_color import ScoreColor
 import app.util as util
 
 API_URL = 'https://raider.io/api/v1/'
-CALLS = 299
+CALLS = 275
 RATE_LIMIT=60
 
 @sleep_and_retry
@@ -208,19 +209,7 @@ async def get_mythic_plus_affixes() -> Optional[List[Affix]]:
 
 @sleep_and_retry
 @limits(calls=CALLS, period=RATE_LIMIT)
-async def get_run_details(run_id: int, season: str):
-    """Get a specific run's details from the Raider.IO API.
-    """    
-    try:
-        request = requests.get(API_URL+f'mythic-plus/run-details?season={season}&id={run_id}')
-        #print(request.json())
-        
-    except Exception as exception:
-        print(exception)
-
-@sleep_and_retry
-@limits(calls=CALLS, period=RATE_LIMIT)
-async def is_guild_run(dungeon_run : DungeonRunDB) -> Optional[bool]:
+async def get_run_details(dungeon_run : DungeonRunDB) -> Optional[bool]:
     """Get a guild run from the Raider.IO API.
 
     Args:
@@ -248,8 +237,20 @@ async def is_guild_run(dungeon_run : DungeonRunDB) -> Optional[bool]:
                                                     roster['character']['realm']['slug'])                      
                 if character_db is not None:
                     guild_member_counter += 1
-                    #print('RaiderIO : Guild member found: ' + roster['character']['name'])
-                    db.add_character_run(character_db, dungeon_run)
+                    character_id = roster['character']['id']
+                    spec_name = roster['character']['spec']['name']
+                    role = roster['character']['spec']['role']
+                    rank_world = roster['ranks']['world']
+                    rank_region = roster['ranks']['region']
+                    rank_realm = roster['ranks']['realm']
+                    character_run = converter.convert_character_run_io(character_db,
+                                                       dungeon_run,
+                                                       spec_name,
+                                                       role,
+                                                       rank_world,
+                                                       rank_region,
+                                                       rank_realm)
+                    db.add_character_run(character_run)
             if guild_member_counter >= 4:
                 #print('RaiderIO : Guild run found: ' + str(run_id))
                 return True
@@ -383,7 +384,7 @@ async def crawl_runs(discord_guild_id: int) -> str:
         print('RaiderIO Crawler: Crawling runs.')
         for run in tqdm(runs_list):
             #await asyncio.sleep(0.2)
-            is_guild = await is_guild_run(run)
+            is_guild = await get_run_details(run)
             runs_crawled += 1
             if is_guild is True:
                 run.is_guild_run = True                
@@ -396,9 +397,7 @@ async def crawl_runs(discord_guild_id: int) -> str:
                 db.add_announcement(announcement)
                 db.update_dungeon_run(run)
                 guild_run_counter += 1
-            else:
-                run.is_guild_run = False
-                db.update_dungeon_run(run)  
+             
         #print('Finished crawling runs.')
         return f'Runs crawled: {runs_crawled}  | Identified {guild_run_counter} guild runs.'
     except Exception as exception:
