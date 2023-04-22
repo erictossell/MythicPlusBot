@@ -2,7 +2,7 @@
 # Description: This file contains the DungeonRunDB class which is used to create the dungeon_runs table in the database.
 # Author: Eriim
 import datetime
-from sqlalchemy import Column, DateTime, Integer, String, Boolean
+from sqlalchemy import BigInteger, Column, DateTime, Integer, String, Boolean
 from sqlalchemy.orm import relationship
 from app.db.base import Base
 
@@ -12,14 +12,14 @@ class DungeonRunDB(Base):
 
     __tablename__ = 'dungeon_runs'
 
-    id = Column(Integer, primary_key=True)
+    id = Column(BigInteger, primary_key=True)
     season = Column(String)
     name = Column(String)
     short_name = Column(String)
     mythic_level = Column(Integer)
     completed_at = Column(DateTime)
-    clear_time_ms = Column(Integer)
-    par_time_ms = Column(Integer)
+    clear_time_ms = Column(BigInteger)
+    par_time_ms = Column(BigInteger)
     num_keystone_upgrades = Column(Integer)
     score = Column(Integer)
     url = Column(String)

@@ -29,20 +29,20 @@ class Announcement(commands.Cog):
         
         await asyncio.sleep(15)
         while not self.is_closed():
-            announcement = db.lookup_next_announcement(804157941732474901)
+            announcement = await db.lookup_next_announcement(804157941732474901)
             
             if announcement is None:
                 print("No announcement found.")
                 await asyncio.sleep(300)
                 continue            
             
-            characters = db.get_all_characters_for_run(announcement.dungeon_run.id)
+            characters = await db.get_all_characters_for_run(announcement.dungeon_run.id)
             
             embed = announce_guild_run_embed(announcement=announcement,
                                              dungeon_run=announcement.dungeon_run,
                                              characters = characters)
             
-            db.update_announcement_has_been_sent(announcement.id)
+            await db.update_announcement_has_been_sent(announcement.id)
             await channel.send(embed=embed)
             await asyncio.sleep(300)
 

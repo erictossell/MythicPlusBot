@@ -3,7 +3,7 @@
 #Author: Eriim
 
 import datetime
-from sqlalchemy import Column, DateTime, Integer, String, Boolean
+from sqlalchemy import BigInteger, Column, DateTime, Integer, String, Boolean
 from sqlalchemy.orm import relationship
 from app.db.base import Base
 
@@ -13,8 +13,8 @@ class CharacterDB(Base):
     __tablename__ = 'characters'
     
     id = Column(Integer, primary_key=True)
-    discord_user_id = Column(Integer, nullable=False)
-    discord_guild_id = Column(Integer, nullable=False)    
+    discord_user_id = Column(BigInteger, nullable=False)
+    discord_guild_id = Column(BigInteger, nullable=False)    
     guild_name = Column(String, nullable=False)    
     name = Column(String, nullable=False)
     realm = Column(String, nullable=False)

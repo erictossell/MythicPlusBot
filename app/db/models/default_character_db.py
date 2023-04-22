@@ -1,5 +1,5 @@
 import datetime
-from sqlalchemy import Column, DateTime, Integer, ForeignKey, Boolean
+from sqlalchemy import BigInteger, Column, DateTime, Integer, ForeignKey, Boolean
 from sqlalchemy.orm import relationship
 from app.db.base import Base
 
@@ -9,8 +9,8 @@ class DefaultCharacterDB(Base):
 
     __tablename__ = 'default_characters'
     id = Column(Integer, primary_key=True)
-    discord_user_id = Column(Integer)
-    discord_guild_id = Column(Integer)    
+    discord_user_id = Column(BigInteger)
+    discord_guild_id = Column(BigInteger)    
     version = Column(Integer)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     modified_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)

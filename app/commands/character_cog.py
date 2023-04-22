@@ -18,12 +18,12 @@ class Character(commands.Cog):
         """Gets the best Mythic+ runs for a character."""
         try:       
             if name is None:
-                character_title = db.lookup_default_character(ctx.guild.id,ctx.author.id).character
+                character_title = await db.lookup_default_character(ctx.guild.id,ctx.author.id).character
             else:   
-                character_title = db.lookup_character(name, realm)
-            run_list = db.get_all_runs_for_character(character_title)
+                character_title = await db.lookup_character(name, realm)
+            run_list = await db.get_all_runs_for_character(character_title)
             for run in run_list:
-                characters_list = db.get_all_characters_for_run(run.id)
+                characters_list = await db.get_all_characters_for_run(run.id)
                 run_characters = '| '
                 for character in characters_list:
                     run_characters += '['+character.name + f']({character.url})  | '
@@ -106,8 +106,8 @@ class Character(commands.Cog):
         try:
             if not name:
                 if ctx.guild:
-                    main_char = db.lookup_default_character(ctx.guild.id, ctx.author.id)
-                    char = db.lookup_character(main_char.character.name, main_char.character.realm)
+                    main_char = await db.lookup_default_character(ctx.guild.id, ctx.author.id)
+                    char = await db.lookup_character(main_char.character.name, main_char.character.realm)
                     if char:
                         name, realm = char.name, char.realm
                     else:
@@ -138,8 +138,8 @@ class Character(commands.Cog):
         """
         try:
             if not name:
-                main_char = db.lookup_default_character(ctx.guild.id, ctx.author.id)
-                char = db.lookup_character(main_char.character.name, main_char.character.realm)
+                main_char = await db.lookup_default_character(ctx.guild.id, ctx.author.id)
+                char = await db.lookup_character(main_char.character.name, main_char.character.realm)
                 if char:
                     name, realm = char.name, char.realm
                 else:
@@ -167,8 +167,8 @@ class Character(commands.Cog):
         """
         try:
             if not name:
-                main_char_relationship = db.lookup_default_character(ctx.guild.id, ctx.author.id)
-                char = db.lookup_character(main_char_relationship.character.name, main_char_relationship.character.realm)
+                main_char_relationship = await db.lookup_default_character(ctx.guild.id, ctx.author.id)
+                char = await db.lookup_character(main_char_relationship.character.name, main_char_relationship.character.realm)
                 
                 if char:
                     name, realm = char.name, char.realm
