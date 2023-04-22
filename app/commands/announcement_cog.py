@@ -7,6 +7,7 @@ from app.objects.embed_builder import announce_guild_run_embed
 import app.raiderIO as raiderIO
 import app.util as util
 
+
 class Announcement(commands.Cog):
     """This cog contains commands for announcements.
 
@@ -25,6 +26,7 @@ class Announcement(commands.Cog):
     async def send_announcements(self):
         await self.bot.wait_until_ready()
         channel = self.bot.get_channel(self.announcement_channel_id)
+        
         await asyncio.sleep(15)
         while not self.is_closed():
             announcement = db.lookup_next_announcement(804157941732474901)

@@ -38,6 +38,8 @@ def binary_search_score_colors(score_color_list: List[ScoreColor], input_score: 
     Returns:
         ScoreColor: The ScoreColor object with the nearest value to the input score.
     """
+    if score_color_list is None or len(score_color_list) == 0:
+        return None
     left = 0
     right = len(score_color_list) - 1
     nearest = None

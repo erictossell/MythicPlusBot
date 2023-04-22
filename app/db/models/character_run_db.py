@@ -16,6 +16,7 @@ class CharacterRunDB(Base):
     rank_world = (Column(Integer, nullable=True))
     rank_region = (Column(Integer, nullable=True))
     rank_realm = (Column(Integer, nullable=True))
+    rio_character_id = (Column(Integer, nullable=True))
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     modified_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
     character_id = Column(Integer, ForeignKey('characters.id'))
@@ -26,6 +27,7 @@ class CharacterRunDB(Base):
     def __init__(self,
                  character: CharacterDB,
                  dungeon_run: DungeonRunDB,
+                 rio_character_id: int = None,
                  spec_name: str = None,
                  role : str = None,
                  rank_world: int = None,
@@ -42,6 +44,7 @@ class CharacterRunDB(Base):
         """
         self.character = character
         self.dungeon_run = dungeon_run
+        self.rio_character_id = rio_character_id
         self.spec_name = spec_name
         self.role = role
         self.rank_world = rank_world

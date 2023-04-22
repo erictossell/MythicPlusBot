@@ -24,8 +24,6 @@ from app.raiderIO.models.dungeon_run import DungeonRun
 load_dotenv('configurations/main.env')
 PASSWORD = os.getenv('POSTGRES_PASSWORD')
 
-
-
 logging.basicConfig(filename='tal.log',
                     level=logging.DEBUG,
                     format='%(asctime)s %(levelname)s %(name)s %(message)s')
@@ -59,16 +57,13 @@ def lookup_character(name: str, realm: str) -> Optional[CharacterDB]:
     Returns:
         existing_character: returns a character object if found, otherwise returns None.
     """
-    #print(f'Tal_DB : looking up character: {name} on realm: {realm}')
     try:
         with session_scope() as session:
             existing_character = session.query(CharacterDB).options(joinedload('*')).filter(CharacterDB.name == name, CharacterDB.realm == realm.lower()).first()
             
             if existing_character is None:
-                #print(f'Tal_DB : character not found: {name} on realm: {realm}')
                 return None
             else:
-                #print(f'Tal_DB : found character: {existing_character.name} on realm: {existing_character.realm}')
                 existing_character = CharacterDB(existing_character.discord_user_id,
                                              existing_character.discord_guild_id,
                                              existing_character.guild_name,
@@ -101,7 +96,6 @@ def lookup_run(run_id: int) -> Optional[DungeonRunDB]:
     Returns:
         existing_run: returns a run object if found, otherwise returns None.
     """
-    #print(f'DB: looking up run: {run_id}')
     try:
         with session_scope() as session:
             existing_run = session.query(DungeonRunDB).options(joinedload('*')).filter(DungeonRunDB.id == run_id).first()
@@ -161,13 +155,11 @@ def lookup_default_character(discord_guild_id, discord_user_id) -> DefaultCharac
         print(f'Error while querying the database: {error}')
         return None 
 def lookup_next_announcement(discord_guild_id: int) -> AnnouncementDB:
-    #print(f'Tal_DB : looking up next announcement for guild: {discord_guild_id}')
     try:
         with session_scope() as session:
             query_result = session.query(AnnouncementDB).filter(AnnouncementDB.discord_guild_id == discord_guild_id, AnnouncementDB.has_been_sent == False).order_by(AnnouncementDB.created_at.asc()).first()
         
             if query_result is None:
-                #print(f'Tal_DB : announcement not found for guild: {discord_guild_id}')
                 return None
             else:
                 announcement = AnnouncementDB(id = query_result.id,
@@ -189,7 +181,6 @@ def lookup_next_announcement(discord_guild_id: int) -> AnnouncementDB:
                                                     score= query_result.dungeon_run.score,
                                                     url= query_result.dungeon_run.url)
                     announcement.dungeon_run = dungeon_run
-                #print(f'Tal_DB : found announcement: {query_result.id} for guild: {query_result.discord_guild_id}')
                 return announcement
     except SQLAlchemyError as error:
         print(f'Error while querying the database: {error}')
@@ -204,7 +195,6 @@ def add_character(character: CharacterDB) -> CharacterDB:
     Returns:
         bool: Returns True if the character was added to the database, otherwise returns False.
     """
-    #print('Tal_DB : adding character: ' + character.name + ' on realm: ' + character.realm)
     try:
         with session_scope() as session:
             existing_character = session.query(CharacterDB).filter(CharacterDB.name == character.name, CharacterDB.realm == character.realm.lower()).first()
@@ -229,10 +219,8 @@ def add_character(character: CharacterDB) -> CharacterDB:
                     character.last_crawled_at,
                     character.is_reporting)
                 session.add(character_db)
-                #print('Tal_DB : added character: ' + character.name + ' on realm: ' + character.realm)
                 return character_db
             else:
-                #print('Tal_DB : character already exists: ' + character.name + ' on realm: ' + character.realm)
                 return None
     except SQLAlchemyError as error:
         print(f'Error while querying the database: {error}')
@@ -246,7 +234,6 @@ def add_character_history(character: CharacterDB) -> CharacterHistoryDB:
     Returns:
         CharacterHistoryDB: The added CharacterHistoryDB.py object.
     """
-    #print('Tal_DB : adding character history for: ' + character.name + ' on realm: ' + character.realm)
     try:
         with session_scope() as session:
             character_history = CharacterHistoryDB(character.discord_user_id,
@@ -269,7 +256,6 @@ def add_character_history(character: CharacterDB) -> CharacterHistoryDB:
                                                     character.is_reporting)
             character_history.character = character
             session.add(character_history)
-            #print('Tal_DB : added character history for: ' + character.name + ' on realm: ' + character.realm)
             return character_history
     except SQLAlchemyError as error:
         print(f'Error while querying the database: {error}')
@@ -284,7 +270,6 @@ def add_dungeon_run(dungeon_run: DungeonRun) -> bool:
     Returns:
         bool: Returns True if the dungeon run was added to the database, otherwise returns False.
     """
-    #print(f'Tal_DB : adding dungeon run: {dungeon_run.id}')
     try:
         with session_scope() as session:
             existing_dungeon_run = session.query(DungeonRunDB).filter(DungeonRunDB.id == dungeon_run.id).first()
@@ -303,10 +288,8 @@ def add_dungeon_run(dungeon_run: DungeonRun) -> bool:
                 session.add(dungeon_run)
                 return True
             elif existing_dungeon_run.id == dungeon_run.id:
-                #print('Run already exists in the database.')
                 return False
             else:
-                #print('Something went wrong.')
                 return False
     except SQLAlchemyError as error:
         print(f'Error while querying the database: {error}')
@@ -341,7 +324,6 @@ def add_default_character(default_character: DefaultCharacterDB) -> bool:
     Returns:
         bool: Returns True if the character was added to the database, otherwise returns False.
     """
-    #print(f'Tal_DB : adding default character: {default_character.discord_user_id} for guild: {default_character.discord_guild_id}')
     try:
         with session_scope() as session:
             existing_relationship = session.query(DefaultCharacterDB).filter(DefaultCharacterDB.discord_guild_id == default_character.discord_guild_id,
@@ -360,7 +342,6 @@ def add_announcement(announcement: AnnouncementDB) -> bool:
     Returns:
         bool: Returns True if the announcement was added to the database, otherwise returns False.
     """
-    #print(f'Tal_DB : adding announcement: {announcement.id}')
     try:
         with session_scope() as session:
             existing_dungeon_run = session.query(DungeonRunDB).filter(DungeonRunDB.id == announcement.dungeon_run_id).first()
@@ -387,7 +368,6 @@ def update_character(character: Character) -> CharacterDB:
     Returns:
         bool: Returns True if the character was updated in the database, otherwise returns False.
     """
-    #print('Tal_DB : updating character: ' + character.name + ' on realm: ' + character.realm)
     try:
         with session_scope() as session:
             existing_character = session.query(CharacterDB).filter(CharacterDB.name == character.name,
@@ -493,7 +473,6 @@ def update_dungeon_run(dungeon_run : DungeonRunDB) -> bool:
     Args:
         dungeon_run (DungeonRunDB): _description_
     """
-    #print(f'Tal_DB : updating dungeon run: {dungeon_run.id}')
     try:
         with session_scope() as session:                
             existing_dungeon_run = session.query(DungeonRunDB).filter(DungeonRunDB.id == dungeon_run.id).first()
@@ -515,24 +494,20 @@ def update_default_character(discord_user_id:int, discord_guild_id:int, characte
     Returns:
         Tuple[DefaultCharacterDB, bool]: Returns a tuple with the updated or created default character and a boolean indicating if the default character was updated (True) or created (False).
     """
-    #print('Tal_DB : updating default character')
     try: 
         with session_scope() as session:
             existing_relationship = session.query(DefaultCharacterDB).filter(DefaultCharacterDB.discord_guild_id == discord_guild_id,
                                                                              DefaultCharacterDB.discord_user_id == discord_user_id).first()
             new_character = session.query(CharacterDB).filter(CharacterDB.name == character.name, CharacterDB.realm == character.realm.lower()).first()
             if new_character is None:
-                #print('Tal_DB : Character not found in the database.')
                 return None
             if existing_relationship is not None:
-                #print('Tal_DB : Main character updated')
                 existing_relationship.character_id = new_character.id
                 existing_relationship.version += 1
                 character_name = new_character.name
                 character_realm = new_character.realm
                 return existing_relationship, character_name, character_realm
             else:
-                #print('Tal_DB : Main character created')
                 default_character = DefaultCharacterDB(discord_user_id, discord_guild_id, character.id)
                 session.add(default_character)
                 character_name = new_character.name
@@ -551,7 +526,6 @@ def update_announcement_has_been_sent(announcement_id: int) -> bool:
     Returns:
         Bool: Returns True if the announcement was updated in the database, otherwise returns False.
     """
-    #print(f'Tal_DB : updating announcement_has_been_sent for announcement: {announcement_id}')
     try:
         with session_scope() as session:
             existing_announcement = session.query(AnnouncementDB).filter(AnnouncementDB.id == announcement_id).first()
@@ -599,7 +573,6 @@ def remove_character(name, realm) -> bool:
     Returns:
         bool: Returns True if the character was removed from the database, otherwise returns False.
     """
-    #print(f'Tal_DB : removing character: {name} on realm: {realm}')
     try:
         with session_scope() as session:
             existing_character = session.query(CharacterDB).filter(CharacterDB.name == name, CharacterDB.realm == realm).first()
@@ -617,7 +590,6 @@ def remove_default_character(default_character: DefaultCharacterDB) -> bool:
     Returns:
         bool: Returns True if the character was removed from the database, otherwise returns False.
     """
-    #print(f'Tal_DB : removing default character: {default_character.discord_user_id} for guild: {default_character.discord_guild_id}')
     try:
         with session_scope() as session:
             existing_relationship = session.query(DefaultCharacterDB).filter(DefaultCharacterDB.discord_guild_id == default_character.discord_guild_id,
@@ -637,7 +609,6 @@ def get_all_characters() -> List[CharacterDB]:
     Returns:
         characters_list: a list of all of the characters in the database.
     """
-    #print ('Tal_DB : getting all characters')
     try:
         with session_scope() as session:
             characters_query = session.query(CharacterDB).options(joinedload('*')).filter(CharacterDB.is_reporting == True).all()
@@ -669,7 +640,6 @@ def get_all_characters_active_in_last_30_days() -> List[CharacterDB]:
     Returns:
         characters_list: a list of all of the characters in the database.
     """
-    #print ('Tal_DB : getting all characters')
     try:
         with session_scope() as session:
             characters_query = session.query(CharacterDB).options(joinedload('*')).filter(CharacterDB.last_crawled_at > datetime.now() - timedelta(days=30), CharacterDB.is_reporting == True).all()
@@ -701,7 +671,6 @@ def get_all_characters_not_recently_crawled() -> List[CharacterDB]:
     Returns:
         List[CharacterDB]: A list of all of the characters in the database that have not been crawled recently.
     """
-    #print('Tal_DB : getting all characters not recently crawled')
     try:
         with session_scope() as session: 
             characters_query = session.query(CharacterDB).options(joinedload('*')).filter(CharacterDB.last_crawled_at < datetime.now() - timedelta(days=1), CharacterDB.is_reporting == True).all()
@@ -733,7 +702,6 @@ def get_all_runs() -> List[DungeonRunDB]:
     Returns:
         runs_list: A list of all of the runs in the database.
     """
-    #print('Tal_DB : getting all runs')
     try:
         with session_scope() as session:
             runs_query = session.query(DungeonRunDB).options(joinedload('*')).all()
@@ -758,7 +726,6 @@ def get_all_runs_not_crawled() -> List[DungeonRunDB]:
     Returns:
         List[DungeonRunDB]: A list of all of the runs that have not been crawled.
     """
-    #print('Tal_DB : getting all runs that have not been crawled')
     try:
         with session_scope() as session:
             runs_query = session.query(DungeonRunDB).filter(DungeonRunDB.is_crawled == False).all()
@@ -786,12 +753,10 @@ def get_all_characters_for_run(run_id: int) -> List[CharacterRunDB]:
     Returns:
         List[CharacterRunDB]: Returns a list of CharacterRunDB.py objects if the character run exists, otherwise returns None.
     """
-    #print(f'Getting all characters for run {run_id}')
     try:
         with session_scope() as session:
             existing_run = session.query(DungeonRunDB).options(joinedload('*')).filter(DungeonRunDB.id == run_id).first()
             if existing_run is None:
-                #print(f'No run found for id {run_id}')
                 return None
             else:
                 existing_character_runs = session.query(CharacterRunDB).filter(CharacterRunDB.dungeon_run_id == existing_run.id).all()
@@ -829,12 +794,10 @@ def get_all_runs_for_character(character: CharacterDB) -> List[CharacterRunDB]:
     Returns:
         List[CharacterRunDB]: Returns a list of CharacterRunDB.py objects if the character run exists, otherwise returns None.
     """
-    #print(f'Getting all runs for character {character.name} {character.realm}')
     try:
         with session_scope() as session:
-            existing_character = session.query(CharacterDB).options(joinedload('*')).filter(CharacterDB.name == CharacterDB.name, CharacterDB.realm == character.realm).first()
+            existing_character = session.query(CharacterDB).options(joinedload('*')).filter(CharacterDB.name == character.name, CharacterDB.realm == character.realm).first()
             if existing_character is None:
-                #print (f'No character found for {character.name} {character.realm}')
                 return None
             else:
                 existing_character_runs = session.query(CharacterRunDB)\
@@ -844,7 +807,6 @@ def get_all_runs_for_character(character: CharacterDB) -> List[CharacterRunDB]:
                                         .order_by(DungeonRunDB.score.desc())\
                                         .limit(15)\
                                         .all()
-                #print(f'Existing character runs (before filtering): {len(existing_character_runs)}')
                 if existing_character_runs is not None:
                     run_list = []
                     for character_run in existing_character_runs:
@@ -861,10 +823,8 @@ def get_all_runs_for_character(character: CharacterDB) -> List[CharacterRunDB]:
                                        run.score,
                                        run.url)
                         run_list.append(run)
-                    #print(f'Found {len(run_list)} runs for character {character.name} {character.realm}')
                     return run_list
                 else:
-                    #print(f'No runs found for character {character.name} {character.realm}')
                     return None
     except SQLAlchemyError as error:
         print(f'Error while querying the database: {error}')
@@ -876,7 +836,6 @@ def get_top10_character_by_achievement() -> List[CharacterDB]:
     Returns:
         List[CharacterDB]: Returns a list of the top 10 characters by achievement points.
     """
-    #print('Tal_DB : getting top 10 characters by achievement points')
     try:
         with session_scope() as session:
             query = session.query(CharacterDB).options(joinedload('*')).order_by(CharacterDB.achievement_points.desc()).limit(10).all()
@@ -908,7 +867,6 @@ def get_top10_character_by_mythic_plus() -> List[CharacterDB]:
     Returns:
         List[CharacterDB]: Returns a list of the top 10 characters by mythic plus score.
     """
-    #print('Tal_DB : getting top 10 characters by mythic plus score')
     try:
         with session_scope() as session:
             query = session.query(CharacterDB).options(joinedload('*')).order_by(CharacterDB.score.desc()).limit(10).all()
@@ -940,7 +898,6 @@ def get_top10_character_by_highest_item_level() -> List[CharacterDB]:
     Returns:
         List[CharacterDB]: Returns a list of the top 10 characters by highest item level.
     """
-    #print('Tal_DB : getting top 10 characters by highest item level')
     try:
         with session_scope() as session:
             query = session.query(CharacterDB).options(joinedload('*')).order_by(CharacterDB.item_level.desc()).limit(10).all()
@@ -967,7 +924,6 @@ def get_top10_character_by_highest_item_level() -> List[CharacterDB]:
         print(f'Error while querying the database: {error}')
         return None 
 def get_top10_guild_runs_this_week() -> List[DungeonRunDB]:
-    #print('Tal_DB : getting top 10 guild runs')
     try: 
         with session_scope() as session:
             one_week_ago = datetime.now() - timedelta(weeks=1)
@@ -991,7 +947,6 @@ def get_top10_guild_runs_this_week() -> List[DungeonRunDB]:
         print(f'Error while querying the database: {error}')
         return None
 def get_top10_guild_runs_all_time() -> List[DungeonRunDB]:
-   # print('Tal_DB : getting top 10 guild runs')
     try: 
         with session_scope() as session:
             query = session.query(DungeonRunDB).options(joinedload('*')).filter(DungeonRunDB.is_guild_run == True,

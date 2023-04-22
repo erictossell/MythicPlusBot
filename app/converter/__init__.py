@@ -45,6 +45,7 @@ def convert_dungeon_run_io(run: DungeonRun) -> DungeonRun:
     
 def convert_character_run_io(character_db: Character,
                              dungeon_run_db: DungeonRun,
+                             rio_character_id: int = None,
                              spec_name: str = None,
                              role : str = None,
                              rank_world: int = None,
@@ -53,6 +54,7 @@ def convert_character_run_io(character_db: Character,
                              is_personal_best: bool = False) -> CharacterRunDB:
     return CharacterRunDB(character = character_db,
                              dungeon_run= dungeon_run_db,
+                             rio_character_id= rio_character_id,
                              spec_name= spec_name,
                              role= role,
                              rank_world= rank_world,
