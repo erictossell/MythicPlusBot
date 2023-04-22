@@ -2,13 +2,14 @@
 #Description: This file is used to create the database and tables for the bot. It is also used to query the database for information.
 #Author: Eriim\
 import logging
+import os
 from contextlib import contextmanager
 from datetime import datetime, timedelta
 from typing import Optional, List
 from sqlalchemy import create_engine
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import sessionmaker, joinedload
-
+from dotenv import load_dotenv
 from app.db.base import Base
 
 from app.db.models.character_db import CharacterDB
@@ -20,11 +21,16 @@ from app.db.models.announcement_db import AnnouncementDB
 from app.raiderIO.models.character import Character
 from app.raiderIO.models.dungeon_run import DungeonRun
 
+load_dotenv('configurations/main.env')
+PASSWORD = os.getenv('POSTGRES_PASSWORD')
+
+
+
 logging.basicConfig(filename='tal.log',
                     level=logging.DEBUG,
                     format='%(asctime)s %(levelname)s %(name)s %(message)s')
 
-engine = create_engine('sqlite:///tal.db', echo=False,
+engine = create_engine('postgresql://talbot:'+PASSWORD+'@127.0.0.1:5432/mplus_db', echo=False,
                        logging_name='sqlalchemy.engine',
                        echo_pool=True, pool_pre_ping=True)
 Base.metadata.create_all(engine)

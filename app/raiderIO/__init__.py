@@ -71,7 +71,10 @@ async def get_character(name: str,
             return None
         elif response.status_code == 200:
             #print('RIO Service: 200')
-            guild_name = response.json()['guild']['name']
+            if response.json()['guild'] is None:
+                guild_name = None
+            else:
+                guild_name = response.json()['guild']['name']
             faction = response.json()['faction'] 
             #print('Faction: ' + faction)
             role = response.json()['active_spec_role']

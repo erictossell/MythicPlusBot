@@ -10,8 +10,7 @@ class DefaultCharacterDB(Base):
     __tablename__ = 'default_characters'
     id = Column(Integer, primary_key=True)
     discord_user_id = Column(Integer)
-    discord_guild_id = Column(Integer)
-    is_default_character = Column(Boolean, default=True)
+    discord_guild_id = Column(Integer)    
     version = Column(Integer)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     modified_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
@@ -26,7 +25,6 @@ class DefaultCharacterDB(Base):
         else:
             self.character = character
         self.version = version
-        self.is_default_character = True
 
     def __repr__(self):
         return f"DefaultCharacterDB(id={self.id}, discord_user_id={self.discord_user_id}, discord_guild_id={self.discord_guild_id}, " \
