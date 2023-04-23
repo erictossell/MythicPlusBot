@@ -70,25 +70,6 @@ async def lookup_character(name: str, realm: str) -> Optional[CharacterDB]:
             if existing_character is None:
                 return None
             else:
-                existing_character = CharacterDB(existing_character.discord_user_id,
-                                             existing_character.discord_guild_id,
-                                             existing_character.guild_name,
-                                             existing_character.name,
-                                             existing_character.realm,
-                                             existing_character.faction,
-                                             existing_character.region,
-                                             existing_character.role,
-                                             existing_character.spec_name,
-                                             existing_character.class_name,
-                                             existing_character.achievement_points,
-                                             existing_character.item_level,
-                                             existing_character.score,
-                                             existing_character.rank,
-                                             existing_character.thumbnail_url,
-                                             existing_character.url,
-                                             existing_character.last_crawled_at,
-                                             existing_character.is_reporting)
-
                 return existing_character
     except SQLAlchemyError as error:
         print(f'Error while querying the database: {error}')
@@ -126,14 +107,20 @@ async def lookup_character_run(character: CharacterDB, run: DungeonRunDB) -> Cha
     print(f'Tal_DB : looking up character run: {character.name} for run: {run.name}')
     try:
         async with async_session_scope() as session:
-            existing_character = select(CharacterDB).options(joinedload('*')).filter(CharacterDB.name == character.name, CharacterDB.realm == character.realm).first()
-            existing_run = session.query(DungeonRunDB).options(joinedload('*')).filter(DungeonRunDB.id == run.id).first()
+            ec_query = select(CharacterDB).options(joinedload('*')).filter(CharacterDB.name == character.name, CharacterDB.realm == character.realm)
+            ec_result = await session.execute(ec_query)
+            existing_character = ec_result.scalar()
+            er_query = select(DungeonRunDB).options(joinedload('*')).filter(DungeonRunDB.id == run.id)
+            er_result = await session.execute(er_query)
+            existing_run = er_result.scalar()
             if existing_character is None:
                 return None
             elif existing_run is None:
                 return None
             else:
-                existing_character_run = session.query(CharacterRunDB).filter(CharacterRunDB.character_id == existing_character.id, CharacterRunDB.run_id == existing_run.id).one()
+                ecr_query = select(CharacterRunDB).filter(CharacterRunDB.character_id == existing_character.id, CharacterRunDB.run_id == existing_run.id)
+                ecr_result = await session.execute(ecr_query)
+                existing_character_run = ecr_result.scalar()
                 if existing_character_run is not None:
                     return existing_character_run
                 else:
@@ -158,16 +145,14 @@ async def lookup_default_character(discord_guild_id, discord_user_id) -> Default
                 characer_result = await session.execute(character_query)
                 default_character.character = characer_result.scalar()               
                 
-                default_character = DefaultCharacterDB(discord_user_id = default_character.discord_user_id,
-                                                    discord_guild_id = default_character.discord_guild_id,
-                                                    character = default_character.character,
-                                                    version = default_character.version)
+                # Return the existing default_character object
                 return default_character
             elif default_character is None:
                 return None
     except SQLAlchemyError as error:
         print(f'Error while querying the database: {error}')
-        return None 
+        return None
+
 async def lookup_next_announcement(discord_guild_id: int) -> AnnouncementDB:
     try:
         async with async_session_scope() as session:
@@ -367,7 +352,8 @@ async def add_default_character(default_character: DefaultCharacterDB) -> bool:
                 return False
     except SQLAlchemyError as error:
         print(f'Error while querying the database: {error}')
-        return False 
+        return False
+
 async def add_announcement(announcement: AnnouncementDB) -> bool:
     """Add an announcement to the database.
 
@@ -470,7 +456,9 @@ async def update_character_reporting(character: Character) -> bool:
     print(f'Tal_DB : updating character reporting status: {character.name} on realm: {character.realm}')
     try:
         async with async_session_scope() as session:
-            existing_character = session.query(CharacterDB).filter(CharacterDB.name == character.name, CharacterDB.realm == character.realm.lower()).first()
+            ec_query = select(CharacterDB).filter(CharacterDB.name == character.name, CharacterDB.realm == character.realm.lower())
+            ec_result = await session.execute(ec_query)
+            existing_character = ec_result.scalar()
             if existing_character is not None:
                 if existing_character.is_reporting is True:
                     existing_character.is_reporting = False
@@ -536,12 +524,12 @@ async def update_default_character(discord_user_id:int, discord_guild_id:int, ch
     try: 
         async with async_session_scope() as session:
             
-            er_query = session.query(DefaultCharacterDB).filter(DefaultCharacterDB.discord_guild_id == discord_guild_id,
+            er_query = select(DefaultCharacterDB).filter(DefaultCharacterDB.discord_guild_id == discord_guild_id,
                                                                              DefaultCharacterDB.discord_user_id == discord_user_id)
             er_result = await session.execute(er_query)
             existing_relationship = er_result.scalar()
             
-            nc_query = session.query(CharacterDB).filter(CharacterDB.name == character.name, CharacterDB.realm == character.realm.lower())
+            nc_query = select(CharacterDB).filter(CharacterDB.name == character.name, CharacterDB.realm == character.realm.lower())
             nc_result = await session.execute(nc_query)
             new_character = nc_result.scalar()
             
@@ -852,7 +840,7 @@ async def get_all_runs_for_character(character: CharacterDB) -> List[CharacterRu
     """
     try:
         async with async_session_scope() as session:
-            query = select(CharacterDB).options(joinedload('*')).filter(CharacterDB.name == character.name, CharacterDB.realm == character.realm).first()
+            query = select(CharacterDB).options(joinedload('*')).filter(CharacterDB.name == character.name, CharacterDB.realm == character.realm)
             result = await session.execute(query)
             existing_character = result.scalar()
             if existing_character is None:
@@ -869,7 +857,7 @@ async def get_all_runs_for_character(character: CharacterDB) -> List[CharacterRu
                 if existing_character_runs is not None:
                     run_list = []
                     for character_run in existing_character_runs:
-                        run_query = select(DungeonRunDB).options(joinedload('*')).filter(DungeonRunDB.id == character_run.dungeon_run_id).first()
+                        run_query = select(DungeonRunDB).options(joinedload('*')).filter(DungeonRunDB.id == character_run.dungeon_run_id)
                         run_result = await session.execute(run_query)
                         run = run_result.scalar()
                         run = DungeonRunDB(run.id,

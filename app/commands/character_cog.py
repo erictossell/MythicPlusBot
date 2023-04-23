@@ -18,9 +18,12 @@ class Character(commands.Cog):
         """Gets the best Mythic+ runs for a character."""
         try:       
             if name is None:
-                character_title = await db.lookup_default_character(ctx.guild.id,ctx.author.id).character
-            else:   
-                character_title = await db.lookup_character(name, realm)
+                character_relationship = await db.lookup_default_character(ctx.guild.id,ctx.author.id)
+                if character_relationship is None:
+                    await ctx.respond('You have not registered a character.  Please register a character with /set_main.')
+                    return
+            name = character_relationship.character.name if name is None else name  
+            character_title = await db.lookup_character(name, realm)
             run_list = await db.get_all_runs_for_character(character_title)
             for run in run_list:
                 characters_list = await db.get_all_characters_for_run(run.id)
@@ -58,12 +61,19 @@ class Character(commands.Cog):
                 await ctx.respond(f'Character {name}-{realm} does not exist.')
                 return
             else:
-                main_char = db.update_default_character(discord_user_id, discord_guild_id, db.lookup_character(name, realm))
+                character = await db.lookup_character(name, realm)
+                main_char = await db.lookup_default_character(discord_guild_id, discord_user_id)
                 if main_char is None:
-                    await ctx.respond(f'Character {name}-{realm} is not registered in the guild.')
-                    return
+                    default = db.DefaultCharacterDB(discord_user_id=discord_user_id, discord_guild_id=discord_guild_id, character_id=character.id)
+                    main_char = await db.add_default_character(default)
+                    await ctx.respond(f'Your main character has been set to: {main_char[1]}-{main_char[2]}.')
+                elif main_char is not None: 
+                    main_char = await db.update_default_character(discord_user_id= discord_user_id,
+                                                                discord_guild_id =discord_guild_id,
+                                                                character=character)                
+                    await ctx.respond(f'Your main character has been set to: {main_char[1]}-{main_char[2]}.')
                 else:
-                    await ctx.respond(f'Your main character is now {main_char[1]}-{main_char[2]}.')
+                    await ctx.respond(f'Something went wrong, contact support for assitance.')
 
         except Exception as exception:
             await ctx.channel.send('Type !help to see how to use this command.')

@@ -64,36 +64,24 @@ async def get_character(name: str,
         async with httpx.AsyncClient() as client:
             response = await client.get(API_URL + 'characters/profile?region='+region+'&realm='+realm+'&name='+name+'&fields=guild,gear,mythic_plus_scores_by_season:current,mythic_plus_ranks,mythic_plus_best_runs,mythic_plus_recent_runs') 
             if response.status_code == 404:
-                #print('Character not found: ' + name)
                 return None
             elif response.status_code == 429:
-                #print('Too many requests.')
                 return None 
             elif response.status_code == 500:
-                #print('Internal server error.')
                 return None
             elif response.status_code == 200:
-                #print('RIO Service: 200')
                 if response.json()['guild'] is None:
                     guild_name = None
                 else:
                     guild_name = response.json()['guild']['name']
                 faction = response.json()['faction'] 
-                #print('Faction: ' + faction)
                 role = response.json()['active_spec_role']
-                #print('Role: ' + str(role))          
                 spec = response.json()['active_spec_name']
-                #print('Spec: ' + spec)
                 player_class = response.json()['class']
-                #print('Class: ' + playerClass)
                 achievement_points = response.json()['achievement_points']
-                #print('Achievement Points: ' + str(achievementPoints))
                 item_level = response.json()['gear']['item_level_equipped']    
-                #print('Item Level: ' + str(item_level))            
                 score = response.json()['mythic_plus_scores_by_season'][0]['scores']['all']
-                #print('Score: ' + str(score))
                 rank = response.json()['mythic_plus_ranks']['class']['realm']
-                #print('Rank: ' + str(rank))
                 best_runs = []
                 recent_runs = []
                 for run in response.json()['mythic_plus_best_runs']:
@@ -111,7 +99,6 @@ async def get_character(name: str,
                                                 run['num_keystone_upgrades'],
                                                 run['score'],
                                                 affixes, run['url']))
-                #print('Best Runs: ' + str(len(best_runs)))
                 for run in response.json()['mythic_plus_recent_runs']:
                     affixes = []
                     for affix in run['affixes']:
@@ -128,15 +115,10 @@ async def get_character(name: str,
                                                     run['score'],
                                                     affixes,
                                                     run['url']))
-                #print('Recent Runs: ' + str(len(recent_runs)))
                 score_color = util.binary_search_score_colors(score_colors, int(score))
-                #print('Score Color: ' + score_color)
                 thumbnail = response.json()['thumbnail_url']
-                #print('Thumbnail: ' + thumbnail)
                 url = response.json()['profile_url']
-                #print('URL: ' + url)
                 last_crawled_at = response.json()['last_crawled_at']
-                #print('Last Crawled At: ' + last_crawled_at)              
                 character = Character(name,
                                         realm,
                                         guild_name,
@@ -154,7 +136,6 @@ async def get_character(name: str,
                                         thumbnail,
                                         url,
                                         last_crawled_at)
-                #print('Character found: ' + character.name)
                 return character    
             else:
                 print('Error: Character not found.')
@@ -209,7 +190,6 @@ async def get_mythic_plus_affixes() -> Optional[List[Affix]]:
             if len(affixes) > 0:
                 return affixes
             else:
-                #print('Error: No affixes found.')
                 return None
     except Exception as exception:
         print(exception)
@@ -233,15 +213,12 @@ async def get_run_details(dungeon_run : DungeonRunDB) -> Optional[bool]:
         async with httpx.AsyncClient() as client:
             request = await client.get(API_URL +f'mythic-plus/run-details?season={dungeon_run.season}&id={dungeon_run.id}')
             if request.status_code != 200:
-                #print('RaiderIO : Error: Run not found.')
                 return None
             elif request.status_code == 200:
                 guild_member_counter = 0
                 if request.json()['roster'] is None:
-                    #print('RaiderIO : No roster found for run: ' + str(run_id))
                     return False
                 for roster in request.json()['roster']:                    
-                    #print('is_Guild_Run: Searching for ' + roster['character']['name'])
                     character_db = await db.lookup_character(roster['character']['name'],
                                                         roster['character']['realm']['slug'])                      
                     if character_db is not None:
@@ -263,10 +240,8 @@ async def get_run_details(dungeon_run : DungeonRunDB) -> Optional[bool]:
                         await db.add_character_run(character_run)
                         
                 if guild_member_counter >= 4:
-                    #print('RaiderIO : Guild run found: ' + str(run_id))
                     return True
                 else:
-                    #print('RaiderIO : Guild run not found: ' + str(run_id))
                     return False           
     except Exception as exception:
         print('RaiderIO : Error: ' + exception)
@@ -284,11 +259,9 @@ async def crawl_characters(discord_guild_id: int) -> str:
     colors = get_score_colors()
     try:
         
-        #print('trying to crawl characters')        
         characters_list = await db.get_all_characters()
         print('RaiderIO Crawler: Crawling ' + str(len(characters_list)) + ' characters.')
         for character in tqdm(characters_list):
-            #await asyncio.sleep(0.2)
             characters_crawled += 1
             if character.is_reporting is True:
                 character_io = await get_character(name=character.name,
@@ -298,7 +271,6 @@ async def crawl_characters(discord_guild_id: int) -> str:
                     if run is None:
                         return f'Error: An error occurred while crawling {character.name}'
                     if run is not None and await db.lookup_run(run.id) is None:
-                        #print('Adding run: ' + str(run.id))
                         run.completed_at = datetime.strptime(run.completed_at,
                                                                 '%Y-%m-%dT%H:%M:%S.%fZ')
                         await db.add_dungeon_run(run)
@@ -308,7 +280,6 @@ async def crawl_characters(discord_guild_id: int) -> str:
                     if run is None:
                         return f'Error: An error occurred while crawling {character.name}'
                     elif run is not None and await db.lookup_run(run.id) is None:
-                        #print('Adding run: ' + str(run.id))
                         run.completed_at = datetime.strptime(run.completed_at,
                                                                 '%Y-%m-%dT%H:%M:%S.%fZ')
                         await db.add_dungeon_run(run)
@@ -347,8 +318,6 @@ async def crawl_guild_members(discord_guild_id) -> None:
         for member in tqdm(members_list):
             db_character = await db.lookup_character(member.name, 'Area-52')
             if db_character is None:
-                #print('Crawler: Character already in database: ' + member.name)                
-                #print('Crawler: calling RIO Service for: ' + member.name)
                 
                 character = await get_character(str(member.name),
                                                                 'Area-52', score_colors_list)
@@ -373,8 +342,6 @@ async def crawl_guild_members(discord_guild_id) -> None:
                                                 True)  
                 await db.add_character(new_character)
                 counter += 1
-                #await asyncio.sleep(0.2)
-                #print(f'Crawler: Character number: {counter} has been crawled.')
     except Exception as exception:
         print(exception)
         return False
@@ -398,7 +365,6 @@ async def crawl_runs(discord_guild_id: int) -> str:
             return 'No runs to crawl.'
         print('RaiderIO Crawler: Crawling runs.')
         for run in tqdm(runs_list):
-            #await asyncio.sleep(0.2)
             is_guild = await get_run_details(run)
             runs_crawled += 1
             if is_guild is True:
@@ -420,7 +386,6 @@ async def crawl_runs(discord_guild_id: int) -> str:
                 run.is_guild_run = False
                 await db.update_dungeon_run(run)
              
-        #print('Finished crawling runs.')
         return f'Runs crawled: {runs_crawled}  | Identified {guild_run_counter} guild runs.'
     except Exception as exception:
         print(exception)

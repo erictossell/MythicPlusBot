@@ -62,7 +62,8 @@ class CharacterDB(Base):
                  thumbnail_url: str,
                  url: str,
                  last_crawled_at: datetime,
-                 is_reporting: bool):
+                 is_reporting: bool,
+                 id = None):
         """CharacterDB constructor"""
         self.discord_user_id = discord_user_id
         self.discord_guild_id = discord_guild_id 
@@ -82,6 +83,7 @@ class CharacterDB(Base):
         self.url = url
         self.last_crawled_at = last_crawled_at
         self.is_reporting = is_reporting
+        self.id = id
         
     def __repr__(self):
         return f"<CharacterDB(id={self.id}, discord_user_id={self.discord_user_id}, name={self.name}, realm={self.realm}, faction={self.faction}, region={self.region}, role={self.role}, spec_name={self.spec_name}, class_name={self.class_name}, achievement_points={self.achievement_points}, item_level={self.item_level}, score={self.score}, rank={self.rank}, thumbnail_url={self.thumbnail_url}, url={self.url}, last_crawled_at={self.last_crawled_at}, is_reporting={self.is_reporting})>"
