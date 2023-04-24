@@ -3,7 +3,7 @@ import discord
 from discord.commands import SlashCommandGroup
 from discord.ext import commands
 import app.db as db
-from app.objects.registration import RegisterView
+from app.objects.character_registration import RegisterView
 import app.raiderIO as raiderIO
 
 class Character(commands.Cog):
@@ -18,13 +18,13 @@ class Character(commands.Cog):
         """Gets the best Mythic+ runs for a character."""
         try:       
             if name is None:
-                character_relationship = await db.lookup_default_character(ctx.guild.id,ctx.author.id)
+                character_relationship = await db.get_default_character_by_guild_user(ctx.guild.id,ctx.author.id)
                 if character_relationship is None:
                     await ctx.respond('You have not registered a character.  Please register a character with /set_main.')
                     return
             name = character_relationship.character.name if name is None else name  
-            character_title = await db.lookup_character(name, realm)
-            run_list = await db.get_all_runs_for_character(character_title)
+            character_title = await db.get_character_by_name_realm(name, realm)
+            run_list = await db.get_top10_runs_for_character_by_score(character_title)
             for run in run_list:
                 characters_list = await db.get_all_characters_for_run(run.id)
                 run_characters = '| '
@@ -62,8 +62,8 @@ class Character(commands.Cog):
                 await ctx.respond(f'Character {name}-{realm} does not exist.')
                 return
             else:
-                character = await db.lookup_character(name, realm)
-                main_char = await db.lookup_default_character(discord_guild_id, discord_user_id)
+                character = await db.get_character_by_name_realm(name, realm)
+                main_char = await db.get_default_character_by_guild_user(discord_guild_id, discord_user_id)
                 if main_char is None:
                     default = db.DefaultCharacterDB(discord_user_id=discord_user_id, discord_guild_id=discord_guild_id, character_id=character.id)
                     main_char = await db.add_default_character(default)
@@ -122,8 +122,8 @@ class Character(commands.Cog):
         try:
             if not name:
                 if ctx.guild:
-                    main_char = await db.lookup_default_character(ctx.guild.id, ctx.author.id)
-                    char = await db.lookup_character(main_char.character.name, main_char.character.realm)
+                    main_char = await db.get_default_character_by_guild_user(ctx.guild.id, ctx.author.id)
+                    char = await db.get_character_by_name_realm(main_char.character.name, main_char.character.realm)
                     if char:
                         name, realm = char.name, char.realm
                     else:
@@ -154,8 +154,8 @@ class Character(commands.Cog):
         """
         try:
             if not name:
-                main_char = await db.lookup_default_character(ctx.guild.id, ctx.author.id)
-                char = await db.lookup_character(main_char.character.name, main_char.character.realm)
+                main_char = await db.get_default_character_by_guild_user(ctx.guild.id, ctx.author.id)
+                char = await db.get_character_by_name_realm(main_char.character.name, main_char.character.realm)
                 if char:
                     name, realm = char.name, char.realm
                 else:
@@ -183,8 +183,8 @@ class Character(commands.Cog):
         """
         try:
             if not name:
-                main_char_relationship = await db.lookup_default_character(ctx.guild.id, ctx.author.id)
-                char = await db.lookup_character(main_char_relationship.character.name, main_char_relationship.character.realm)
+                main_char_relationship = await db.get_default_character_by_guild_user(ctx.guild.id, ctx.author.id)
+                char = await db.get_character_by_name_realm(main_char_relationship.character.name, main_char_relationship.character.realm)
                 
                 if char:
                     name, realm = char.name, char.realm
