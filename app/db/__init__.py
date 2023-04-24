@@ -24,14 +24,14 @@ from app.raiderIO.models.character import Character
 from app.raiderIO.models.dungeon_run import DungeonRun
 
 load_dotenv('configurations/main.env')
-PASSWORD = os.getenv('RAILWAY_POSTGRES')
+RAILWAY = os.getenv('RAILWAY_POSTGRES')
 
 logging.basicConfig(filename='tal.log',
                     level=logging.DEBUG,
                     format='%(asctime)s %(levelname)s %(name)s %(message)s')
 
 async_engine = create_async_engine(
-    'postgresql+asyncpg://postgres:'+PASSWORD+'@containers-us-west-142.railway.app:7486/railway',
+    RAILWAY,
     echo=False, logging_name='sqlalchemy.engine', echo_pool=True, pool_pre_ping=True
 )
 
