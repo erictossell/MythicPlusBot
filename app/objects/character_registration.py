@@ -66,9 +66,9 @@ class RegisterModal(Modal):
             user_id = interaction.user.id
             
             character = await raiderIO.get_character(name, realm)
-            existing_character = await db.lookup_character(name, realm)
+            existing_character = await db.get_character_by_name_realm(name, realm)
                         
-            if character is None:
+            if not character:
                 await interaction.response.send_message(f'Character {name} on {realm} not found.', ephemeral=True)
                 return
             
@@ -120,7 +120,7 @@ class UnregisterModal(Modal):
                 await interaction.response.send_message(f'Character {name} on {realm} not found', ephemeral=True)
                 return
 
-            existing_character = await db.lookup_character(name, realm)
+            existing_character = await db.get_character_by_name_realm(name, realm)
 
             if existing_character is None:
                 await interaction.response.send_message('This character is not registered.', ephemeral=True)

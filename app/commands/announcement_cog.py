@@ -29,7 +29,7 @@ class Announcement(commands.Cog):
         
         await asyncio.sleep(15)
         while not self.is_closed():
-            announcement = await db.lookup_next_announcement(804157941732474901)
+            announcement = await db.get_next_announcement_by_guild_id(804157941732474901)
             
             if announcement is None:
                 print("No announcement found.")

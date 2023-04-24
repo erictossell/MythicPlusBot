@@ -25,13 +25,14 @@ from app.raiderIO.models.dungeon_run import DungeonRun
 
 load_dotenv('configurations/main.env')
 RAILWAY = os.getenv('RAILWAY_POSTGRES')
+DEV_POSTGRES = os.getenv('DEV_POSTGRES')
 
 logging.basicConfig(filename='tal.log',
                     level=logging.DEBUG,
                     format='%(asctime)s %(levelname)s %(name)s %(message)s')
 
 async_engine = create_async_engine(
-    RAILWAY,
+    DEV_POSTGRES,
     echo=False, logging_name='sqlalchemy.engine', echo_pool=True, pool_pre_ping=True
 )
 
@@ -58,7 +59,7 @@ async def async_session_scope():
 
 #-----------------------Read Functions--------------------------------#
 
-async def lookup_discord_guild(discord_guild_id: int) -> Optional[DiscordGuildDB]:
+async def get_discord_guild_by_id(discord_guild_id: int) -> Optional[DiscordGuildDB]:
     """Look up a specific discord guild in the database.
 
     Args:
@@ -80,7 +81,7 @@ async def lookup_discord_guild(discord_guild_id: int) -> Optional[DiscordGuildDB
         print(f'Error while querying the database: {error}')
         return None
 
-async def lookup_character(name: str, realm: str) -> Optional[CharacterDB]:
+async def get_character_by_name_realm(name: str, realm: str) -> Optional[CharacterDB]:
     """Look up a specific character in the database.
 
     Args:
@@ -103,7 +104,7 @@ async def lookup_character(name: str, realm: str) -> Optional[CharacterDB]:
         print(f'Error while querying the database: {error}')
         return None
 
-async def lookup_run(run_id: int) -> Optional[DungeonRunDB]:
+async def get_run_by_id(run_id: int) -> Optional[DungeonRunDB]:
     """Look up a specific run in the database.
 
     Args:
@@ -122,7 +123,7 @@ async def lookup_run(run_id: int) -> Optional[DungeonRunDB]:
         print(f'Error while querying the database: {error}')
         return None
 
-async def lookup_character_run(character: CharacterDB, run: DungeonRunDB) -> CharacterRunDB:
+async def get_character_run_by_character_run(character: CharacterDB, run: DungeonRunDB) -> CharacterRunDB:
     """Lookup a character run from the database.
 
     Args:
@@ -157,7 +158,7 @@ async def lookup_character_run(character: CharacterDB, run: DungeonRunDB) -> Cha
         print(error)
         return None
 
-async def lookup_default_character(discord_guild_id, discord_user_id) -> DefaultCharacterDB:
+async def get_default_character_by_guild_user(discord_guild_id, discord_user_id) -> DefaultCharacterDB:
     """Lookup a default character from the database.
 
     Returns:
@@ -182,7 +183,7 @@ async def lookup_default_character(discord_guild_id, discord_user_id) -> Default
         print(f'Error while querying the database: {error}')
         return None
 
-async def lookup_next_announcement(discord_guild_id: int) -> AnnouncementDB:
+async def get_next_announcement_by_guild_id(discord_guild_id: int) -> AnnouncementDB:
     try:
         async with async_session_scope() as session:
             query = select(AnnouncementDB).filter(AnnouncementDB.discord_guild_id == discord_guild_id, AnnouncementDB.has_been_sent == False).order_by(AnnouncementDB.created_at.asc())
@@ -235,17 +236,9 @@ async def add_discord_guild(discord_guild : DiscordGuildDB) -> DiscordGuildDB:
             query = select(DiscordGuildDB).filter(DiscordGuildDB.id == discord_guild.id)
             result = await session.execute(query)
             existing_guild = result.scalar()
-            if not existing_guild:
-                discord_guild = DiscordGuildDB(id = discord_guild.id,
-                                               discord_guild_name = discord_guild.discord_guild_name,
-                                               wow_guild_name = discord_guild.wow_guild_name,
-                                               wow_region = discord_guild.wow_region,
-                                               wow_realm = discord_guild.wow_realm,
-                                               announcement_channel_id = discord_guild.announcement_channel_id,
-                                               modified_by = discord_guild.modified_by)
-                session.add(discord_guild)
-                await session.commit()
-                return discord_guild
+            if not existing_guild:                
+                new_discord_guild = session.add(discord_guild)               
+                return new_discord_guild
             else:
                 return None
     except SQLAlchemyError as error:
@@ -267,27 +260,9 @@ async def add_character(character: CharacterDB) -> CharacterDB:
             result = await session.execute(query)
             existing_character = result.scalar()
             if existing_character is None:
-                character_db = CharacterDB(
-                    character.discord_user_id,
-                    character.discord_guild_id,
-                    character.guild_name,
-                    character.name,
-                    character.realm.lower(),
-                    character.faction,
-                    character.region,
-                    character.role,
-                    character.spec_name,
-                    character.class_name,
-                    character.achievement_points,
-                    character.item_level,
-                    character.score,
-                    character.rank,
-                    character.thumbnail_url,
-                    character.url,
-                    character.last_crawled_at,
-                    character.is_reporting)
-                session.add(character_db)
-                return character_db
+                
+                new_character = session.add(character)
+                return new_character
             else:
                 return None
     except SQLAlchemyError as error:
@@ -330,7 +305,7 @@ async def add_character_history(character: CharacterDB) -> CharacterHistoryDB:
         print(f'Error while querying the database: {error}')
         return None
 
-async def add_dungeon_run(dungeon_run: DungeonRun) -> bool:
+async def add_dungeon_run(dungeon_run: DungeonRunDB) -> bool:
     """Add a dungeon run to the database.
 
     Args:
@@ -346,17 +321,7 @@ async def add_dungeon_run(dungeon_run: DungeonRun) -> bool:
             result = await session.execute(query)
             existing_dungeon_run = result.scalar()
             if existing_dungeon_run is None:
-                dungeon_run = DungeonRunDB(int(dungeon_run.id),
-                                        dungeon_run.season,
-                                        dungeon_run.name,
-                                        dungeon_run.short_name,
-                                        dungeon_run.mythic_level,
-                                        dungeon_run.completed_at,
-                                        dungeon_run.clear_time_ms,
-                                        dungeon_run.par_time_ms,
-                                        dungeon_run.num_keystone_upgrades,
-                                        dungeon_run.score,
-                                        dungeon_run.url)
+                dungeon_run.id = int(dungeon_run.id)
                 session.add(dungeon_run)
                 return True
             elif existing_dungeon_run.id == dungeon_run.id:
@@ -448,6 +413,41 @@ async def add_announcement(announcement: AnnouncementDB) -> bool:
 
 #-------------------------Update Functions------------------------------#
 
+async def update_discord_guild(discord_guild: DiscordGuildDB) -> DiscordGuildDB:
+    """Update an existing discord guild in the database.
+
+    Args:
+        discord_guild (DiscordGuildDB): The DiscordGuildDB.py object to update in the database.
+
+    Returns:
+        DiscordGuildDB: Returns the updated DiscordGuildDB object if the guild was updated in the database, otherwise returns None.
+    """
+    try:
+        async with async_session_scope() as session:
+            existing_guild_query = select(DiscordGuildDB).filter(DiscordGuildDB.id == discord_guild.id)
+            existing_guild_result = await session.execute(existing_guild_query)
+            existing_guild = existing_guild_result.scalar()
+            if not existing_guild:                
+                return None
+            else:
+                existing_guild.wow_guild_name = discord_guild.wow_guild_name
+                existing_guild.wow_realm = discord_guild.wow_realm
+                existing_guild.wow_region = discord_guild.wow_region
+                existing_guild.announcement_channel_id = discord_guild.announcement_channel_id
+                if discord_guild.announcement_channel_id:
+                    existing_guild.is_announcing = True
+                return existing_guild
+            
+    except IntegrityError as error:
+        print(f'Integrit Error while updating the guild: {error}')
+        return None
+    except SQLAlchemyError as error:
+        print(f'SQLAlchemy Error while querying the database: {error}')
+        return None
+    except Exception as error:
+        print(f'Error while updating the guild: {error}')
+        return None
+            
 async def update_character(character: Character) -> CharacterDB:
     """Update an existing character in the database.
 
@@ -462,7 +462,9 @@ async def update_character(character: Character) -> CharacterDB:
             existing_character_query = select(CharacterDB).filter(CharacterDB.name == character.name, CharacterDB.realm == character.realm.lower())
             result = await session.execute(existing_character_query)
             existing_character = result.scalars().first()
-            if existing_character is not None:                
+            if not existing_character:
+                return None
+            else:                
                 if has_any_character_field_changed(existing_character, character):
                     character_history = CharacterHistoryDB(existing_character.discord_user_id,
                                                         existing_character.discord_guild_id,
@@ -505,9 +507,7 @@ async def update_character(character: Character) -> CharacterDB:
                 existing_character.is_reporting = character.is_reporting
                 #print('Tal_DB : updated character: ' + character.name + ' on realm: ' + character.realm)
                 return existing_character
-            else:
-                #print('Tal_DB : character not found: ' + character.name + ' on realm: ' + character.realm)
-                return None
+            
     except SQLAlchemyError as error:
         print(f'Error while querying the database: {error}')
         return None
@@ -737,8 +737,8 @@ async def get_all_characters() -> List[CharacterDB]:
                 .join(CharacterDB.discord_guild)  # Join the tables using the relationship
             )
             result = await session.execute(characters_query)
-            characters_list = result.scalars().unique().all()
-            return characters_list
+            characters = result.scalars().unique().all()
+            return characters
     except SQLAlchemyError as error:
         print(f'Error while querying the database: {error}')
         return None
@@ -754,25 +754,8 @@ async def get_all_characters_active_in_last_30_days() -> List[CharacterDB]:
             characters_query = select(CharacterDB).filter(CharacterDB.last_crawled_at > datetime.now() - timedelta(days=30), CharacterDB.is_reporting == True)
             result = await session.execute(characters_query)
             characters = result.scalars().unique().all()
-            characters_list = [CharacterDB(character.discord_user_id,
-                                           character.discord_guild_id,
-                                           character.guild_name,
-                                           character.name,
-                                           character.realm,
-                                           character.faction,
-                                           character.region,
-                                           character.role,
-                                           character.spec_name,
-                                           character.class_name,
-                                           character.achievement_points,
-                                           character.item_level,
-                                           character.score,
-                                           character.rank,
-                                           character.thumbnail_url,
-                                           character.url,
-                                           character.last_crawled_at,
-                                           character.is_reporting) for character in characters]
-            return characters_list
+            
+            return characters
     except SQLAlchemyError as error:
         print(f'Error while querying the database: {error}')
         return None
@@ -788,25 +771,8 @@ async def get_all_characters_not_recently_crawled() -> List[CharacterDB]:
             characters_query = select(CharacterDB).filter(CharacterDB.last_crawled_at < datetime.now() - timedelta(days=1), CharacterDB.is_reporting == True)
             result = await session.execute(characters_query)
             characters = result.scalars().unique().all()
-            characters_list = [CharacterDB(character.discord_user_id,
-                                           character.discord_guild_id,
-                                           character.guild_name,
-                                           character.name,
-                                           character.realm,
-                                           character.faction,
-                                           character.region,
-                                           character.role,
-                                           character.spec_name,
-                                           character.class_name,
-                                           character.achievement_points,
-                                           character.item_level,
-                                           character.score,
-                                           character.rank,
-                                           character.thumbnail_url,
-                                           character.url,
-                                           character.last_crawled_at,
-                                           character.is_reporting) for character in characters]
-            return characters_list
+            
+            return characters
     except SQLAlchemyError as error:
         print(f'Error while querying the database: {error}')
         return None
@@ -821,19 +787,8 @@ async def get_all_runs() -> List[DungeonRunDB]:
         async with async_session_scope() as session:
             runs_query = select(DungeonRunDB)
             result = await session.execute(runs_query)
-            runs = result.scalars().unique().all()
-            runs_list = [DungeonRunDB(run.id,
-                                      run.season,
-                                      run.name,
-                                      run.short_name,
-                                      run.mythic_level,
-                                      run.completed_at,
-                                      run.clear_time_ms,
-                                      run.par_time_ms,
-                                      run.num_keystone_upgrades,
-                                      run.score,
-                                      run.url) for run in runs]
-            return runs_list
+            runs = result.scalars().unique().all()            
+            return runs
     except SQLAlchemyError as error:
         print(f'Error while querying the database: {error}')
         return None
@@ -849,18 +804,8 @@ async def get_all_runs_not_crawled() -> List[DungeonRunDB]:
             runs_query = select(DungeonRunDB).filter(DungeonRunDB.is_crawled == False)
             result = await session.execute(runs_query)
             runs = result.scalars().unique().all()
-            runs_list = [DungeonRunDB(run.id,
-                                      run.season,
-                                      run.name,
-                                      run.short_name,
-                                      run.mythic_level,
-                                      run.completed_at,
-                                      run.clear_time_ms,
-                                      run.par_time_ms,
-                                      run.num_keystone_upgrades,
-                                      run.score,
-                                      run.url) for run in runs]
-            return runs_list
+            
+            return runs
     except SQLAlchemyError as error:
         print(f'Error while querying the database: {error}')
         return None
@@ -876,44 +821,32 @@ async def get_all_characters_for_run(run_id: int) -> List[CharacterRunDB]:
     """
     try:
         async with async_session_scope() as session:
+            
             query = select(DungeonRunDB).filter(DungeonRunDB.id == run_id)
             result = await session.execute(query)
             existing_run = result.scalar()
+            
             if existing_run is None:
                 return None
+            
             else:
+                
                 existing_character_runs_query = select(CharacterRunDB).filter(CharacterRunDB.dungeon_run_id == existing_run.id)
                 excresult = await session.execute(existing_character_runs_query)
                 existing_character_runs = excresult.scalars().all()
+                
                 existing_characters = select(CharacterDB).filter(CharacterDB.id.in_([char.character_id for char in existing_character_runs]))
-                ecresult = await session.execute(existing_characters)
-                existing_characters = ecresult.scalars().unique().all()
-                character_list = [CharacterDB(char.discord_user_id,
-                                                char.discord_guild_id,
-                                                char.guild_name,
-                                                char.name,
-                                                char.realm,
-                                                char.faction,
-                                                char.region,
-                                                char.role,                                                
-                                                char.spec_name,
-                                                char.class_name,
-                                                char.achievement_points,
-                                                char.item_level,
-                                                char.score,
-                                                char.rank,
-                                                char.thumbnail_url,
-                                                char.url,
-                                                char.last_crawled_at,
-                                                char.is_reporting) for char in existing_characters]
-                print(f'Found {len(character_list)} characters for run {run_id}')
-                return character_list
+                ec_result = await session.execute(existing_characters)
+                existing_characters = ec_result.scalars().unique().all()
+                
+                print(f'Found {len(existing_characters)} characters for run {run_id}')
+                return existing_characters
                 
     except SQLAlchemyError as error:
         print(f'Error while querying the database: {error}')
         return None 
 
-async def get_all_runs_for_character(character: CharacterDB) -> List[CharacterRunDB]:
+async def get_top10_runs_for_character_by_score(character: CharacterDB) -> List[CharacterRunDB]:
     """Get all runs for a character.
 
     Args:
@@ -924,12 +857,16 @@ async def get_all_runs_for_character(character: CharacterDB) -> List[CharacterRu
     """
     try:
         async with async_session_scope() as session:
+            
             query = select(CharacterDB).filter(CharacterDB.name == character.name, CharacterDB.realm == character.realm)
             result = await session.execute(query)
             existing_character = result.scalar()
+            
             if existing_character is None:
                 return None
+            
             else:
+                
                 existing_character_runs_query = select(CharacterRunDB)\
                                         .join(DungeonRunDB, CharacterRunDB.dungeon_run_id == DungeonRunDB.id)\
                                         .filter(CharacterRunDB.character_id == existing_character.id)\
@@ -937,27 +874,19 @@ async def get_all_runs_for_character(character: CharacterDB) -> List[CharacterRu
                                         .limit(10)
                 result = await session.execute(existing_character_runs_query)
                 existing_character_runs = result.scalars().unique().all()
-                if existing_character_runs is not None:
-                    run_list = []
-                    for character_run in existing_character_runs:
-                        run_query = select(DungeonRunDB).filter(DungeonRunDB.id == character_run.dungeon_run_id)
-                        run_result = await session.execute(run_query)
-                        run = run_result.scalar()
-                        run = DungeonRunDB(run.id,
-                                       run.season,
-                                       run.name,
-                                       run.short_name,
-                                       run.mythic_level,
-                                       run.completed_at,
-                                       run.clear_time_ms,
-                                       run.par_time_ms,
-                                       run.num_keystone_upgrades,
-                                       run.score,
-                                       run.url)
-                        run_list.append(run)
-                    return run_list
-                else:
+                
+                if not existing_character_runs:
                     return None
+                
+                else:
+                    
+                    existing_runs_query = select(DungeonRunDB).filter(DungeonRunDB.id.in_([run.dungeon_run_id for run in existing_character_runs]))
+                    er_result = await session.execute(existing_runs_query)
+                    existing_runs = er_result.scalars().unique().all()
+                    
+                    return existing_runs              
+                    
+                
     except SQLAlchemyError as error:
         print(f'Error while querying the database: {error}')
         return None 
@@ -973,25 +902,8 @@ async def get_top10_character_by_achievement() -> List[CharacterDB]:
             query = select(CharacterDB).order_by(CharacterDB.achievement_points.desc()).limit(10)
             result = await session.execute(query)
             characters = result.scalars().unique().all()
-            top10_characters = [CharacterDB(char.discord_user_id,
-                                            char.discord_guild_id,
-                                            char.guild_name,
-                                            char.name,
-                                            char.realm,
-                                            char.faction,
-                                            char.region,
-                                            char.role,
-                                            char.spec_name,
-                                            char.class_name,
-                                            char.achievement_points,
-                                            char.item_level,
-                                            char.score,
-                                            char.rank,
-                                            char.thumbnail_url,
-                                            char.url,
-                                            char.last_crawled_at,
-                                            char.is_reporting) for char in characters]
-            return top10_characters
+            
+            return characters
     except SQLAlchemyError as error:
         print(f'Error while querying the database: {error}')
         return None 
@@ -1007,25 +919,8 @@ async def get_top10_character_by_mythic_plus() -> List[CharacterDB]:
             query = select(CharacterDB).order_by(CharacterDB.score.desc()).limit(10)
             result = await session.execute(query)
             characters = result.scalars().unique().all()
-            top10_characters = [CharacterDB(char.discord_user_id,
-                                            char.discord_guild_id,
-                                            char.guild_name,
-                                            char.name,
-                                            char.realm,
-                                            char.faction,
-                                            char.region,
-                                            char.role,
-                                            char.spec_name,
-                                            char.class_name,
-                                            char.achievement_points,
-                                            char.item_level,
-                                            char.score,
-                                            char.rank,
-                                            char.thumbnail_url,
-                                            char.url,
-                                            char.last_crawled_at,
-                                            char.is_reporting) for char in characters]
-            return top10_characters
+            
+            return characters
     except SQLAlchemyError as error:
         print(f'Error while querying the database: {error}')
         return None 
@@ -1042,25 +937,8 @@ async def get_top10_character_by_highest_item_level() -> List[CharacterDB]:
             query = select(CharacterDB).order_by(CharacterDB.item_level.desc()).limit(10)
             result = await session.execute(query)
             characters = result.scalars().unique().all()
-            top10_characters = [CharacterDB(char.discord_user_id,
-                                            char.discord_guild_id,
-                                            char.guild_name,
-                                            char.name,
-                                            char.realm,
-                                            char.faction,
-                                            char.region,
-                                            char.role,
-                                            char.spec_name,
-                                            char.class_name,
-                                            char.achievement_points,
-                                            char.item_level,
-                                            char.score,
-                                            char.rank,
-                                            char.thumbnail_url,
-                                            char.url,
-                                            char.last_crawled_at,
-                                            char.is_reporting) for char in characters]
-            return top10_characters
+            
+            return characters
     except SQLAlchemyError as error:
         print(f'Error while querying the database: {error}')
         return None 
@@ -1073,44 +951,23 @@ async def get_top10_guild_runs_this_week() -> List[DungeonRunDB]:
                                                                                 DungeonRunDB.num_keystone_upgrades >= 1,
                                                                                 DungeonRunDB.completed_at >= one_week_ago).order_by(DungeonRunDB.score.desc()).limit(10)
             result = await session.execute(query)
-            runs = result.scalars().unique().all()
-            
-            top10_runs = [DungeonRunDB(run.id,
-                                       run.season,
-                                       run.name,
-                                       run.short_name,
-                                       run.mythic_level,
-                                       run.completed_at,
-                                       run.clear_time_ms,
-                                       run.par_time_ms,
-                                       run.num_keystone_upgrades,
-                                       run.score,
-                                       run.url) for run in runs]
-            return top10_runs
+            runs = result.scalars().unique().all()            
+           
+            return runs
     except SQLAlchemyError as error:
         print(f'Error while querying the database: {error}')
         return None
 
-async def get_top10_guild_runs_all_time() -> List[DungeonRunDB]:
+async def get_top8_guild_runs_all_time() -> List[DungeonRunDB]:
     try: 
         async with async_session_scope() as session:
             query = select(DungeonRunDB).filter(DungeonRunDB.is_guild_run == True,
-                                                DungeonRunDB.num_keystone_upgrades >= 1).order_by(DungeonRunDB.score.desc()).limit(10)
+                                                DungeonRunDB.num_keystone_upgrades >= 1).order_by(DungeonRunDB.score.desc()).limit(5)
             result = await session.execute(query)
             runs = result.scalars().unique().all()
             
-            top10_runs = [DungeonRunDB(run.id,
-                                       run.season,
-                                       run.name,
-                                       run.short_name,
-                                       run.mythic_level,
-                                       run.completed_at,
-                                       run.clear_time_ms,
-                                       run.par_time_ms,
-                                       run.num_keystone_upgrades,
-                                       run.score,
-                                       run.url) for run in runs] 
-            return top10_runs
+            
+            return runs
     except SQLAlchemyError as error:
         print(f'Error while querying the database: {error}')
         return None

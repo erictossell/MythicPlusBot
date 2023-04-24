@@ -46,8 +46,8 @@ class Guild(commands.Cog):
             ctx (_type_): _description_
         """
         try:
-            description = '📄 This leaderboard is based on the top 10 registered characters from the Take a Lap Guild.\n\n  ⚠️ If you have not registered your off-realm or out-of-guild character, please do so with !register.'
-            dungeon_list = await db.get_top10_guild_runs_all_time()
+            description = '📄 This leaderboard is based on the top 8 registered characters from the Take a Lap Guild.\n\n  ⚠️ If you have not registered your off-realm or out-of-guild character, please do so with !register.'
+            dungeon_list = await db.get_top8_guild_runs_all_time()
             
             embed = discord.Embed(title='🏆 Best Take a Lap Guild Runs', description= description, color=discord.Color.green())
             counter = 1

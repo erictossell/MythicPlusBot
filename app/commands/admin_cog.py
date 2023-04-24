@@ -1,12 +1,16 @@
-
-
+import os
+from dotenv import load_dotenv
 import time
 from discord.ext import commands
 from discord.commands import SlashCommandGroup
+from app.objects.guild_registration import RegisterGuildView
 
 import app.raiderIO as raiderIO
 import app.db as db
 
+load_dotenv('configurations/main.env')
+SUPPORT_SERVER_ID = os.getenv('SUPPORT_SERVER_ID')
+SUPPORT_SERVER_CHANNEL_ID = os.getenv('SUPPORT_SERVER_CHANNEL_ID')
 
 class Admin(commands.Cog):
     def __init__(self, bot):
@@ -14,6 +18,26 @@ class Admin(commands.Cog):
         print("Admin cog is initializing....")
         
     admin = SlashCommandGroup("admin", description="Admin commands for the bot.")
+    
+    @admin.command(name="register")
+    async def register(self,ctx):
+        """This command registers the guild with the bot.
+
+        Args:
+            ctx (context): The current discord context.
+        """
+        try:
+            print('register command called')
+            await ctx.respond(view=RegisterGuildView(discord_guild_id=ctx.guild.id))
+        except Exception as e:
+            print(e)
+            await ctx.respond('Something went wrong :( Talk to Eriim about this error. ')
+            error_channel = await ctx.bot.fetch_guild(SUPPORT_SERVER_ID).fetch_channel(SUPPORT_SERVER_CHANNEL_ID)
+           
+            await error_channel.send(f'Error in !register command: {e}')
+        
+    
+    
     
     @admin.command(name="crawl")    
     async def crawl(self, ctx):
@@ -82,7 +106,6 @@ class Admin(commands.Cog):
         await db.add_discord_guild(db.DiscordGuildDB(id = guild.id, discord_guild_name=guild.name))
         await guild.system_channel.send('Hello! I am a bot that tracks your guild\'s runs on Raider.IO. '
                                         'Type /help to see a list of commands.') 
-     
      
     @commands.Cog.listener()
     async def on_application_command_error(self, ctx, error):

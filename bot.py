@@ -13,6 +13,8 @@ from discord.ext import commands
 load_dotenv('configurations/main.env')
 TOKEN = os.getenv('DISCORD_TOKEN')
 GUILD = os.getenv('DISCORD_GUILD')
+SUPPORT_CHANNEL_ID = os.getenv('SUPPORT_CHANNEL_ID')
+SUPPORT_SERVER_ID = os.getenv('SUPPORT_SERVER_ID')
 
 #Set up Discord BOT with correct permissions
 intents = discord.Intents(messages=True, guilds=True, members=True)

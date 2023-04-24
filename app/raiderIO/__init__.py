@@ -5,7 +5,7 @@ import asyncio
 from typing import List, Optional
 from ratelimit import limits, sleep_and_retry
 import httpx
-from app import converter
+from app import convert
 import app.db as db
 from app.db.models.dungeon_run_db import DungeonRunDB
 from app.raiderIO.models.affix import Affix
@@ -20,6 +20,7 @@ import app.util as util
 API_URL = 'https://raider.io/api/v1/'
 CALLS = 295
 RATE_LIMIT=60
+TIMEOUT = 10
 
 @sleep_and_retry
 @limits(calls=CALLS, period=RATE_LIMIT)
@@ -63,7 +64,7 @@ async def get_character(name: str,
     attempts = 0 
     try:
         async with httpx.AsyncClient() as client:
-            response = await client.get(API_URL + 'characters/profile?region='+region+'&realm='+realm+'&name='+name+'&fields=guild,gear,mythic_plus_scores_by_season:current,mythic_plus_ranks,mythic_plus_best_runs,mythic_plus_recent_runs') 
+            response = await client.get(API_URL + 'characters/profile?region='+region+'&realm='+realm+'&name='+name+'&fields=guild,gear,mythic_plus_scores_by_season:current,mythic_plus_ranks,mythic_plus_best_runs,mythic_plus_recent_runs', timeout=TIMEOUT) 
             if response.status_code == 404:
                 return None
             elif response.status_code == 429:
@@ -231,7 +232,7 @@ async def get_run_details(dungeon_run : DungeonRunDB) -> Optional[bool]:
     attempts = 0
     try:
         async with httpx.AsyncClient() as client:
-            request = await client.get(API_URL +f'mythic-plus/run-details?season={dungeon_run.season}&id={dungeon_run.id}')
+            request = await client.get(API_URL +f'mythic-plus/run-details?season={dungeon_run.season}&id={dungeon_run.id}', timeout=TIMEOUT)
             if request.status_code != 200:
                 return None
             elif request.status_code == 200:
@@ -239,7 +240,7 @@ async def get_run_details(dungeon_run : DungeonRunDB) -> Optional[bool]:
                 if request.json()['roster'] is None:
                     return False
                 for roster in request.json()['roster']:                    
-                    character_db = await db.lookup_character(roster['character']['name'],
+                    character_db = await db.get_character_by_name_realm(roster['character']['name'],
                                                         roster['character']['realm']['slug'])                      
                     if character_db is not None:
                         guild_member_counter += 1
@@ -249,7 +250,7 @@ async def get_run_details(dungeon_run : DungeonRunDB) -> Optional[bool]:
                         rank_world = roster['ranks']['world']
                         rank_region = roster['ranks']['region']
                         rank_realm = roster['ranks']['realm']
-                        character_run = converter.convert_character_run_io(character_db,
+                        character_run = convert.character_run_io(character_db,
                                                         dungeon_run,
                                                         character_id,
                                                         spec_name,
@@ -293,22 +294,24 @@ async def crawl_characters(discord_guild_id: int) -> str:
                 character_io = await get_character(name=character.name,
                                                     realm=character.realm,
                                                     score_colors=colors)
+                if not character_io:
+                    return f'Error: An error occurred while crawling {character.name}'
                 for run in character_io.best_runs:
                     if run is None:
                         return f'Error: An error occurred while crawling {character.name}'
-                    if run is not None and await db.lookup_run(int(run.id)) is None:
+                    if run is not None and await db.get_run_by_id(int(run.id)) is None:
                         run.completed_at = datetime.strptime(run.completed_at,
                                                                 '%Y-%m-%dT%H:%M:%S.%fZ')
-                        await db.add_dungeon_run(run)
+                        await db.add_dungeon_run(convert.dungeon_run_io(run))
                         run_counter += 1
                    
                 for run in character_io.recent_runs:
                     if run is None:
                         return f'Error: An error occurred while crawling {character.name}'
-                    elif run is not None and await db.lookup_run(int(run.id)) is None:
+                    elif run is not None and await db.get_run_by_id(int(run.id)) is None:
                         run.completed_at = datetime.strptime(run.completed_at,
                                                                 '%Y-%m-%dT%H:%M:%S.%fZ')
-                        await db.add_dungeon_run(run)
+                        await db.add_dungeon_run(convert.dungeon_run_io(run))
                         run_counter += 1
                     
                 if character.name == character_io.name and character.realm == character_io.realm:
@@ -343,7 +346,7 @@ async def crawl_guild_members(discord_guild_id) -> None:
         counter = 0
         print('RaiderIO Crawler: Crawling ' + str(len(members_list)) + ' guild members.')
         for member in tqdm(members_list):
-            db_character = await db.lookup_character(member.name, 'Area-52')
+            db_character = await db.get_character_by_name_realm(member.name, 'Area-52')
             if db_character is None:
                 
                 character = await get_character(str(member.name),
