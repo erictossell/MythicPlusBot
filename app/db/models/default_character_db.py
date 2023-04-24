@@ -10,12 +10,16 @@ class DefaultCharacterDB(Base):
     __tablename__ = 'default_characters'
     id = Column(Integer, primary_key=True)
     discord_user_id = Column(BigInteger)
-    discord_guild_id = Column(BigInteger)    
+      
     version = Column(Integer)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     modified_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+    
     character_id = Column(Integer, ForeignKey('characters.id'))
     character = relationship("CharacterDB", back_populates="default_character")
+    
+    discord_guild_id = Column(BigInteger,ForeignKey('discord_guilds.id'), nullable=False)
+    discord_guild = relationship("DiscordGuildDB", back_populates="default_characters")
 
     def __init__(self, discord_user_id: int, discord_guild_id: int, character_id=None, character=None, version: int = 1):
         self.discord_user_id = discord_user_id

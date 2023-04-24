@@ -66,7 +66,7 @@ class RegisterModal(Modal):
             user_id = interaction.user.id
             
             character = await raiderIO.get_character(name, realm)
-            existing_character = db.lookup_character(name, realm)
+            existing_character = await db.lookup_character(name, realm)
                         
             if character is None:
                 await interaction.response.send_message(f'Character {name} on {realm} not found.', ephemeral=True)
@@ -82,12 +82,12 @@ class RegisterModal(Modal):
                     character.thumbnail_url, character.url,
                     datetime.strptime(character.last_crawled_at, '%Y-%m-%dT%H:%M:%S.%fZ'), True)
                                                
-                db.add_character(new_character)
+                await db.add_character(new_character)
                 await interaction.response.send_message(f'You have registered the character {new_character.name} on realm {new_character.realm.capitalize()} for Tal-Bot reporting.', ephemeral=True)
                 return
 
             elif not existing_character.is_reporting:
-                db.update_character_reporting(existing_character)
+                await db.update_character_reporting(existing_character)
                 await interaction.response.send_message(f'You have registered the character {existing_character.name} on realm {existing_character.realm.capitalize()} for Tal-Bot reporting.', ephemeral=True)
             else:
                 await interaction.response.send_message(f'The character {existing_character.name} on realm {existing_character.realm.capitalize()} has already been registered for Tal-Bot reporting.', ephemeral=True)                   
@@ -114,33 +114,33 @@ class UnregisterModal(Modal):
             realm = self.children[1].value.capitalize() if self.children[1].value else 'Area-52'
             user_id = interaction.user.id           
             
-            character = raiderIO.get_character(name, realm)
+            character = await raiderIO.get_character(name, realm)
             
             if character is None:
                 await interaction.response.send_message(f'Character {name} on {realm} not found', ephemeral=True)
                 return
 
-            existing_character = db.lookup_character(name, realm)
+            existing_character = await db.lookup_character(name, realm)
 
             if existing_character is None:
                 await interaction.response.send_message('This character is not registered.', ephemeral=True)
                 return
 
-            if existing_character.discord_user_id != user_id:                        
+            elif existing_character.discord_user_id != user_id:                        
                 await interaction.response.send_message('You do not have permission to unregister this character. Contact an admin if you believe this is an error.', ephemeral=True)
                 return
 
-            if existing_character.discord_user_id == user_id and existing_character.is_reporting:
+            elif existing_character.discord_user_id == user_id and existing_character.is_reporting:
                 existing_character.is_reporting = False  
-                db.update_character_reporting(existing_character)                
+                await db.update_character_reporting(existing_character)                
                 await interaction.response.send_message(f'You have unregistered the character {name} on realm {realm} for Tal-Bot reporting.', ephemeral=True)
                 return
 
-            if existing_character.discord_user_id == user_id and not existing_character.is_reporting:
+            elif existing_character.discord_user_id == user_id and not existing_character.is_reporting:
                 await interaction.response.send_message('This character is not registered.', ephemeral=True)
                 return
-
-            await interaction.response.send_message('An unexpected error has occurred, contact Eriim with a timestamp.', ephemeral=True)
+            else:
+                await interaction.response.send_message('An unexpected error has occurred, contact Eriim with a timestamp.', ephemeral=True)
                          
         except Exception as e:
             print(e)

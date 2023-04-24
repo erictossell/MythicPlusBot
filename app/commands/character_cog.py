@@ -37,6 +37,7 @@ class Character(commands.Cog):
                 embed.add_field(name=str(counter)+ '.  '+ run.name + '  |  ' + str(run.mythic_level)+'  |  +'+str(run.num_keystone_upgrades), value=run.characters+f'\n[Link to run]({run.url})', inline=True)
                 counter+=1
             embed.set_footer(text='Data from Raider.IO(https://raider.io/)')
+            embed.set_thumbnail(url=character_title.thumbnail_url)
             await ctx.respond(embed=embed)
         except Exception as exception:
             await ctx.channel.send('Type !help to see how to use this command.')
@@ -66,14 +67,19 @@ class Character(commands.Cog):
                 if main_char is None:
                     default = db.DefaultCharacterDB(discord_user_id=discord_user_id, discord_guild_id=discord_guild_id, character_id=character.id)
                     main_char = await db.add_default_character(default)
-                    await ctx.respond(f'Your main character has been set to: {main_char[1]}-{main_char[2]}.')
+                    embed = discord.Embed(title=f'Success! Your main character has been updated to: {main_char[1]}-{main_char[2].capitalize()}.', color=discord.Color.green())
+                    embed.set_thumbnail(url=character.thumbnail_url)
+                    await ctx.respond(embed=embed)
                 elif main_char is not None: 
                     main_char = await db.update_default_character(discord_user_id= discord_user_id,
                                                                 discord_guild_id =discord_guild_id,
-                                                                character=character)                
-                    await ctx.respond(f'Your main character has been set to: {main_char[1]}-{main_char[2]}.')
+                                                                character=character)
+                    embed = discord.Embed(title=f'Success! Your main character has been updated to: {main_char[1]}-{main_char[2].capitalize()}.', color=discord.Color.green())
+                    embed.set_thumbnail(url=character.thumbnail_url)          
+                    await ctx.respond(embed=embed)
                 else:
-                    await ctx.respond(f'Something went wrong, contact support for assitance.')
+                    embed = discord.Embed(title=f'Something went wrong, contact support for assitance.', color=discord.Color.red())
+                    await ctx.respond(embed=embed)
 
         except Exception as exception:
             await ctx.channel.send('Type !help to see how to use this command.')

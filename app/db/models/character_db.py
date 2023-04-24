@@ -3,9 +3,10 @@
 #Author: Eriim
 
 import datetime
-from sqlalchemy import BigInteger, Column, DateTime, Integer, String, Boolean
+from sqlalchemy import BigInteger, Column, DateTime, ForeignKey, Integer, String, Boolean
 from sqlalchemy.orm import relationship
 from app.db.base import Base
+from app.db.models.discord_guild_db import DiscordGuildDB
 
 
 class CharacterDB(Base):
@@ -14,7 +15,7 @@ class CharacterDB(Base):
     
     id = Column(Integer, primary_key=True)
     discord_user_id = Column(BigInteger, nullable=False)
-    discord_guild_id = Column(BigInteger, nullable=False)    
+        
     guild_name = Column(String, nullable=False)    
     name = Column(String, nullable=False)
     realm = Column(String, nullable=False)
@@ -33,6 +34,10 @@ class CharacterDB(Base):
     is_reporting = Column(Boolean, nullable=False, default=False)
     modified_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    
+    discord_guild_id = Column(BigInteger,ForeignKey('discord_guilds.id'), nullable=False)
+    discord_guild = relationship("DiscordGuildDB", back_populates="characters")
+    
     character_runs = relationship("CharacterRunDB",
                                   back_populates="character",
                                   cascade="all, delete-orphan")
@@ -43,10 +48,11 @@ class CharacterDB(Base):
     character_history = relationship("CharacterHistoryDB",
                                      back_populates="character",
                                      cascade="all, delete-orphan")
+    
 
     def __init__(self,
                  discord_user_id: int,
-                 discord_guild_id: int,                 
+                                  
                  guild_name: str,
                  name: str,
                  realm: str,
@@ -63,10 +69,12 @@ class CharacterDB(Base):
                  url: str,
                  last_crawled_at: datetime,
                  is_reporting: bool,
+                 discord_guild_id: int = None,
+                 discord_guild: DiscordGuildDB = None,
                  id = None):
         """CharacterDB constructor"""
         self.discord_user_id = discord_user_id
-        self.discord_guild_id = discord_guild_id 
+        
         self.guild_name = guild_name    
         self.name = name
         self.realm = realm
@@ -84,6 +92,11 @@ class CharacterDB(Base):
         self.last_crawled_at = last_crawled_at
         self.is_reporting = is_reporting
         self.id = id
+        
+        if discord_guild_id:
+            self.discord_guild_id = discord_guild_id
+        elif discord_guild:
+            self.discord_guild = discord_guild
         
     def __repr__(self):
         return f"<CharacterDB(id={self.id}, discord_user_id={self.discord_user_id}, name={self.name}, realm={self.realm}, faction={self.faction}, region={self.region}, role={self.role}, spec_name={self.spec_name}, class_name={self.class_name}, achievement_points={self.achievement_points}, item_level={self.item_level}, score={self.score}, rank={self.rank}, thumbnail_url={self.thumbnail_url}, url={self.url}, last_crawled_at={self.last_crawled_at}, is_reporting={self.is_reporting})>"

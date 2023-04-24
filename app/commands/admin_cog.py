@@ -5,6 +5,7 @@ from discord.ext import commands
 from discord.commands import SlashCommandGroup
 
 import app.raiderIO as raiderIO
+import app.db as db
 
 
 class Admin(commands.Cog):
@@ -64,7 +65,25 @@ class Admin(commands.Cog):
             end_time = time.time()
             elapsed_time = end_time - start_time
             await ctx.respond('Finished crawling Raider.IO guild runs after ' + str(elapsed_time) + ' seconds.')
-    
+     
+    @commands.Cog.listener()
+    async def on_ready(self):
+        print('Connected to Discord as {0.user}'.format(self.bot))
+        for guild in self.bot.guilds:
+            
+            await db.add_discord_guild(db.DiscordGuildDB(id = guild.id, discord_guild_name=guild.name))
+            print(f'{self.bot.user} is connected to the following guild:\n'
+                  f'{guild.name}(id: {guild.id})')
+            
+    @commands.Cog.listener()
+    async def on_guild_join(self, guild):
+        print(f'{self.bot.user} has joined the following guild:\n'
+              f'{guild.name}(id: {guild.id})')
+        await db.add_discord_guild(db.DiscordGuildDB(id = guild.id, discord_guild_name=guild.name))
+        await guild.system_channel.send('Hello! I am a bot that tracks your guild\'s runs on Raider.IO. '
+                                        'Type /help to see a list of commands.') 
+     
+     
     @commands.Cog.listener()
     async def on_application_command_error(self, ctx, error):
         if isinstance(error, commands.errors.CommandNotFound):

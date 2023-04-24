@@ -1,6 +1,7 @@
 from tqdm import tqdm
 from datetime import datetime
 import re
+import asyncio
 from typing import List, Optional
 from ratelimit import limits, sleep_and_retry
 import httpx
@@ -58,8 +59,8 @@ async def get_character(name: str,
 
     Returns:
         Character: Returns a Character object or None if an error occurs.
-    """    
-    #print('RIO Service: Looking up character: ' + name)   
+    """   
+    attempts = 0 
     try:
         async with httpx.AsyncClient() as client:
             response = await client.get(API_URL + 'characters/profile?region='+region+'&realm='+realm+'&name='+name+'&fields=guild,gear,mythic_plus_scores_by_season:current,mythic_plus_ranks,mythic_plus_best_runs,mythic_plus_recent_runs') 
@@ -139,7 +140,15 @@ async def get_character(name: str,
                 return character    
             else:
                 print('Error: Character not found.')
-                return None   
+                return None
+    except httpx.ReadTimeout:
+        print("Timeout occurred while fetching character data.")
+        
+        while attempts < 3:
+            await asyncio.sleep(5)  # Adding delay before retrying the request
+            attempts+=1
+            return await get_character(region, realm, name)
+        
     except Exception as exception:
         print(exception)
         return None
@@ -165,6 +174,11 @@ async def get_members() -> Optional[List[Member]]:
                 return members
             elif len(members) == 0:
                 return None
+    except httpx.ReadTimeout:
+        print("Timeout occurred while fetching character data.")
+        # You can add custom handling for the timeout error here, such as logging or retrying the request
+        await asyncio.sleep(5)  # Adding delay before retrying the request
+        return await get_members()
     except Exception as e:
         print(e)
         print('Error: Guild not found.')
@@ -191,6 +205,11 @@ async def get_mythic_plus_affixes() -> Optional[List[Affix]]:
                 return affixes
             else:
                 return None
+    except httpx.ReadTimeout:
+        print("Timeout occurred while fetching character data.")
+        # You can add custom handling for the timeout error here, such as logging or retrying the request
+        await asyncio.sleep(5)  # Adding delay before retrying the request
+        return await get_mythic_plus_affixes()
     except Exception as exception:
         print(exception)
         return None    
@@ -209,6 +228,7 @@ async def get_run_details(dungeon_run : DungeonRunDB) -> Optional[bool]:
     Returns:
         Optional[bool]: True if a guild run is found, False if not.
     """
+    attempts = 0
     try:
         async with httpx.AsyncClient() as client:
             request = await client.get(API_URL +f'mythic-plus/run-details?season={dungeon_run.season}&id={dungeon_run.id}')
@@ -242,7 +262,13 @@ async def get_run_details(dungeon_run : DungeonRunDB) -> Optional[bool]:
                 if guild_member_counter >= 4:
                     return True
                 else:
-                    return False           
+                    return False
+    except httpx.ReadTimeout:
+        print("Timeout occurred while fetching character data.")
+        while attempts < 3:
+            await asyncio.sleep(5)
+            attempts+=1            
+            return await get_run_details(dungeon_run)      
     except Exception as exception:
         print('RaiderIO : Error: ' + exception)
         return None   
@@ -270,7 +296,7 @@ async def crawl_characters(discord_guild_id: int) -> str:
                 for run in character_io.best_runs:
                     if run is None:
                         return f'Error: An error occurred while crawling {character.name}'
-                    if run is not None and await db.lookup_run(run.id) is None:
+                    if run is not None and await db.lookup_run(int(run.id)) is None:
                         run.completed_at = datetime.strptime(run.completed_at,
                                                                 '%Y-%m-%dT%H:%M:%S.%fZ')
                         await db.add_dungeon_run(run)
@@ -279,7 +305,7 @@ async def crawl_characters(discord_guild_id: int) -> str:
                 for run in character_io.recent_runs:
                     if run is None:
                         return f'Error: An error occurred while crawling {character.name}'
-                    elif run is not None and await db.lookup_run(run.id) is None:
+                    elif run is not None and await db.lookup_run(int(run.id)) is None:
                         run.completed_at = datetime.strptime(run.completed_at,
                                                                 '%Y-%m-%dT%H:%M:%S.%fZ')
                         await db.add_dungeon_run(run)
@@ -300,6 +326,7 @@ async def crawl_characters(discord_guild_id: int) -> str:
                     await db.update_character(character)
                     update_character_counter += 1
         return f'Characters crawled: {characters_crawled} |  Updated {update_character_counter} characters and added {run_counter} runs.'
+    
     except Exception as exception:
         print(exception)
     finally:
@@ -368,7 +395,6 @@ async def crawl_runs(discord_guild_id: int) -> str:
             is_guild = await get_run_details(run)
             runs_crawled += 1
             if is_guild is True:
-                             
                 announcement = await db.AnnouncementDB(discord_guild_id=discord_guild_id,
                                                 announcement_channel_id=1074546599239356498,
                                                 title=f'🧙‍♂️ New guild run:{run.mythic_level} - {run.name} on {run.completed_at}',
