@@ -69,8 +69,8 @@ class GeneralCog(commands.Cog):
         """
         print('testPoll command called')
         view = CreatePollButton()
-        await ctx.send('Take a Lap Discord Poll', view=view)
-        await ctx.defer()
+        await ctx.send(view=view)
+        await ctx.respond('----- TalBot Poll -----')
 
 def setup(bot):
     """Set up the general cog.

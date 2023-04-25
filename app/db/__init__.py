@@ -364,7 +364,7 @@ async def add_character_run(character_run: CharacterRunDB) -> Optional[Character
         print(error)
         return None
 
-async def add_default_character(default_character: DefaultCharacterDB) -> bool:
+async def add_default_character(default_character: DefaultCharacterDB) -> DefaultCharacterDB:
     """Add a default character to the database.
 
     Returns:
@@ -377,13 +377,13 @@ async def add_default_character(default_character: DefaultCharacterDB) -> bool:
             er_result = await session.execute(er_query)
             existing_relationship = er_result.scalar()
             if existing_relationship is None:
-                session.add(default_character)
-                return True
+                new_default_character = session.add(default_character)
+                return new_default_character
             else:
-                return False
+                return None
     except SQLAlchemyError as error:
         print(f'Error while querying the database: {error}')
-        return False
+        return None
 
 async def add_announcement(announcement: AnnouncementDB) -> bool:
     """Add an announcement to the database.
