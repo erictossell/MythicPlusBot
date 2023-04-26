@@ -1,4 +1,3 @@
-from datetime import datetime
 import discord
 from discord.ui import Button, View, Modal, InputText
 import app.db as db
@@ -66,14 +65,22 @@ class RegisterGuildModal(Modal):
                 await interaction.response.send_message("Guild region is required.", ephemeral=True)
                 return
             else: 
-                existing_guild = await db.lookup_discord_guild(self.discord_guild_id)
+                existing_guild = await db.get_discord_guild_by_id(int(self.discord_guild_id))
                 if existing_guild:
-                    updated_guild = db.DiscordGuildDB(id=self.discord_guild_id,
+                    
+                    if announcement_channel_id is None:
+                        updated_guild = db.DiscordGuildDB(id=int(self.discord_guild_id),
+                                                      discord_guild_name=existing_guild.discord_guild_name,
+                                                      wow_guild_name=wow_guild_name,
+                                                      wow_realm=wow_realm,
+                                                      wow_region=wow_region)
+                    else:
+                        updated_guild = db.DiscordGuildDB(id=int(self.discord_guild_id),
                                                       discord_guild_name=existing_guild.discord_guild_name,
                                                       wow_guild_name=wow_guild_name,
                                                       wow_realm=wow_realm,
                                                       wow_region=wow_region,
-                                                      announcement_channel_id=announcement_channel_id)
+                                                      announcement_channel_id=int(announcement_channel_id))
                     await db.update_discord_guild(updated_guild)
                     
                     embed = discord.Embed(title=f"{updated_guild.discord_guild_name} WoW Guild Updated",

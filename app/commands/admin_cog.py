@@ -35,10 +35,7 @@ class Admin(commands.Cog):
             error_channel = await ctx.bot.fetch_guild(SUPPORT_SERVER_ID).fetch_channel(SUPPORT_SERVER_CHANNEL_ID)
            
             await error_channel.send(f'Error in !register command: {e}')
-        
-    
-    
-    
+       
     @admin.command(name="crawl")    
     async def crawl(self, ctx):
         """Crawl the guild for new runs.
@@ -46,11 +43,12 @@ class Admin(commands.Cog):
         Args:
             ctx (context): the current discord context.
         """
+        discord_guild_id = int(ctx.guild.id)        
         async with ctx.typing():
             print('crawl command called')
             start_time = time.time()
             await ctx.respond('Crawling Raider.IO characters...')
-            output = await raiderIO.crawl_characters(ctx.guild.id)
+            output = await raiderIO.crawl_characters(discord_guild_id)
             await ctx.respond(output)
             end_time = time.time()
             elapsed_time = end_time - start_time
@@ -64,11 +62,12 @@ class Admin(commands.Cog):
         Args:
             ctx (context): The current discord context.
         """
+        discord_guild_id = int(ctx.guild.id)        
         async with ctx.typing():
             print('crawl guild command called')
             start_time = time.time()
             await ctx.respond('Crawling Raider.IO guild members...')
-            await raiderIO.crawl_guild_members(ctx.guild.id)
+            await raiderIO.crawl_guild_members(discord_guild_id)
             end_time = time.time()
             elapsed_time = end_time - start_time
             await ctx.respond('Finished crawling Raider.IO guild members after ' + str(elapsed_time) + ' seconds.')
@@ -80,11 +79,12 @@ class Admin(commands.Cog):
         Args:
             ctx (context): The current discord context.
         """
+        discord_guild_id = int(ctx.guild.id) 
         async with ctx.typing():
             print('crawl runs command called')
             await ctx.respond('Crawling Raider.IO guild runs...')
             start_time = time.time()
-            output = await raiderIO.crawl_runs(ctx.guild.id)
+            output = await raiderIO.crawl_runs(discord_guild_id)
             await ctx.respond(output)
             end_time = time.time()
             elapsed_time = end_time - start_time

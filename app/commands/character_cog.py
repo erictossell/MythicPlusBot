@@ -10,13 +10,13 @@ class Character(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         print('Character cog is initializing....')
-    
+
     character = SlashCommandGroup(name='character', description='All commands related to characters')
-    
+
     @character.command(name='runs', help='Gets the best Mythic+ runs for a character.')
     async def runs(self,ctx, name: str = None, realm: str = 'area-52'):
         """Gets the best Mythic+ runs for a character."""
-        try:       
+        try:
             if name is None:
                 character_relationship = await db.get_default_character_by_guild_user(ctx.guild.id,ctx.author.id)
                 if character_relationship is None:
@@ -44,7 +44,7 @@ class Character(commands.Cog):
             user = await ctx.bot.fetch_user(173958345022111744)
             channel = await user.create_dm()
             await channel.send(f'Error in !charRuns command: {exception}')
-    
+
     @character.command(name='set_main', help='Sets the default character for a user.')
     async def set_main(self, ctx, name: str, realm: Optional[str] = 'Area-52'):
         """Sets a user's default character.
@@ -109,7 +109,7 @@ class Character(commands.Cog):
             user = await ctx.bot.fetch_user(173958345022111744)
             channel = await user.create_dm()
             await channel.send(f'Error in !register command: {exception}')
-    
+
     @character.command(name='profile', help='View a character\'s profile.')
     async def profile(self, ctx, name: str = None, realm: str = 'Area-52'):
         """This command returns a character's profile.
@@ -144,7 +144,7 @@ class Character(commands.Cog):
             user = await ctx.bot.fetch_user(173958345022111744)
             channel = await user.create_dm()
             await channel.send(f'Error in !character command: {exception}')
-    
+
     @character.command(name='recent_runs', help='View a character\'s recent runs directly from RaiderIO.')
     async def recent_runs(self, ctx, name: str = None, realm: str = None):
         """This command returns the recent runs for a given character.
@@ -165,13 +165,13 @@ class Character(commands.Cog):
                 realm = 'Area-52'
             character = await raiderIO.get_character(name, realm)
             await ctx.respond(embed=character.get_recent_runs_embed())
-            
+
         except Exception as exception:
             await ctx.respond('Type !help to see how to use this command.')
             user = await ctx.bot.fetch_user(173958345022111744)
             channel = await user.create_dm()
             await channel.send(f'Error in !recent command: {exception}')  
-    
+
     @character.command(name='best_runs', help='Usage: !best <character name> <realm> (optional on Area-52)')
     async def best_runs(self, ctx, name: str = None, realm: str = None):
         """The best command returns the best runs for a given character.
@@ -185,7 +185,7 @@ class Character(commands.Cog):
             if not name:
                 main_char_relationship = await db.get_default_character_by_guild_user(ctx.guild.id, ctx.author.id)
                 char = await db.get_character_by_name_realm(main_char_relationship.character.name, main_char_relationship.character.realm)
-                
+
                 if char:
                     name, realm = char.name, char.realm
                 else:
@@ -197,13 +197,13 @@ class Character(commands.Cog):
 
             character = await raiderIO.get_character(name, realm)
             await ctx.respond(embed=character.get_best_runs_embed())
-        
+
         except Exception as exception:
             await ctx.respond('Type !help to see how to use this command.')
             user = await ctx.bot.fetch_user(173958345022111744)
             channel = await user.create_dm()
             await channel.send(f'Error in !best command: {exception}')
-            
+
     @commands.Cog.listener()
     async def on_application_command_error(self, ctx, error):
         if isinstance(error, commands.errors.CommandNotFound):
@@ -211,7 +211,7 @@ class Character(commands.Cog):
             user = await ctx.bot.fetch_user(173958345022111744)
             channel = await user.create_dm()
             await channel.send(f'Error in !leaderboard command: {error}')
-            
+
 def setup(bot):
     bot.add_cog(Character(bot))
     print('Character cog loaded successfully.')

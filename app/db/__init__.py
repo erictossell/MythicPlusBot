@@ -32,7 +32,7 @@ logging.basicConfig(filename='tal.log',
                     format='%(asctime)s %(levelname)s %(name)s %(message)s')
 
 async_engine = create_async_engine(
-    DEV_POSTGRES,
+    RAILWAY,
     echo=False, logging_name='sqlalchemy.engine', echo_pool=True, pool_pre_ping=True
 )
 
@@ -70,7 +70,7 @@ async def get_discord_guild_by_id(discord_guild_id: int) -> Optional[DiscordGuil
     """
     try:
         async with async_session_scope() as session:
-            existing_guild_query = select(DiscordGuildDB).filter(DiscordGuildDB.id == discord_guild_id)
+            existing_guild_query = select(DiscordGuildDB).filter(DiscordGuildDB.id == int(discord_guild_id))
             result = await session.execute(existing_guild_query)
             existing_guild = result.scalar()
             if not existing_guild:
@@ -256,7 +256,7 @@ async def add_character(character: CharacterDB) -> CharacterDB:
     """
     try:
         async with async_session_scope() as session:
-            query = select(CharacterDB).filter(CharacterDB.name == character.name, CharacterDB.realm == character.realm.lower()).first()
+            query = select(CharacterDB).filter(CharacterDB.name == character.name, CharacterDB.realm == character.realm.lower())
             result = await session.execute(query)
             existing_character = result.scalar()
             if existing_character is None:
@@ -736,6 +736,27 @@ async def get_all_characters() -> List[CharacterDB]:
                 .options(joinedload(CharacterDB.discord_guild))  # Load the relationship
                 .join(CharacterDB.discord_guild)  # Join the tables using the relationship
             )
+            result = await session.execute(characters_query)
+            characters = result.scalars().unique().all()
+            return characters
+    except SQLAlchemyError as error:
+        print(f'Error while querying the database: {error}')
+        return None
+
+async def get_all_characters_in_guild_by_id(discord_guild_id: int) -> List[CharacterDB]:
+    """Get all of the characters in a guild from the database.
+
+    Args:
+        guild_id (int): The id of the guild to get the characters for.
+
+    Returns:
+        List[CharacterDB]: A list of the characters in the guild.
+    """
+    try:
+        async with async_session_scope() as session:
+            characters_query = (select(CharacterDB)
+                                .join(CharacterDB.discord_guild)
+                                .filter(DiscordGuildDB.id == discord_guild_id))
             result = await session.execute(characters_query)
             characters = result.scalars().unique().all()
             return characters
