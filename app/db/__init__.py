@@ -32,7 +32,7 @@ logging.basicConfig(filename='tal.log',
                     format='%(asctime)s %(levelname)s %(name)s %(message)s')
 
 async_engine = create_async_engine(
-    RAILWAY,
+    DEV_POSTGRES,
     echo=False, logging_name='sqlalchemy.engine', echo_pool=True, pool_pre_ping=True
 )
 
