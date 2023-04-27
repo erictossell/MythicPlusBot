@@ -24,7 +24,7 @@ intents.guilds = True
 intents.guild_messages = True
 
 
-bot = commands.Bot(intents=intents,
+bot = discord.Bot(intents=intents,
                    activity=discord.Activity(type=discord.ActivityType.watching,
                                              name="for slash commands!"))
 

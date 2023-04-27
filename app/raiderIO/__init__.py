@@ -268,12 +268,12 @@ async def get_run_details(dungeon_run : DungeonRunDB) -> Optional[bool]:
                             rank_region = roster['ranks']['region']
                             rank_realm = roster['ranks']['realm']
                             character_run = convert.character_run_io(character_db= character_db,
-                                                            dungeon_run = dungeon_run,
+                                                            dungeon_run_db = dungeon_run,
                                                             rio_character_id = character_id,
                                                             spec_name = spec_name,
                                                             role = role,
                                                             rank_world = rank_world,
-                                                            rakn_region = rank_region,
+                                                            rank_region = rank_region,
                                                             rank_realm = rank_realm)
                             await db.add_character_run(character_run)
                             
