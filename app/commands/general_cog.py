@@ -22,7 +22,7 @@ class GeneralCog(commands.Cog):
             ctx (context): The current discord context.
         """
         await ctx.respond(f'Pong! {round(self.bot.latency * 1000)}ms')
-    
+
     @commands.slash_command(name="roll", description="Rolls a dice with the specified number of sides.")
     async def roll(self,
                    ctx,
@@ -34,7 +34,7 @@ class GeneralCog(commands.Cog):
             num_sides (int): The number of sides on the dice.
         """        
         try:
-            
+
             dice = Dice(int(sides))
             await ctx.respond(dice.roll())
         except Exception as exception:
@@ -51,10 +51,14 @@ class GeneralCog(commands.Cog):
         """
         try:
             affixes = await raiderIO.get_mythic_plus_affixes()
+            
             embed = discord.Embed(title='Current Mythic+ Affixes', description= '', color=discord.Color.green())
+
             for affix in affixes:
                 embed.add_field(name=affix.name, value=affix.description, inline=False)
+                
             await ctx.respond(embed=embed)
+            
         except Exception as exception:
             await ctx.respond('Type !help to see how to use this command.')
             user = await ctx.bot.fetch_user(173958345022111744)
@@ -69,8 +73,8 @@ class GeneralCog(commands.Cog):
         """
         print('testPoll command called')
         view = CreatePollButton()
-        await ctx.send('Take a Lap Discord Poll', view=view)
-        await ctx.defer()
+        await ctx.send(view=view)
+        await ctx.respond('----- TalBot Poll -----')
 
 def setup(bot):
     """Set up the general cog.

@@ -19,12 +19,12 @@ class Guild(commands.Cog):
         """
         try:
             description = '📄 This leaderboard is based on the top 10 registered characters from the Take a Lap Guild.\n\n  ⚠️ If you have not registered your off-realm or out-of-guild character, please do so with !register.'
-            dungeon_list = db.get_top10_guild_runs_this_week()
+            dungeon_list = await db.get_top10_guild_runs_this_week()
             
             embed = discord.Embed(title='🏆 Best Take a Lap Guild Runs', description= description, color=discord.Color.green())
             counter = 1
             for run in dungeon_list:
-                characters_list = db.get_all_characters_for_run(run.id)
+                characters_list = await db.get_all_characters_for_run(run.id)
                 run_characters = '| '
                 for character in characters_list:
                     run_characters += '['+character.name + f']({character.url})  | '
@@ -46,13 +46,13 @@ class Guild(commands.Cog):
             ctx (_type_): _description_
         """
         try:
-            description = '📄 This leaderboard is based on the top 10 registered characters from the Take a Lap Guild.\n\n  ⚠️ If you have not registered your off-realm or out-of-guild character, please do so with !register.'
-            dungeon_list = db.get_top10_guild_runs_all_time()
+            description = '📄 This leaderboard is based on the top 8 registered characters from the Take a Lap Guild.\n\n  ⚠️ If you have not registered your off-realm or out-of-guild character, please do so with !register.'
+            dungeon_list = await db.get_top8_guild_runs_all_time()
             
             embed = discord.Embed(title='🏆 Best Take a Lap Guild Runs', description= description, color=discord.Color.green())
             counter = 1
             for run in dungeon_list:
-                characters_list = db.get_all_characters_for_run(run.id)
+                characters_list = await db.get_all_characters_for_run(run.id)
                 run_characters = '| '
                 for character in characters_list:
                     run_characters += '['+character.name + f']({character.url})  | '
@@ -108,17 +108,17 @@ class Guild(commands.Cog):
         footer_text = 'Data from [Raider.IO](https://raider.io/)'
 
         if leaderboard_type == 'mythic_plus':
-            characters_list = db.get_top10_character_by_mythic_plus()
+            characters_list = await db.get_top10_character_by_mythic_plus()
             title = 'Mythic+ Score Leaderboard'
             field_func = lambda leader: (f'{leader.score} - {leader.name} | {leader.spec_name} - {leader.class_name}', f'[M+ Class Rank on {leader.realm.capitalize()}: {leader.rank}]({leader.url})')
 
         elif leaderboard_type == 'achievements':
-            characters_list = db.get_top10_character_by_achievement()
+            characters_list = await db.get_top10_character_by_achievement()
             title = 'Achievement Point Leaderboard'
             field_func = lambda leader: (f'{leader.achievement_points} - {leader.name} | {leader.spec_name} - {leader.class_name}', f'Last updated: [{leader.last_crawled_at}]({leader.url})')
 
         elif leaderboard_type == 'itemlevel':
-            characters_list = db.get_top10_character_by_highest_item_level()
+            characters_list = await db.get_top10_character_by_highest_item_level()
             title = 'Item Level Leaderboard'
             field_func = lambda leader: (f'{leader.item_level} - {leader.name} | {leader.spec_name} - {leader.class_name}', f'[M+ Class Rank on {leader.realm.capitalize()}: {leader.rank}]({leader.url})')
 

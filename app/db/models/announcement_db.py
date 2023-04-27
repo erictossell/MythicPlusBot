@@ -1,5 +1,5 @@
 from datetime import datetime
-from sqlalchemy import Boolean, Column, Integer, String, ForeignKey, DateTime
+from sqlalchemy import BigInteger, Boolean, Column, Integer, String, ForeignKey, DateTime
 from sqlalchemy.orm import relationship
 from app.db.base import Base
 from app.db.models.dungeon_run_db import DungeonRunDB
@@ -12,13 +12,16 @@ class AnnouncementDB(Base):
     id = Column(Integer, primary_key=True)
     title = Column(String)
     content = Column(String)
-    discord_guild_id = Column(Integer)
-    announcement_channel_id = Column(Integer)
+    
+    announcement_channel_id = Column(BigInteger)
     has_been_sent = Column(Boolean)
     created_at = Column(DateTime, default=datetime.utcnow)
     modified_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     dungeon_run_id = Column(Integer, ForeignKey('dungeon_runs.id'))
     dungeon_run = relationship("DungeonRunDB", back_populates="announcements")
+    
+    discord_guild_id = Column(BigInteger, ForeignKey('discord_guilds.id'), nullable=False)
+    discord_guild = relationship("DiscordGuildDB", back_populates="announcements")
 
     def __init__(self,
                  title: str,

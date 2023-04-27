@@ -8,7 +8,7 @@ from app.raiderIO.models.character import Character
 from app.raiderIO.models.dungeon_run import DungeonRun
 
 
-def convert_character_io(character: Character, discord_user_id: int, discord_guild_id: int) -> Character:
+def character_io(character: Character, discord_user_id: int, discord_guild_id: int) -> Character:
     character_db = CharacterDB(discord_user_id = discord_user_id,
                           discord_guild_id = discord_guild_id,
                           guild_name = character.guild_name,
@@ -29,7 +29,7 @@ def convert_character_io(character: Character, discord_user_id: int, discord_gui
                           is_reporting= True)
     return character_db
 
-def convert_dungeon_run_io(run: DungeonRun) -> DungeonRun:
+def dungeon_run_io(run: DungeonRun) -> DungeonRunDB:
     return DungeonRunDB(id = run.id,
                            season = run.season,
                            name = run.name,
@@ -43,19 +43,20 @@ def convert_dungeon_run_io(run: DungeonRun) -> DungeonRun:
                            url = run.url)
     
     
-def convert_character_run_io(character_db: Character,
+def character_run_io(character_db: Character,
                              dungeon_run_db: DungeonRun,
+                             rio_character_id: int = None,
                              spec_name: str = None,
                              role : str = None,
                              rank_world: int = None,
                              rank_region: int = None,
-                             rank_realm: int = None,
-                             is_personal_best: bool = False) -> CharacterRunDB:
+                             rank_realm: int = None) -> CharacterRunDB:
     return CharacterRunDB(character = character_db,
                              dungeon_run= dungeon_run_db,
+                             rio_character_id= rio_character_id,
                              spec_name= spec_name,
                              role= role,
                              rank_world= rank_world,
                              rank_region= rank_region,
-                             rank_realm= rank_realm,
-                             is_personal_best= is_personal_best)
+                             rank_realm= rank_realm)
+    

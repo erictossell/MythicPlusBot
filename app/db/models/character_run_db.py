@@ -1,5 +1,5 @@
 import datetime
-from sqlalchemy import Column, DateTime, Integer, ForeignKey, Boolean, String
+from sqlalchemy import BigInteger, Column, DateTime, Integer, ForeignKey, Boolean, String
 from sqlalchemy.orm import relationship
 from app.db.base import Base
 from app.db.models.character_db import CharacterDB
@@ -10,12 +10,12 @@ class CharacterRunDB(Base):
     """Model representing the many-to-many relationship between characters and dungeon runs."""
     __tablename__ = 'character_runs'
     id = Column(Integer, primary_key=True)
-    is_personal_best = Column(Boolean, default=False)
     spec_name = (Column(String, nullable=True))
     role = (Column(String, nullable=True))
     rank_world = (Column(Integer, nullable=True))
     rank_region = (Column(Integer, nullable=True))
     rank_realm = (Column(Integer, nullable=True))
+    rio_character_id = (Column(BigInteger, nullable=True))
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     modified_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
     character_id = Column(Integer, ForeignKey('characters.id'))
@@ -26,12 +26,12 @@ class CharacterRunDB(Base):
     def __init__(self,
                  character: CharacterDB,
                  dungeon_run: DungeonRunDB,
+                 rio_character_id: int = None,
                  spec_name: str = None,
                  role : str = None,
                  rank_world: int = None,
                  rank_region: int = None,
-                 rank_realm: int = None,
-                 is_personal_best: bool = False):
+                 rank_realm: int = None):
         """
         CharacterRunDB constructor.
 
@@ -42,12 +42,12 @@ class CharacterRunDB(Base):
         """
         self.character = character
         self.dungeon_run = dungeon_run
+        self.rio_character_id = rio_character_id
         self.spec_name = spec_name
         self.role = role
         self.rank_world = rank_world
         self.rank_region = rank_region
         self.rank_realm = rank_realm
-        self.is_personal_best = is_personal_best
 
     def __repr__(self):
         return f"CharacterRunDB(id={self.id}, character={self.character}, dungeon_run={self.dungeon_run}, " \

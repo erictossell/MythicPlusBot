@@ -3,27 +3,30 @@ import discord
 from discord.commands import SlashCommandGroup
 from discord.ext import commands
 import app.db as db
-from app.objects.registration import RegisterView
+from app.objects.character_registration import RegisterView
 import app.raiderIO as raiderIO
 
 class Character(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         print('Character cog is initializing....')
-    
+
     character = SlashCommandGroup(name='character', description='All commands related to characters')
-    
+
     @character.command(name='runs', help='Gets the best Mythic+ runs for a character.')
     async def runs(self,ctx, name: str = None, realm: str = 'area-52'):
         """Gets the best Mythic+ runs for a character."""
-        try:       
+        try:
             if name is None:
-                character_title = db.lookup_default_character(ctx.guild.id,ctx.author.id).character
-            else:   
-                character_title = db.lookup_character(name, realm)
-            run_list = db.get_all_runs_for_character(character_title)
+                character_relationship = await db.get_default_character_by_guild_user(ctx.guild.id,ctx.author.id)
+                if character_relationship is None:
+                    await ctx.respond('You have not registered a character.  Please register a character with /set_main.')
+                    return
+            name = character_relationship.character.name if name is None else name  
+            character_title = await db.get_character_by_name_realm(name, realm)
+            run_list = await db.get_top10_runs_for_character_by_score(character_title)
             for run in run_list:
-                characters_list = db.get_all_characters_for_run(run.id)
+                characters_list = await db.get_all_characters_for_run(run.id)
                 run_characters = '| '
                 for character in characters_list:
                     run_characters += '['+character.name + f']({character.url})  | '
@@ -34,13 +37,14 @@ class Character(commands.Cog):
                 embed.add_field(name=str(counter)+ '.  '+ run.name + '  |  ' + str(run.mythic_level)+'  |  +'+str(run.num_keystone_upgrades), value=run.characters+f'\n[Link to run]({run.url})', inline=True)
                 counter+=1
             embed.set_footer(text='Data from Raider.IO(https://raider.io/)')
+            embed.set_thumbnail(url=character_title.thumbnail_url)
             await ctx.respond(embed=embed)
         except Exception as exception:
             await ctx.channel.send('Type !help to see how to use this command.')
             user = await ctx.bot.fetch_user(173958345022111744)
             channel = await user.create_dm()
             await channel.send(f'Error in !charRuns command: {exception}')
-    
+
     @character.command(name='set_main', help='Sets the default character for a user.')
     async def set_main(self, ctx, name: str, realm: Optional[str] = 'Area-52'):
         """Sets a user's default character.
@@ -58,12 +62,24 @@ class Character(commands.Cog):
                 await ctx.respond(f'Character {name}-{realm} does not exist.')
                 return
             else:
-                main_char = db.update_default_character(discord_user_id, discord_guild_id, db.lookup_character(name, realm))
+                character = await db.get_character_by_name_realm(name, realm)
+                main_char = await db.get_default_character_by_guild_user(discord_guild_id, discord_user_id)
                 if main_char is None:
-                    await ctx.respond(f'Character {name}-{realm} is not registered in the guild.')
-                    return
+                    default = db.DefaultCharacterDB(discord_user_id=discord_user_id, discord_guild_id=discord_guild_id, character_id=character.id)
+                    main_char = await db.add_default_character(default)
+                    embed = discord.Embed(title=f'Success! Your main character has been updated to: {main_char[1]}-{main_char[2].capitalize()}.', color=discord.Color.green())
+                    embed.set_thumbnail(url=character.thumbnail_url)
+                    await ctx.respond(embed=embed)
+                elif main_char is not None: 
+                    main_char = await db.update_default_character(discord_user_id= discord_user_id,
+                                                                discord_guild_id =discord_guild_id,
+                                                                character=character)
+                    embed = discord.Embed(title=f'Success! Your main character has been updated to: {main_char[1]}-{main_char[2].capitalize()}.', color=discord.Color.green())
+                    embed.set_thumbnail(url=character.thumbnail_url)          
+                    await ctx.respond(embed=embed)
                 else:
-                    await ctx.respond(f'Your main character is now {main_char[1]}-{main_char[2]}.')
+                    embed = discord.Embed(title=f'Something went wrong, contact support for assitance.', color=discord.Color.red())
+                    await ctx.respond(embed=embed)
 
         except Exception as exception:
             await ctx.channel.send('Type !help to see how to use this command.')
@@ -93,7 +109,7 @@ class Character(commands.Cog):
             user = await ctx.bot.fetch_user(173958345022111744)
             channel = await user.create_dm()
             await channel.send(f'Error in !register command: {exception}')
-    
+
     @character.command(name='profile', help='View a character\'s profile.')
     async def profile(self, ctx, name: str = None, realm: str = 'Area-52'):
         """This command returns a character's profile.
@@ -106,8 +122,8 @@ class Character(commands.Cog):
         try:
             if not name:
                 if ctx.guild:
-                    main_char = db.lookup_default_character(ctx.guild.id, ctx.author.id)
-                    char = db.lookup_character(main_char.character.name, main_char.character.realm)
+                    main_char = await db.get_default_character_by_guild_user(ctx.guild.id, ctx.author.id)
+                    char = await db.get_character_by_name_realm(main_char.character.name, main_char.character.realm)
                     if char:
                         name, realm = char.name, char.realm
                     else:
@@ -128,7 +144,7 @@ class Character(commands.Cog):
             user = await ctx.bot.fetch_user(173958345022111744)
             channel = await user.create_dm()
             await channel.send(f'Error in !character command: {exception}')
-    
+
     @character.command(name='recent_runs', help='View a character\'s recent runs directly from RaiderIO.')
     async def recent_runs(self, ctx, name: str = None, realm: str = None):
         """This command returns the recent runs for a given character.
@@ -138,8 +154,8 @@ class Character(commands.Cog):
         """
         try:
             if not name:
-                main_char = db.lookup_default_character(ctx.guild.id, ctx.author.id)
-                char = db.lookup_character(main_char.character.name, main_char.character.realm)
+                main_char = await db.get_default_character_by_guild_user(ctx.guild.id, ctx.author.id)
+                char = await db.get_character_by_name_realm(main_char.character.name, main_char.character.realm)
                 if char:
                     name, realm = char.name, char.realm
                 else:
@@ -149,13 +165,13 @@ class Character(commands.Cog):
                 realm = 'Area-52'
             character = await raiderIO.get_character(name, realm)
             await ctx.respond(embed=character.get_recent_runs_embed())
-            
+
         except Exception as exception:
             await ctx.respond('Type !help to see how to use this command.')
             user = await ctx.bot.fetch_user(173958345022111744)
             channel = await user.create_dm()
             await channel.send(f'Error in !recent command: {exception}')  
-    
+
     @character.command(name='best_runs', help='Usage: !best <character name> <realm> (optional on Area-52)')
     async def best_runs(self, ctx, name: str = None, realm: str = None):
         """The best command returns the best runs for a given character.
@@ -167,9 +183,9 @@ class Character(commands.Cog):
         """
         try:
             if not name:
-                main_char_relationship = db.lookup_default_character(ctx.guild.id, ctx.author.id)
-                char = db.lookup_character(main_char_relationship.character.name, main_char_relationship.character.realm)
-                
+                main_char_relationship = await db.get_default_character_by_guild_user(ctx.guild.id, ctx.author.id)
+                char = await db.get_character_by_name_realm(main_char_relationship.character.name, main_char_relationship.character.realm)
+
                 if char:
                     name, realm = char.name, char.realm
                 else:
@@ -181,13 +197,13 @@ class Character(commands.Cog):
 
             character = await raiderIO.get_character(name, realm)
             await ctx.respond(embed=character.get_best_runs_embed())
-        
+
         except Exception as exception:
             await ctx.respond('Type !help to see how to use this command.')
             user = await ctx.bot.fetch_user(173958345022111744)
             channel = await user.create_dm()
             await channel.send(f'Error in !best command: {exception}')
-            
+
     @commands.Cog.listener()
     async def on_application_command_error(self, ctx, error):
         if isinstance(error, commands.errors.CommandNotFound):
@@ -195,7 +211,7 @@ class Character(commands.Cog):
             user = await ctx.bot.fetch_user(173958345022111744)
             channel = await user.create_dm()
             await channel.send(f'Error in !leaderboard command: {error}')
-            
+
 def setup(bot):
     bot.add_cog(Character(bot))
     print('Character cog loaded successfully.')
