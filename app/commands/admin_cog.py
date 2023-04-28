@@ -93,6 +93,7 @@ class Admin(commands.Cog):
     @commands.Cog.listener()
     async def on_ready(self):
         print('Connected to Discord as {0.user}'.format(self.bot))
+        await db.create_schema()
         for guild in self.bot.guilds:
             
             await db.add_discord_guild(db.DiscordGuildDB(id = guild.id, discord_guild_name=guild.name))

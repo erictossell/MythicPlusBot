@@ -12,6 +12,7 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import sessionmaker, joinedload
 from dotenv import load_dotenv
+from app.db.base import Base
 
 from app.db.models.discord_guild_db import DiscordGuildDB
 from app.db.models.character_db import CharacterDB
@@ -23,18 +24,24 @@ from app.db.models.announcement_db import AnnouncementDB
 from app.raiderIO.models.character import Character
 from app.raiderIO.models.dungeon_run import DungeonRun
 
+
 load_dotenv('configurations/main.env')
 RAILWAY = os.getenv('RAILWAY_POSTGRES')
 DEV_POSTGRES = os.getenv('DEV_POSTGRES')
+DEV_RAILWAY = os.getenv('DEV_RAILWAY')
 
 logging.basicConfig(filename='tal.log',
                     level=logging.DEBUG,
                     format='%(asctime)s %(levelname)s %(name)s %(message)s')
 
 async_engine = create_async_engine(
-    RAILWAY,
+    DEV_RAILWAY,
     echo=False, logging_name='sqlalchemy.engine', echo_pool=True, pool_pre_ping=True
 )
+
+async def create_schema():
+    async with async_engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
 
 # Create a session factory for async sessions
 AsyncSessionLocal = sessionmaker(async_engine, expire_on_commit=False, class_= AsyncSession)

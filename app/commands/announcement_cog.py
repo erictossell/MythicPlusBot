@@ -26,8 +26,8 @@ class Announcement(commands.Cog):
     async def send_announcements(self):
         await self.bot.wait_until_ready()
         channel = self.bot.get_channel(self.announcement_channel_id)
-
-        await asyncio.sleep(15)
+        
+        await asyncio.sleep(600)
         while not self.is_closed():
             announcement = await db.get_next_announcement_by_guild_id(804157941732474901)
 
@@ -51,6 +51,7 @@ class Announcement(commands.Cog):
         await self.bot.wait_until_ready()
         channel = self.bot.get_channel(self.announcement_channel_id)
         while not self.is_closed():
+            await asyncio.sleep(600)
             character_crawl = await raiderIO.crawl_characters(804157941732474901)
             
             await channel.send(character_crawl)

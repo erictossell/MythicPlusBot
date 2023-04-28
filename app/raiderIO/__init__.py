@@ -258,7 +258,7 @@ async def get_run_details(dungeon_run : DungeonRunDB) -> Optional[bool]:
                         return False
                     for roster in request.json()['roster']:                    
                         character_db = await db.get_character_by_name_realm(roster['character']['name'],
-                                                            roster['character']['realm']['slug'])                      
+                                                            roster['character']['realm']['slug'])
                         if character_db is not None:
                             guild_member_counter += 1
                             character_id = roster['character']['id']

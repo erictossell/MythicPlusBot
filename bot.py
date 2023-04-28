@@ -9,6 +9,8 @@ import discord
 from dotenv import load_dotenv
 from discord.ext import commands
 
+from app import db
+
 #Load Environment variables
 load_dotenv('configurations/main.env')
 TOKEN = os.getenv('DISCORD_TOKEN')
@@ -17,11 +19,8 @@ SUPPORT_CHANNEL_ID = os.getenv('SUPPORT_CHANNEL_ID')
 SUPPORT_SERVER_ID = os.getenv('SUPPORT_SERVER_ID')
 
 #Set up Discord BOT with correct permissions
-intents = discord.Intents(messages=True, guilds=True, members=True)
-intents.message_content = True #v2
-intents.presences = True #v2
+intents = discord.Intents( guilds=True, members=True)
 intents.guilds = True
-intents.guild_messages = True
 
 
 bot = discord.Bot(intents=intents,
