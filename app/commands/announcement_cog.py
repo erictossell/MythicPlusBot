@@ -25,47 +25,88 @@ class Announcement(commands.Cog):
     @tasks.loop(time=time(hour=22, minute=5, second=0))
     async def send_announcements(self):
         await self.bot.wait_until_ready()
-        channel = self.bot.get_channel(self.announcement_channel_id)
+        
         
         await asyncio.sleep(600)
         while not self.is_closed():
-            announcement = await db.get_next_announcement_by_guild_id(804157941732474901)
-
-            if announcement is None:
-                print("No announcement found.")
-                await asyncio.sleep(300)
-                continue            
-
-            characters = await db.get_all_characters_for_run(announcement.dungeon_run.id)
-
-            embed = announce_guild_run_embed(announcement=announcement,
-                                             dungeon_run=announcement.dungeon_run,
-                                             characters = characters)
-
-            await db.update_announcement_has_been_sent(announcement.id)
-            await channel.send(embed=embed)
+            
+            
+            for guild in self.bot.guilds:
+                
+                discord_guild_db = await db.get_discord_guild_by_id(guild.id)
+                
+                if discord_guild_db is None:
+                    await db.add_discord_guild(db.DiscordGuildDB(id = guild.id,
+                                                                 discord_guild_name = guild.name))
+            
+                elif discord_guild_db.is_announcing is False:
+                    continue
+                
+                elif discord_guild_db.announcement_channel_id is None:
+                    continue
+                
+                announcement = await db.get_next_announcement_by_guild_id(guild.id)
+                
+                if announcement is None:
+                    print("No announcement found.")
+                    await asyncio.sleep(300)
+                    continue
+                
+                else:
+                    characters_list = await db.get_all_characters_for_run(announcement.dungeon_run.id)
+                    
+                    embed = announce_guild_run_embed(announcement=announcement,
+                                                    dungeon_run=announcement.dungeon_run,
+                                                    characters = characters_list)
+                    await db.update_announcement_has_been_sent(announcement.id)
+                    
+                    channel = self.bot.get_channel(discord_guild_db.announcement_channel_id)
+                    await channel.send(embed=embed)
+                
             await asyncio.sleep(300)
 
     @tasks.loop(time=time(hour=16, minute=34, second=0))
     async def crawl_for_data(self):
         await self.bot.wait_until_ready()
-        channel = self.bot.get_channel(self.announcement_channel_id)
+        
         while not self.is_closed():
             await asyncio.sleep(600)
-            character_crawl = await raiderIO.crawl_characters(804157941732474901)
             
-            await channel.send(character_crawl)
+            for guild in self.bot.guilds:            
+                discord_guild_db = await db.get_discord_guild_by_id(guild.id)
             
-            await asyncio.sleep(20)
+                if discord_guild_db is None:
+                    await db.add_discord_guild(db.DiscordGuildDB(id = guild.id,
+                                                                 discord_guild_name=guild.name))
+                    
+                elif discord_guild_db.is_announcing is False:
+                    continue
+                
+                elif discord_guild_db.announcement_channel_id is None:
+                    continue
+                
+                
+                else:
+                    channel = self.bot.get_channel(discord_guild_db.announcement_channel_id)
+                    
+                    character_crawl = await raiderIO.crawl_characters(guild.id)
+                    
+                    await channel.send(character_crawl)
+                    
+                    await asyncio.sleep(20)
+                    
+                    dungeon_run_crawl = await raiderIO.crawl_runs(guild.id)
+                    
+                    await channel.send(dungeon_run_crawl)
             
-            dungeon_run_crawl = await raiderIO.crawl_runs(804157941732474901)
-            
-            await channel.send(dungeon_run_crawl)
+                    
             if util.seconds_until(0,0) < 1200:
-                # If it's less than 20 minutes until midnight, run this code.
-                print("It's less than 20 minutes until midnight.")
+                        # If it's less than 20 minutes until midnight, run this code.
+                        print("It's less than 20 minutes until midnight.")         
             await asyncio.sleep(3600)
-            continue
+            
+                    
+                    
 
 def setup(bot):
     bot.add_cog(Announcement(bot))

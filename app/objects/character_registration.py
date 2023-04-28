@@ -73,14 +73,24 @@ class RegisterModal(Modal):
                 return
             
             elif existing_character is None:
-                new_character = db.CharacterDB(
-                    user_id, self.discord_guild_id, character.guild_name,
-                    character.name, character.realm.lower(), character.faction,
-                    character.region, character.role, character.spec_name,
-                    character.class_name, character.achievement_points,
-                    character.item_level, character.score, character.rank,
-                    character.thumbnail_url, character.url,
-                    datetime.strptime(character.last_crawled_at, '%Y-%m-%dT%H:%M:%S.%fZ'), True)
+                new_character = db.CharacterDB(discord_user_id = user_id, 
+                                               discord_guild_id = self.discord_guild_id,
+                                               guild_name = character.guild_name,
+                                               name = character.name,
+                                               realm = character.realm,
+                                               faction = character.faction,
+                                               region = character.region,
+                                               role = character.role,
+                                               spec_name = character.spec_name,
+                                               class_name = character.class_name,
+                                               achievement_points= character.achievement_points,
+                                               item_level= character.item_level,
+                                               score = character.score,
+                                               rank = character.rank,
+                                               thumbnail_url= character.thumbnail_url,
+                                               url = character.url,
+                                               last_crawled_at= datetime.strptime(character.last_crawled_at, '%Y-%m-%dT%H:%M:%S.%fZ'),
+                                               is_reporting = True)
                                                
                 await db.add_character(new_character)
                 await interaction.response.send_message(f'You have registered the character {new_character.name} on realm {new_character.realm.capitalize()} for Tal-Bot reporting.', ephemeral=True)
