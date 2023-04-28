@@ -1,11 +1,11 @@
 import discord
-
+from typing import List
 import app.db as db
 
 def announce_guild_run_embed(announcement : db.AnnouncementDB = None,
                              color : discord.Color = discord.Color.green(),
                              dungeon_run : db.DungeonRunDB = None,
-                             characters : list[db.CharacterDB] = None):
+                             characters : List[db.CharacterDB] = None):
     """This function creates an embed for the guild dungeon run announcement.
 
     Args:
