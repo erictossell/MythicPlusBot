@@ -9,9 +9,7 @@ class DiscordGuildDB(Base):
     
     id = Column(BigInteger, primary_key=True)
     discord_guild_name = Column(String)
-    wow_guild_name = Column(String)
-    wow_region = Column(String)
-    wow_realm = Column(String)
+        
     announcement_channel_id = Column(BigInteger)
     is_announcing = Column(Boolean, default=False)
     modified_by = Column(BigInteger)
@@ -19,25 +17,19 @@ class DiscordGuildDB(Base):
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     
     announcements = relationship("AnnouncementDB", back_populates="discord_guild")
-    characters = relationship("CharacterDB", back_populates="discord_guild")
+    discord_game_guilds = relationship("DiscordGameGuildDB", back_populates="discord_guild")
     default_characters = relationship("DefaultCharacterDB", back_populates="discord_guild")
     
     def __init__(self,
                  id: int,
-                 discord_guild_name: str,
-                 wow_guild_name: str = None,
-                 wow_region: str = None,
-                 wow_realm: str = None,
+                 discord_guild_name: str,                 
                  announcement_channel_id: int = None,
                  is_announcing: bool = False,
                  modified_by: int = None,
                  modified_at: datetime.datetime = None,
                  created_at: datetime.datetime = None):
         self.id = id
-        self.discord_guild_name = discord_guild_name
-        self.wow_guild_name = wow_guild_name
-        self.wow_region = wow_region
-        self.wow_realm = wow_realm
+        self.discord_guild_name = discord_guild_name        
         self.announcement_channel_id = announcement_channel_id
         self.is_announcing = is_announcing
         self.modified_by = modified_by

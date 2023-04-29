@@ -16,7 +16,6 @@ from app.raiderIO.models.member import Member
 from app.raiderIO.models.score_color import ScoreColor
 import app.util as util
 
-
 API_URL = 'https://raider.io/api/v1/'
 CALLS = 295
 RATE_LIMIT=60
@@ -358,7 +357,7 @@ async def crawl_guild_members(discord_guild_id) -> None:
     This method has a 0.3 second delay between each API call to avoid rate limiting.
     """
     print('Crawler: trying to crawl guild members')
-    try:   
+    try:
         score_colors_list = get_score_colors()          
         members_list = await get_guild_members(discord_guild_id)
         counter = 0

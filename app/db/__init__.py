@@ -13,6 +13,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import sessionmaker, joinedload
 from dotenv import load_dotenv
 from app.db.base import Base
+from app.db.models.discord_game_guilds_db import DiscordGameGuildDB
 
 from app.db.models.discord_guild_db import DiscordGuildDB
 from app.db.models.character_db import CharacterDB
@@ -21,6 +22,7 @@ from app.db.models.dungeon_run_db import DungeonRunDB
 from app.db.models.default_character_db import DefaultCharacterDB
 from app.db.models.character_run_db import CharacterRunDB
 from app.db.models.announcement_db import AnnouncementDB
+from app.db.models.game_guild_db import GameGuildDB
 from app.raiderIO.models.character import Character
 from app.raiderIO.models.dungeon_run import DungeonRun
 
@@ -65,6 +67,7 @@ async def async_session_scope():
         await async_session.close()
 
 #-----------------------Read Functions--------------------------------#
+
 
 async def get_discord_guild_by_id(discord_guild_id: int) -> Optional[DiscordGuildDB]:
     """Look up a specific discord guild in the database.
@@ -233,7 +236,7 @@ async def add_discord_guild(discord_guild : DiscordGuildDB) -> DiscordGuildDB:
     """Add a discord guild to the database.
 
     Args:
-        discord_guild_id (int): The discord guild id to add to the database.
+        discord_guild_id (int): The discord guild to add to the database.
 
     Returns:
         DiscordGuildDB: Returns a DiscordGuildDB.py object if the guild was added to the database, otherwise returns None.
@@ -252,6 +255,45 @@ async def add_discord_guild(discord_guild : DiscordGuildDB) -> DiscordGuildDB:
         print(f'Error while querying the database: {error}')
         return None
 
+async def add_game_guild(game_guild: GameGuildDB) -> GameGuildDB:
+    """Add a game guild to the database.
+
+    Args:
+        game_guild (GameGuildDB): The game guild to add to the database.
+
+    Returns:
+        GameGuildDB: A copy of the GameGuildDB.py object that was added to the database.
+    """
+    try:
+        async with async_session_scope() as session:
+            query = select(GameGuildDB).filter(GameGuildDB.id == game_guild.id)
+            result = await session.execute(query)
+            existing_guild = result.scalar()
+            if not existing_guild:
+                new_game_guild = session.add(game_guild)
+                return new_game_guild
+            else:
+                return None
+    except SQLAlchemyError as error:
+        print(f'Error while querying the database: {error}')
+        return None
+
+async def add_discord_game_guild(discord_game_guild: DiscordGameGuildDB) -> DiscordGameGuildDB:
+    try:
+        async with async_session_scope() as session:
+            query = select(DiscordGameGuildDB).filter(DiscordGameGuildDB.discord_guild_id == discord_game_guild.discord_guild_id, DiscordGameGuildDB.game_guild_id == discord_game_guild.game_guild_id)
+            result = await session.execute(query)
+            existing_game_guild = result.scalar()
+            if not existing_game_guild:
+                new_discord_game_guild = session.add(discord_game_guild)
+                return new_discord_game_guild
+            else:
+                return None
+            
+    except SQLAlchemyError as error:
+        print(f'Error while querying the database: {error}')
+        return None
+    
 async def add_character(character: CharacterDB) -> CharacterDB:
     """Add a character to the database.
 
@@ -473,24 +515,24 @@ async def update_character(character: Character) -> CharacterDB:
                 return None
             else:                
                 if has_any_character_field_changed(existing_character, character):
-                    character_history = CharacterHistoryDB(existing_character.discord_user_id,
-                                                        existing_character.discord_guild_id,
-                                                        existing_character.guild_name,
-                                                        existing_character.name,
-                                                        existing_character.realm,
-                                                        existing_character.faction,
-                                                        existing_character.region,
-                                                        existing_character.role,
-                                                        existing_character.spec_name,
-                                                        existing_character.class_name,
-                                                        existing_character.achievement_points,
-                                                        existing_character.item_level,
-                                                        existing_character.score,
-                                                        existing_character.rank,
-                                                        existing_character.thumbnail_url,
-                                                        existing_character.url,
-                                                        existing_character.last_crawled_at,
-                                                        existing_character.is_reporting)
+                    character_history = CharacterHistoryDB(discord_user_id = existing_character.discord_user_id,
+                                                        discord_guild_id = existing_character.discord_guild_id,
+                                                        guild_name = existing_character.guild_name,
+                                                        name = existing_character.name,
+                                                        realm = existing_character.realm,
+                                                        faction = existing_character.faction,
+                                                        region = existing_character.region,
+                                                        role = existing_character.role,
+                                                        spec_name = existing_character.spec_name,
+                                                        class_name = existing_character.class_name,
+                                                        achievement_points = existing_character.achievement_points,
+                                                        item_level = existing_character.item_level,
+                                                        score = existing_character.score,
+                                                        rank = existing_character.rank,
+                                                        thumbnail_url = existing_character.thumbnail_url,
+                                                        url = existing_character.url,
+                                                        last_crawled_at= existing_character.last_crawled_at,
+                                                        is_reporting = existing_character.is_reporting)
                     character_history.character = existing_character
                     session.add(character_history)
                 
@@ -540,24 +582,24 @@ async def update_character_reporting(character: Character) -> bool:
                     existing_character.is_reporting = False
                 else:
                     existing_character.is_reporting = True
-                    character_history = CharacterHistoryDB(existing_character.discord_user_id,
-                                                        existing_character.discord_guild_id,
-                                                        existing_character.guild_name,
-                                                        existing_character.name,
-                                                        existing_character.realm,
-                                                        existing_character.faction,
-                                                        existing_character.region,
-                                                        existing_character.role,
-                                                        existing_character.spec_name,
-                                                        existing_character.class_name,
-                                                        existing_character.achievement_points,
-                                                        existing_character.item_level,
-                                                        existing_character.score,
-                                                        existing_character.rank,
-                                                        existing_character.thumbnail_url,
-                                                        existing_character.url,
-                                                        existing_character.last_crawled_at,
-                                                        existing_character.is_reporting)
+                    character_history = CharacterHistoryDB(discord_user_id = existing_character.discord_user_id,
+                                                        discord_guild_id = existing_character.discord_guild_id,
+                                                        guild_name = existing_character.guild_name,
+                                                        name = existing_character.name,
+                                                        realm = existing_character.realm,
+                                                        faction = existing_character.faction,
+                                                        region = existing_character.region,
+                                                        role = existing_character.role,
+                                                        spec_name = existing_character.spec_name,
+                                                        class_name = existing_character.class_name,
+                                                        achievement_points = existing_character.achievement_points,
+                                                        item_level = existing_character.item_level,
+                                                        score = existing_character.score,
+                                                        rank = existing_character.rank,
+                                                        thumbnail_url = existing_character.thumbnail_url,
+                                                        url = existing_character.url,
+                                                        last_crawled_at= existing_character.last_crawled_at,
+                                                        is_reporting = existing_character.is_reporting)
                     character_history.character = existing_character
                     session.add(character_history)
                 return True
@@ -729,6 +771,31 @@ async def remove_default_character(default_character: DefaultCharacterDB) -> boo
         return False 
 
 #-------------------------Bulk Read Functions------------------------------#
+
+async def get_all_game_guilds_by_discord_id(discord_guild_id: int) -> Optional[GameGuildDB]:
+    """Look up a specific game guild in the database.
+
+    Args:
+        discord_guild_id (integer): The discord guild id to look up.
+
+    Returns:
+        existing_guild: returns a guild object if found, otherwise returns None.
+    """
+    try:
+        async with async_session_scope() as session:
+            query = (
+                select(GameGuildDB)
+                .join(GameGuildDB.discord_game_guilds)
+                .filter(DiscordGameGuildDB.discord_guild_id == discord_guild_id)
+            )
+            result = await session.execute(query)
+            existing_game_guilds = result.scalars().unique().all()
+            
+            return existing_game_guilds
+        
+    except SQLAlchemyError as error:
+        print(f'Error while querying the database: {error}')
+        return None
 
 async def get_all_characters() -> List[CharacterDB]:
     """Get all of the characters from the database.

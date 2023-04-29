@@ -35,8 +35,8 @@ class CharacterDB(Base):
     modified_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     
-    discord_guild_id = Column(BigInteger,ForeignKey('discord_guilds.id'), nullable=False)
-    discord_guild = relationship("DiscordGuildDB", back_populates="characters")
+    game_guild_id = Column(BigInteger, ForeignKey('game_guilds.id'), nullable=True)
+    game_guild = relationship("GameGuildDB", back_populates="characters")
     
     character_runs = relationship("CharacterRunDB",
                                   back_populates="character",
