@@ -7,10 +7,13 @@ from app.db.base import Base
 class GameDB(Base):
     
     __tablename__ = 'games'
+    
     id = Column(Integer, primary_key=True)
+    
     name = Column(String)
     modified_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)    
+    
     game_guilds = relationship("GameGuildDB", back_populates="game")
     
     

@@ -169,19 +169,21 @@ async def get_guild_members(discord_guild_id: int ) -> Optional[List[Member]]:
     """Get a list of members from the Raider.IO API."""
     for retry in range(RETRIES):
         try:
-            discord_guild = await db.get_discord_guild_by_id(discord_guild_id)
+            game_guilds = await db.get_all_game_guilds_by_discord_id(discord_guild_id)
             pattern = re.compile(r'^[^0-9]*$')
             members = []
-            async with httpx.AsyncClient() as client:        
-                request = await client.get(API_URL+f'guilds/profile?region={discord_guild.wow_region}&realm={discord_guild.wow_realm}&name={discord_guild.wow_guild_name}&fields=members')
-                for member in request.json()['members']:
-                    if member['rank'] <= 8:    
+            async with httpx.AsyncClient() as client:                
+                for game_guild in game_guilds:
+                    request = await client.get(API_URL+f'guilds/profile?region={game_guild.region}&realm={game_guild.realm}&name={game_guild.name}&fields=members')
+                    for member in request.json()['members']:
                         if pattern.search(str(member['character']['name'])):
-                            members.append(Member(member['rank'],
-                                                    str(member['character']['name']),
-                                                    member['character']['class'],
-                                                    member['character']['last_crawled_at'],
-                                                    member['character']['profile_url']))
+                            realm = member['character']['profile_url'].split('/')[5]
+                            members.append(Member(rank = member['rank'],
+                                                  name= str(member['character']['name']),
+                                                   class_name = member['character']['class'],
+                                                   last_crawled_at= member['character']['last_crawled_at'],
+                                                   profile_url= member['character']['profile_url'],
+                                                   realm = realm.capitalize()))
                 if len(members) > 0:
                     return members
                 elif len(members) == 0:
@@ -196,9 +198,8 @@ async def get_guild_members(discord_guild_id: int ) -> Optional[List[Member]]:
         except Exception as e:
             print(e)
             print('Error: Guild not found.')
-        finally:
-            print('Finished grabbing members.')
-
+            return None
+        
 @sleep_and_retry
 @limits(calls=CALLS, period=RATE_LIMIT)
 async def get_mythic_plus_affixes() -> Optional[List[Affix]]:
@@ -233,7 +234,7 @@ async def get_mythic_plus_affixes() -> Optional[List[Affix]]:
 
 @sleep_and_retry
 @limits(calls=CALLS, period=RATE_LIMIT)
-async def get_run_details(dungeon_run : DungeonRunDB) -> Optional[bool]:
+async def get_run_details(dungeon_run : DungeonRunDB, discord_guild_id) -> Optional[bool]:
     """Get a guild run from the Raider.IO API.
 
     Args:
@@ -248,16 +249,25 @@ async def get_run_details(dungeon_run : DungeonRunDB) -> Optional[bool]:
     for retry in range(RETRIES):
         try:
             async with httpx.AsyncClient() as client:
+                
                 request = await client.get(API_URL +f'mythic-plus/run-details?season={dungeon_run.season}&id={dungeon_run.id}', timeout=TIMEOUT)
+                
                 if request.status_code != 200:
                     return None
+                
                 elif request.status_code == 200:
+                    
                     guild_member_counter = 0
+                    
                     if request.json()['roster'] is None:
                         return False
-                    for roster in request.json()['roster']:                    
-                        character_db = await db.get_character_by_name_realm(str(roster['character']['name']).capitalize(),
-                                                            str(roster['character']['realm']['slug']).capitalize())
+                    
+                    for roster in request.json()['roster']:
+                        
+                        character_db = await db.get_character_by_name_realm_and_discord_guild(str(roster['character']['name']).capitalize(),
+                                                            str(roster['character']['realm']['slug']).capitalize(),
+                                                            discord_guild_id)
+                        
                         if character_db is not None:
                             guild_member_counter += 1
                             character_id = roster['character']['id']
@@ -299,38 +309,92 @@ async def crawl_characters(discord_guild_id: int) -> str:
     """
     characters_crawled = 0
     run_counter = 0
+    runs_crawled = 0
     update_character_counter = 0
+    guild_run_counter = 0
     colors = get_score_colors()
-    try:
+    try:        
+        characters_list = await db.get_all_discord_guild_characters(discord_guild_id)
         
-        characters_list = await db.get_all_characters_in_guild_by_id(int(discord_guild_id))
         print('RaiderIO Crawler: Crawling ' + str(len(characters_list)) + ' characters.')
+        
         for character in tqdm(characters_list):
             characters_crawled += 1
+            
             if character.is_reporting is True:
                 character_io = await get_character(name=character.name,
                                                     realm=character.realm,
                                                     score_colors=colors)
+                
                 if not character_io:
                     return f'Error: An error occurred while crawling {character.name}'
+                
                 for run in character_io.best_runs:
-                    if run is None:
-                        return f'Error: An error occurred while crawling {character.name}'
-                    if run is not None and await db.get_run_by_id(int(run.id)) is None:
-                        run.completed_at = datetime.strptime(run.completed_at,
-                                                                '%Y-%m-%dT%H:%M:%S.%fZ')
-                        await db.add_dungeon_run(convert.dungeon_run_io(run))
-                        run_counter += 1
-                   
-                for run in character_io.recent_runs:
-                    if run is None:
-                        return f'Error: An error occurred while crawling {character.name}'
-                    elif run is not None and await db.get_run_by_id(int(run.id)) is None:
-                        run.completed_at = datetime.strptime(run.completed_at,
-                                                                '%Y-%m-%dT%H:%M:%S.%fZ')
-                        await db.add_dungeon_run(convert.dungeon_run_io(run))
-                        run_counter += 1
                     
+                    if run is None:
+                        return f'Error: An error occurred while crawling {character.name}'
+                    
+                    if run is not None and await db.get_run_by_id(int(run.id)) is None:
+                        
+                        run.completed_at = datetime.strptime(run.completed_at,
+                                                                '%Y-%m-%dT%H:%M:%S.%fZ')
+                        run_db = await db.add_dungeon_run(convert.dungeon_run_io(run))
+                        run_counter += 1
+                        
+                        is_guild = await get_run_details(run_db, discord_guild_id)
+                        runs_crawled += 1
+                        discord_guild = await db.get_discord_guild_by_id(discord_guild_id)
+                        
+                        if is_guild is True:
+                            announcement = db.AnnouncementDB(discord_guild_id=discord_guild_id,
+                                                            announcement_channel_id=discord_guild.announcement_channel_id,
+                                                            title=f'🧙‍♂️ New guild run: {run_db.mythic_level} - {run_db.name} on {run_db.completed_at}',
+                                                            content=f'**{run_db.name}** completed on {run_db.completed_at} by Take a Lap.\n\n**Dungeon:** {run_db.short_name}\n**Score:** {run_db.score}\n**URL:** {run_db.url}',
+                                                            dungeon_run_id=run_db.id)
+                            print(f"Created announcement with dungeon_run_id: {announcement.dungeon_run_id}")
+                            
+                            await db.add_announcement(announcement)
+                            run_db.is_crawled = True
+                            run_db.is_guild_run = True
+                            await db.update_dungeon_run(run_db)
+                            await db.add_discord_guild_run(discord_guild=discord_guild,
+                                                           dungeon_run=run_db)
+                            
+                            guild_run_counter += 1
+
+                for run in character_io.recent_runs:
+                    
+                    if run is None:
+                        return f'Error: An error occurred while crawling {character.name}'
+                    
+                    elif run is not None and await db.get_run_by_id(int(run.id)) is None:
+                        
+                        run.completed_at = datetime.strptime(run.completed_at,
+                                                                '%Y-%m-%dT%H:%M:%S.%fZ')
+                        run_db = await db.add_dungeon_run(convert.dungeon_run_io(run))
+                        run_counter += 1
+                        
+                        is_guild = await get_run_details(run_db, discord_guild_id)
+                        runs_crawled += 1
+                        discord_guild = await db.get_discord_guild_by_id(discord_guild_id)
+                        
+                        if is_guild is True:
+                            announcement = db.AnnouncementDB(discord_guild_id=discord_guild_id,
+                                                            announcement_channel_id=discord_guild.announcement_channel_id,
+                                                            title=f'🧙‍♂️ New guild run: {run_db.mythic_level} - {run_db.name} on {run_db.completed_at}',
+                                                            content=f'**{run_db.name}** completed on {run_db.completed_at} by Take a Lap.\n\n**Dungeon:** {run_db.short_name}\n**Score:** {run_db.score}\n**URL:** {run_db.url}',
+                                                            dungeon_run_id=run_db.id)
+                            print(f"Created announcement with dungeon_run_id: {announcement.dungeon_run_id}")
+                            
+                            await db.add_announcement(announcement)
+                            run_db.is_crawled = True
+                            run_db.is_guild_run = True
+                            await db.update_dungeon_run(run_db)
+                            await db.add_discord_guild_run(discord_guild=discord_guild,
+                                                           dungeon_run=run_db)
+                            
+                            guild_run_counter += 1
+                            
                 if character.name == character_io.name and character.realm == character_io.realm:
                 
                     character.last_crawled_at = datetime.strptime(character_io.last_crawled_at,
@@ -340,8 +404,7 @@ async def crawl_characters(discord_guild_id: int) -> str:
                     character.achievement_points = character_io.achievement_points
                     character.spec_name = character_io.spec_name
                     character.role = character_io.role
-                    character.rank = character_io.rank
-                    character.discord_guild_id = discord_guild_id
+                    character.rank = character_io.rank                    
                     character.guild_name = character_io.guild_name
                     await db.update_character(character)
                     update_character_counter += 1
@@ -363,14 +426,19 @@ async def crawl_guild_members(discord_guild_id) -> None:
         counter = 0
         print('RaiderIO Crawler: Crawling ' + str(len(members_list)) + ' guild members.')
         for member in tqdm(members_list):
-            db_character = await db.get_character_by_name_realm(member.name, 'Area-52')
+            db_character = await db.get_character_by_name_realm(member.name, member.realm)
             if db_character is None:
                 
                 character = await get_character(str(member.name),
-                                                                'Area-52', score_colors_list)
+                                                str(member.realm),
+                                                score_colors_list)
+                
+                game_guild = await db.get_game_guild_by_name_realm(str(character.guild_name),str(character.realm))
+                
+                
                 new_character = db.CharacterDB(discord_user_id=173958345022111744,
-                                                discord_guild_id = discord_guild_id,
-                                                guild_name = character.guild_name,
+                                                game_guild_id = game_guild.id,
+                                                guild_name = game_guild.name,
                                                 name = character.name,
                                                 realm = character.realm,
                                                 faction = character.faction,
@@ -395,7 +463,7 @@ async def crawl_guild_members(discord_guild_id) -> None:
     finally:
         print('Crawler: finished crawling guild members')
 
-async def crawl_runs(discord_guild_id: int) -> str:
+async def crawl_dungeon_runs(discord_guild_id: int) -> str:
     """Crawl all runs in the database that have not been crawled.\n
 
     Args:
@@ -407,30 +475,33 @@ async def crawl_runs(discord_guild_id: int) -> str:
     runs_crawled = 0
     guild_run_counter = 0
     try:
+        
         runs_list = await db.get_all_runs_not_crawled()
+        
         if runs_list is None:
             return 'No runs to crawl.'
+        
         print('RaiderIO Crawler: Crawling runs.')
         for run in tqdm(runs_list):
-            is_guild = await get_run_details(run)
+            
+            is_guild = await get_run_details(run, discord_guild_id)
             runs_crawled += 1
+            discord_guild = await db.get_discord_guild_by_id(discord_guild_id)
+            
             if is_guild is True:
                 announcement = db.AnnouncementDB(discord_guild_id=discord_guild_id,
-                                                announcement_channel_id=1074546599239356498,
+                                                announcement_channel_id=discord_guild.announcement_channel_id,
                                                 title=f'🧙‍♂️ New guild run: {run.mythic_level} - {run.name} on {run.completed_at}',
                                                 content=f'**{run.name}** completed on {run.completed_at} by Take a Lap.\n\n**Dungeon:** {run.short_name}\n**Score:** {run.score}\n**URL:** {run.url}',
                                                 dungeon_run_id=run.id)
-                print(f"Created announcement with dungeon_run_id: {announcement.dungeon_run_id}")  # Print statement to verify dungeon_run_id
+                print(f"Created announcement with dungeon_run_id: {announcement.dungeon_run_id}")
+                
                 await db.add_announcement(announcement)
                 run.is_crawled = True
                 run.is_guild_run = True
                 await db.update_dungeon_run(run)
                 
-                guild_run_counter += 1
-            else:
-                run.is_crawled = True
-                run.is_guild_run = False
-                await db.update_dungeon_run(run)
+                guild_run_counter += 1            
              
         return f'Runs crawled: {runs_crawled}  | Identified {guild_run_counter} guild runs.'
     except Exception as exception:

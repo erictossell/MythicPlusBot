@@ -65,7 +65,7 @@ class Announcement(commands.Cog):
                 
             await asyncio.sleep(300)
 
-    @tasks.loop(time=time(hour=16, minute=34, second=0))
+    @tasks.loop(time=time(hour=0, minute=0, second=0))
     async def crawl_for_data(self):
         await self.bot.wait_until_ready()
         
@@ -73,32 +73,38 @@ class Announcement(commands.Cog):
             await asyncio.sleep(600)
             
             for guild in self.bot.guilds:            
-                discord_guild_db = await db.get_discord_guild_by_id(guild.id)
-            
-                if discord_guild_db is None:
+                discord_guild = await db.get_discord_guild_by_id(guild.id)
+                
+                if discord_guild is None:
                     await db.add_discord_guild(db.DiscordGuildDB(id = guild.id,
                                                                  discord_guild_name=guild.name))
                     
-                elif discord_guild_db.is_announcing is False:
+                elif discord_guild.is_announcing is False:
                     continue
                 
-                elif discord_guild_db.announcement_channel_id is None:
+                elif discord_guild.announcement_channel_id is None:
                     continue
                                 
-                else:                     
-                    channel = self.bot.get_channel(discord_guild_db.announcement_channel_id)
+                else:       
                     
-                    guild_crawl = await raiderIO.crawl_guild_members(guild.id)
+                    game_guilds = db.get_all_game_guilds_by_discord_id(guild.id)
+                    channel = self.bot.get_channel(discord_guild.announcement_channel_id)
                     
+                    guild_crawl = await raiderIO.crawl_guild_members(discord_guild.id)
+                    
+                    
+                        
                     await channel.send(guild_crawl)
                     
-                    character_crawl = await raiderIO.crawl_characters(guild.id)
-                    
-                    await channel.send(character_crawl)               
-                    
-                    dungeon_run_crawl = await raiderIO.crawl_runs(guild.id)
-                    
-                    await channel.send(dungeon_run_crawl)
+                    for game_guild in game_guilds:                    
+                                          
+                        character_crawl = await raiderIO.crawl_characters(game_guild.id)
+                        
+                        await channel.send(character_crawl)               
+                        
+                        dungeon_run_crawl = await raiderIO.crawl_dungeon_runs(game_guild.id)
+                        
+                        await channel.send(dungeon_run_crawl)
             
                     
             if util.seconds_until(0,0) < 1200:

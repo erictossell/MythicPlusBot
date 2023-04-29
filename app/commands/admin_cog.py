@@ -48,8 +48,14 @@ class Admin(commands.Cog):
             print('crawl command called')
             start_time = time.time()
             await ctx.respond('Crawling Raider.IO characters...')
-            output = await raiderIO.crawl_characters(discord_guild_id)
-            await ctx.respond(output)
+            
+            game_guilds = await db.get_all_game_guilds_by_discord_id(discord_guild_id)
+            
+            for game_guild in game_guilds:
+                await raiderIO.crawl_characters(game_guild.id)            
+                output = await raiderIO.crawl_characters(discord_guild_id)
+                await ctx.respond(output)
+                
             end_time = time.time()
             elapsed_time = end_time - start_time
             
@@ -67,7 +73,10 @@ class Admin(commands.Cog):
             print('crawl guild command called')
             start_time = time.time()
             await ctx.respond('Crawling Raider.IO guild members...')
+            
+            
             await raiderIO.crawl_guild_members(discord_guild_id)
+            
             end_time = time.time()
             elapsed_time = end_time - start_time
             await ctx.respond('Finished crawling Raider.IO guild members after ' + str(elapsed_time) + ' seconds.')
@@ -83,9 +92,11 @@ class Admin(commands.Cog):
         async with ctx.typing():
             print('crawl runs command called')
             await ctx.respond('Crawling Raider.IO guild runs...')
-            start_time = time.time()
-            output = await raiderIO.crawl_runs(discord_guild_id)
+            start_time = time.time()            
+            
+            output = await raiderIO.crawl_dungeon_runs(discord_guild_id)            
             await ctx.respond(output)
+                
             end_time = time.time()
             elapsed_time = end_time - start_time
             await ctx.respond('Finished crawling Raider.IO guild runs after ' + str(elapsed_time) + ' seconds.')

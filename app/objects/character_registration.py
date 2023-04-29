@@ -74,7 +74,9 @@ class RegisterModal(Modal):
             
             elif existing_character is None:
                 new_character = db.CharacterDB(discord_user_id = user_id, 
-                                               discord_guild_id = self.discord_guild_id,
+                                               game_guild = db.GameGuildDB(name = character.guild_name,
+                                                                           realm = character.realm,
+                                                                           region= character.region),
                                                guild_name = character.guild_name,
                                                name = character.name,
                                                realm = character.realm,
@@ -91,8 +93,12 @@ class RegisterModal(Modal):
                                                url = character.url,
                                                last_crawled_at= datetime.strptime(character.last_crawled_at, '%Y-%m-%dT%H:%M:%S.%fZ'),
                                                is_reporting = True)
-                                               
+                        
                 await db.add_character(new_character)
+                
+                await db.add_discord_game_guild(db.DiscordGameGuildDB(discord_guild_id = self.discord_guild_id,
+                                                game_guild_id = new_character.game_guild_id))
+                
                 await interaction.response.send_message(f'You have registered the character {new_character.name} on realm {new_character.realm.capitalize()} for Tal-Bot reporting.', ephemeral=True)
                 return
 

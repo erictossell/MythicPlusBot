@@ -19,6 +19,7 @@ class DiscordGuildDB(Base):
     announcements = relationship("AnnouncementDB", back_populates="discord_guild")
     discord_game_guilds = relationship("DiscordGameGuildDB", back_populates="discord_guild")
     default_characters = relationship("DefaultCharacterDB", back_populates="discord_guild")
+    discord_guild_runs = relationship("DiscordGuildRunDB", back_populates="discord_guild")
     
     def __init__(self,
                  id: int,

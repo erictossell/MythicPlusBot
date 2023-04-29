@@ -62,20 +62,39 @@ class RegisterGuildModal(Modal):
                 return
             else: 
                 existing_guild = await db.get_discord_guild_by_id(int(self.discord_guild_id))
-                if existing_guild:       
-                
-                        updated_guild = db.DiscordGuildDB(id=int(self.discord_guild_id),
-                                                      discord_guild_name=existing_guild.discord_guild_name,
-                                                      wow_guild_name=wow_guild_name,
-                                                      wow_realm=wow_realm,
-                                                      wow_region=wow_region)
-                  
-                        await db.update_discord_guild(updated_guild)
+                if existing_guild:
+                    
+                    existing_game_guild = await db.get_game_guild_by_name(wow_guild_name, wow_realm)
+                    
+                    if existing_game_guild:
                         
-                        embed = discord.Embed(title=f"{updated_guild.discord_guild_name} WoW Guild Updated",
-                                            description=f"Your guild has been updated to {updated_guild.wow_guild_name} - {updated_guild.wow_realm} in the {updated_guild.wow_region.upper()} region.",
+                        discord_game_guild = db.DiscordGameGuildDB(discord_guild_id = existing_guild.id,
+                                                                   game_guild_id = existing_game_guild.id,
+                                                                   is_crawlable=True)
+                        
+                        await db.add_discord_game_guild(discord_game_guild)
+                        
+                        embed = discord.Embed(title=f"{existing_game_guild.name} WoW Guild Updated",
+                                            description=f"Your have added the guild {existing_game_guild.name} - {existing_game_guild.realm} in the {existing_game_guild.region.upper()} region to your Discord Server.",
                                             color=0x00ff00)
                         await interaction.response.send_message(embed=embed, ephemeral=True)
+                        
+                    else:
+                        game_guild = db.GameGuildDB(name =wow_guild_name,
+                                                      realm =wow_realm,
+                                                      region =wow_region)
+                        
+                        discord_game_guild = db.DiscordGameGuildDB(discord_guild_id = existing_guild.id,
+                                                                   game_guild= game_guild,
+                                                                   is_crawlable=True)
+                        
+                        await db.add_discord_game_guild(discord_game_guild)
+                        
+                        embed = discord.Embed(title=f"{game_guild.name} WoW Guild Updated",
+                                            description=f"Your have added the guild {game_guild.name} - {game_guild.realm} in the {game_guild.region.upper()} region to your Discord Server.",
+                                            color=0x00ff00)
+                        await interaction.response.send_message(embed=embed, ephemeral=True)
+                        
         except Exception as exception:
             print('Error occurred:', exception)
             await interaction.message.delete()

@@ -1,5 +1,5 @@
 import datetime
-from sqlalchemy import BigInteger, ForeignKey, Column, DateTime, Integer
+from sqlalchemy import BigInteger, Boolean, ForeignKey, Column, DateTime, Integer
 from sqlalchemy.orm import relationship
 from app.db.base import Base
 from app.db.models.discord_guild_db import DiscordGuildDB
@@ -16,15 +16,19 @@ class DiscordGameGuildDB(Base):
     game_guild_id = Column(BigInteger, ForeignKey('game_guilds.id'))
     game_guild = relationship("GameGuildDB", back_populates="discord_game_guilds")
     
+    
+    is_crawlable = Column(Boolean, default=False)  
     modified_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     
     def __init__(self,
+                 is_crawlable : bool = False,
                  discord_guild_id: int = None,
                  discord_guild : DiscordGuildDB = None,
                  game_guild_id: int = None,
                  game_guild : GameGuildDB = None):
         
+        self.is_crawlable = is_crawlable
         if discord_guild_id:
             self.discord_guild_id = discord_guild_id
         else: 
