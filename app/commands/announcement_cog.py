@@ -17,7 +17,7 @@ class Announcement(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         print("Announcement cog is initializing....")
-        self.announcement_channel_id = 1074546599239356498
+       
         self.announcement_task = self.bot.loop.create_task(self.send_announcements())
         self.crawl_task = self.bot.loop.create_task(self.crawl_for_data())
         self.is_closed = bot.is_closed
@@ -84,10 +84,8 @@ class Announcement(commands.Cog):
                 
                 elif discord_guild_db.announcement_channel_id is None:
                     continue
-                
-                
-                else: 
-                    
+                                
+                else:                     
                     channel = self.bot.get_channel(discord_guild_db.announcement_channel_id)
                     
                     guild_crawl = await raiderIO.crawl_guild_members(guild.id)
