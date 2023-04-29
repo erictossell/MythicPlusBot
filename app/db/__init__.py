@@ -100,7 +100,7 @@ async def get_character_by_name_realm(name: str, realm: str) -> Optional[Charact
     """
     try:
         async with async_session_scope() as session:
-            existing_character_query = select(CharacterDB).filter(CharacterDB.name == name, CharacterDB.realm == realm.lower())
+            existing_character_query = select(CharacterDB).filter(CharacterDB.name == name, CharacterDB.realm.lower() == realm.lower())
             result = await session.execute(existing_character_query)
             existing_character = result.scalar()
             if existing_character is None:

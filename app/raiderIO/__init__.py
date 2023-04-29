@@ -166,7 +166,7 @@ async def get_character(name: str,
 
 @sleep_and_retry
 @limits(calls=CALLS, period=RATE_LIMIT)
-async def get_members(discord_guild_id: int ) -> Optional[List[Member]]:
+async def get_guild_members(discord_guild_id: int ) -> Optional[List[Member]]:
     """Get a list of members from the Raider.IO API."""
     for retry in range(RETRIES):
         try:
@@ -360,7 +360,7 @@ async def crawl_guild_members(discord_guild_id) -> None:
     print('Crawler: trying to crawl guild members')
     try:   
         score_colors_list = get_score_colors()          
-        members_list = await get_members(discord_guild_id)
+        members_list = await get_guild_members(discord_guild_id)
         counter = 0
         print('RaiderIO Crawler: Crawling ' + str(len(members_list)) + ' guild members.')
         for member in tqdm(members_list):

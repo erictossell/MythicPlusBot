@@ -86,14 +86,17 @@ class Announcement(commands.Cog):
                     continue
                 
                 
-                else:
+                else: 
+                    
                     channel = self.bot.get_channel(discord_guild_db.announcement_channel_id)
+                    
+                    guild_crawl = await raiderIO.crawl_guild_members(guild.id)
+                    
+                    await channel.send(guild_crawl)
                     
                     character_crawl = await raiderIO.crawl_characters(guild.id)
                     
-                    await channel.send(character_crawl)
-                    
-                    await asyncio.sleep(20)
+                    await channel.send(character_crawl)               
                     
                     dungeon_run_crawl = await raiderIO.crawl_runs(guild.id)
                     
@@ -103,7 +106,7 @@ class Announcement(commands.Cog):
             if util.seconds_until(0,0) < 1200:
                         # If it's less than 20 minutes until midnight, run this code.
                         print("It's less than 20 minutes until midnight.")         
-            await asyncio.sleep(3600)
+            await asyncio.sleep(3600*3)
             
                     
                     
