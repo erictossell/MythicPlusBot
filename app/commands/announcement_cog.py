@@ -96,15 +96,13 @@ class Announcement(commands.Cog):
                         
                     await channel.send(guild_crawl)
                     
-                    for game_guild in game_guilds:                    
+                                     
                                           
-                        character_crawl = await raiderIO.crawl_characters(game_guild.id)
+                    character_crawl = await raiderIO.crawl_characters(discord_guild.id)
+                    
+                    await channel.send(character_crawl)               
                         
-                        await channel.send(character_crawl)               
                         
-                        dungeon_run_crawl = await raiderIO.crawl_dungeon_runs(game_guild.id)
-                        
-                        await channel.send(dungeon_run_crawl)
             
                     
             if util.seconds_until(0,0) < 1200:
