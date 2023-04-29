@@ -73,10 +73,13 @@ class RegisterModal(Modal):
                 return
             
             elif existing_character is None:
+                
+                game_guild = await db.get_game_guild_by_name_realm(character.guild_name, character.realm)
+                
                 new_character = db.CharacterDB(discord_user_id = user_id, 
                                                game_guild = db.GameGuildDB(name = character.guild_name,
                                                                            realm = character.realm,
-                                                                           region= character.region),
+                                                                           region= character.region) if game_guild is None else game_guild,
                                                guild_name = character.guild_name,
                                                name = character.name,
                                                realm = character.realm,
