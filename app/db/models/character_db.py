@@ -14,10 +14,7 @@ class CharacterDB(Base):
     """CharacterDB class which is used to create the character table in the database."""
     __tablename__ = 'characters'
     
-    id = Column(Integer, primary_key=True)
-    discord_user_id = Column(BigInteger, nullable=False)
-        
-    guild_name = Column(String, nullable=False)    
+    id = Column(Integer, primary_key=True)       
     name = Column(String, nullable=False)
     realm = Column(String, nullable=False)
     faction = Column(String, nullable=False)
@@ -32,7 +29,7 @@ class CharacterDB(Base):
     thumbnail_url = Column(String, nullable=False)
     url = Column(String, nullable=False)
     last_crawled_at = Column(DateTime, nullable=False)
-    is_reporting = Column(Boolean, nullable=False, default=False)
+    
     modified_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     
@@ -42,7 +39,7 @@ class CharacterDB(Base):
     character_runs = relationship("CharacterRunDB",
                                   back_populates="character",
                                   cascade="all, delete-orphan")
-    default_character = relationship("DefaultCharacterDB",
+    discord_user_characters = relationship("DiscordUserCharacterDB",
                                      back_populates="character",
                                      uselist=False,
                                      cascade="all, delete-orphan")
@@ -50,11 +47,13 @@ class CharacterDB(Base):
                                      back_populates="character",
                                      cascade="all, delete-orphan")
     
+    discord_guild_characters = relationship("DiscordGuildCharacterDB",
+                                     back_populates="character",
+                                     cascade="all, delete-orphan")
+    
 
-    def __init__(self,
-                 discord_user_id: int,
-                                  
-                 guild_name: str,
+    def __init__(self,                                 
+                 
                  name: str,
                  realm: str,
                  faction: str,
@@ -68,15 +67,12 @@ class CharacterDB(Base):
                  rank: int,
                  thumbnail_url: str,
                  url: str,
-                 last_crawled_at: datetime,
-                 is_reporting: bool,
+                 last_crawled_at: datetime,                
                  game_guild_id: int = None,
                  game_guild: GameGuildDB = None,
                  id = None):
-        """CharacterDB constructor"""
-        self.discord_user_id = discord_user_id
+        """CharacterDB constructor"""   
         
-        self.guild_name = guild_name    
         self.name = name
         self.realm = realm
         self.faction = faction
@@ -91,7 +87,6 @@ class CharacterDB(Base):
         self.thumbnail_url = thumbnail_url
         self.url = url
         self.last_crawled_at = last_crawled_at
-        self.is_reporting = is_reporting
         self.id = id
         
         if game_guild_id:

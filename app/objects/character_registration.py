@@ -64,6 +64,7 @@ class RegisterModal(Modal):
             name = self.children[0].value.capitalize()  
             realm = self.children[1].value.capitalize() if self.children[1].value else 'Area-52'
             user_id = interaction.user.id
+            discord_guild = await db.get_discord_guild_by_id(self.discord_guild_id)
             
             character = await raiderIO.get_character(name, realm)
             existing_character = await db.get_character_by_name_realm(name, realm)
@@ -72,15 +73,15 @@ class RegisterModal(Modal):
                 await interaction.response.send_message(f'Character {name} on {realm} not found.', ephemeral=True)
                 return
             
+            
             elif existing_character is None:
                 
                 game_guild = await db.get_game_guild_by_name_realm(character.guild_name, character.realm)
                 
-                new_character = db.CharacterDB(discord_user_id = user_id, 
+                new_character = db.CharacterDB(
                                                game_guild = db.GameGuildDB(name = character.guild_name,
                                                                            realm = character.realm,
                                                                            region= character.region) if game_guild is None else game_guild,
-                                               guild_name = character.guild_name,
                                                name = character.name,
                                                realm = character.realm,
                                                faction = character.faction,
@@ -94,19 +95,19 @@ class RegisterModal(Modal):
                                                rank = character.rank,
                                                thumbnail_url= character.thumbnail_url,
                                                url = character.url,
-                                               last_crawled_at= datetime.strptime(character.last_crawled_at, '%Y-%m-%dT%H:%M:%S.%fZ'),
-                                               is_reporting = True)
+                                               last_crawled_at= datetime.strptime(character.last_crawled_at, '%Y-%m-%dT%H:%M:%S.%fZ'))
                         
                 await db.add_character(new_character)
                 
-                await db.add_discord_game_guild(db.DiscordGameGuildDB(discord_guild_id = self.discord_guild_id,
-                                                game_guild_id = new_character.game_guild_id))
+                await db.add_discord_guild_character(discord_guild= discord_guild,
+                                                        character= new_character)
                 
                 await interaction.response.send_message(f'You have registered the character {new_character.name} on realm {new_character.realm.capitalize()} for Tal-Bot reporting.', ephemeral=True)
                 return
 
-            elif not existing_character.is_reporting:
-                await db.update_character_reporting(existing_character)
+            elif existing_character:
+                await db.add_discord_guild_character(discord_guild= discord_guild,
+                                                        character= existing_character)
                 await interaction.response.send_message(f'You have registered the character {existing_character.name} on realm {existing_character.realm.capitalize()} for Tal-Bot reporting.', ephemeral=True)
             else:
                 await interaction.response.send_message(f'The character {existing_character.name} on realm {existing_character.realm.capitalize()} has already been registered for Tal-Bot reporting.', ephemeral=True)                   

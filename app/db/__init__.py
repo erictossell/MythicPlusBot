@@ -13,18 +13,25 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import sessionmaker, joinedload
 from dotenv import load_dotenv
 from app.db.base import Base
+
+from app.db.models.game_db import GameDB
+from app.db.models.game_guild_db import GameGuildDB
+from app.db.models.discord_guild_db import DiscordGuildDB
 from app.db.models.discord_game_guilds_db import DiscordGameGuildDB
 
-from app.db.models.discord_guild_db import DiscordGuildDB
+from app.db.models.discord_guild_run_db import DiscordGuildRunDB
+from app.db.models.discord_user_character_db import DiscordUserCharacterDB
+from app.db.models.discord_guild_character_db import DiscordGuildCharacterDB
+
 from app.db.models.character_db import CharacterDB
 from app.db.models.character_history_db import CharacterHistoryDB
+
 from app.db.models.dungeon_run_db import DungeonRunDB
-from app.db.models.default_character_db import DefaultCharacterDB
 from app.db.models.character_run_db import CharacterRunDB
+
 from app.db.models.announcement_db import AnnouncementDB
-from app.db.models.game_guild_db import GameGuildDB
-from app.db.models.game_db import GameDB
-from app.db.models.discord_guild_run_db import DiscordGuildRunDB
+
+
 
 from app.raiderIO.models.character import Character
 from app.raiderIO.models.dungeon_run import DungeonRun
@@ -71,14 +78,29 @@ async def async_session_scope():
 
 #-----------------------Read Functions--------------------------------#
 
+async def get_discord_game_guild_by_guild_ids(discord_guild_id: int, game_guild_id: int) -> Optional[DiscordGameGuildDB]:
+    try:
+        async with async_session_scope() as session:
+            query = select(DiscordGameGuildDB).filter(DiscordGameGuildDB.discord_guild_id == discord_guild_id, DiscordGameGuildDB.game_guild_id == game_guild_id)
+            result = await session.execute(query)
+            existing_discord_game_guild = result.scalar()
+            
+            if existing_discord_game_guild:
+                return existing_discord_game_guild
+            else:
+                return None
+            
+    except SQLAlchemyError as error:
+        print(f'Error while querying the database: {error}')
+        return None
+
 async def get_character_by_name_realm_and_discord_guild(name: str, realm: str, discord_guild_id: int) -> Optional[CharacterDB]:
     try:
         async with async_session_scope() as session:
             query = (
                 select(CharacterDB)
-                .join(GameGuildDB)
-                .join(DiscordGameGuildDB)
-                .filter(CharacterDB.name == name, CharacterDB.realm == realm, DiscordGameGuildDB.discord_guild_id == discord_guild_id)
+                .join(DiscordGuildCharacterDB)
+                .filter(CharacterDB.name == name, CharacterDB.realm == realm, DiscordGuildCharacterDB.discord_guild_id == discord_guild_id)
             )
             result = await session.execute(query)
             existing_character = result.scalar()
@@ -204,26 +226,26 @@ async def get_character_run_by_character_run(character: CharacterDB, run: Dungeo
         print(error)
         return None
 
-async def get_default_character_by_guild_user(discord_guild_id, discord_user_id) -> DefaultCharacterDB:
+async def get_discord_user_character_by_guild_user(discord_guild_id, discord_user_id) -> DiscordUserCharacterDB:
     """Lookup a default character from the database.
 
     Returns:
-        DefaultCharacterDB: Returns a DefaultCharacterDB.py object if the relationship exists, otherwise returns None.
+        DiscordUserCharacterDB: Returns a DiscordUserCharacterDB.py object if the relationship exists, otherwise returns None.
     """
     
     try:
         async with async_session_scope() as session:
-            default_character_query = select(DefaultCharacterDB).filter(DefaultCharacterDB.discord_guild_id == discord_guild_id, DefaultCharacterDB.discord_user_id == discord_user_id)
-            result = await session.execute(default_character_query)
-            default_character = result.scalar()
-            if default_character is not None:   
-                character_query = select(CharacterDB).filter(CharacterDB.id == default_character.character_id)
+            discord_user_character_query = select(DiscordUserCharacterDB).filter(DiscordUserCharacterDB.discord_guild_id == discord_guild_id, DiscordUserCharacterDB.discord_user_id == discord_user_id)
+            result = await session.execute(discord_user_character_query)
+            discord_user_character = result.scalar()
+            if discord_user_character is not None:   
+                character_query = select(CharacterDB).filter(CharacterDB.id == discord_user_character.character_id)
                 characer_result = await session.execute(character_query)
-                default_character.character = characer_result.scalar()               
+                discord_user_character.character = characer_result.scalar()               
                 
-                # Return the existing default_character object
-                return default_character
-            elif default_character is None:
+                # Return the existing discord_user_character object
+                return discord_user_character
+            elif discord_user_character is None:
                 return None
     except SQLAlchemyError as error:
         print(f'Error while querying the database: {error}')
@@ -267,6 +289,38 @@ async def get_next_announcement_by_guild_id(discord_guild_id: int) -> Announceme
         return None            
 
 #-------------------------Create Functions------------------------------#
+
+async def add_discord_guild_character(discord_guild: DiscordGuildDB, character: CharacterDB) -> DiscordGuildCharacterDB:
+    try:
+        async with async_session_scope() as session:
+            guild_query = select(DiscordGuildDB).filter(DiscordGuildDB.id == discord_guild.id)
+            guild_result = await session.execute(guild_query)
+            existing_discord_guild = guild_result.scalar()
+            
+            if existing_discord_guild:
+                
+                character_query = select(CharacterDB).filter(CharacterDB.id == character.id)
+                character_result = await session.execute(character_query)
+                existing_character = character_result.scalar()
+                
+                if existing_character:
+                    
+                    guild_character_query = select(DiscordGuildCharacterDB).filter(DiscordGuildCharacterDB.discord_guild_id == discord_guild.id, DiscordGuildCharacterDB.character_id == character.id)
+                    guild_character_result = await session.execute(guild_character_query)
+                    existing_guild_character = guild_character_result.scalar()
+                    
+                    if existing_guild_character:
+                        return existing_guild_character
+                    else:
+                        new_guild_character = DiscordGuildCharacterDB(discord_guild_id = discord_guild.id, character_id = character.id)
+                        session.add(new_guild_character)
+                        await session.commit()
+                        return new_guild_character
+            else:
+                return None
+    except SQLAlchemyError as error:
+        print(f'Error while querying the database: {error}')
+        return None
 
 async def add_discord_guild_run(discord_guild: DiscordGuildDB, dungeon_run: DungeonRunDB) -> DiscordGuildRunDB:
     try:
@@ -380,7 +434,7 @@ async def add_character(character: CharacterDB) -> CharacterDB:
                 new_character = session.add(character)
                 return new_character
             else:
-                return None
+                return existing_character
     except SQLAlchemyError as error:
         print(f'Error while querying the database: {error}')
         return None
@@ -396,11 +450,8 @@ async def add_character_history(character: CharacterDB) -> CharacterHistoryDB:
     """
     try:
         async with async_session_scope() as session:
-            character_history = CharacterHistoryDB(character.discord_user_id,
-                                                    character.discord_guild_id,
-                                                    character.guild_name,
-                                                    character.name,
-                                                    character.realm.lower(),
+            character_history = CharacterHistoryDB( character.name,
+                                                    character.realm,
                                                     character.faction,
                                                     character.region,
                                                     character.role,
@@ -480,7 +531,7 @@ async def add_character_run(character_run: CharacterRunDB) -> Optional[Character
         print(error)
         return None
 
-async def add_default_character(default_character: DefaultCharacterDB) -> DefaultCharacterDB:
+async def add_discord_user_character(discord_user_character: DiscordUserCharacterDB) -> DiscordUserCharacterDB:
     """Add a default character to the database.
 
     Returns:
@@ -488,13 +539,13 @@ async def add_default_character(default_character: DefaultCharacterDB) -> Defaul
     """
     try:
         async with async_session_scope() as session:
-            er_query = select(DefaultCharacterDB).filter(DefaultCharacterDB.discord_guild_id == default_character.discord_guild_id,
-                                                                             DefaultCharacterDB.discord_user_id == default_character.discord_user_id)
+            er_query = select(DiscordUserCharacterDB).filter(DiscordUserCharacterDB.discord_guild_id == discord_user_character.discord_guild_id,
+                                                                             DiscordUserCharacterDB.discord_user_id == discord_user_character.discord_user_id)
             er_result = await session.execute(er_query)
             existing_relationship = er_result.scalar()
             if existing_relationship is None:
-                new_default_character = session.add(default_character)
-                return new_default_character
+                new_discord_user_character = session.add(discord_user_character)
+                return new_discord_user_character
             else:
                 return None
     except SQLAlchemyError as error:
@@ -698,20 +749,20 @@ async def update_dungeon_run(dungeon_run : DungeonRunDB) -> bool:
         print(f'Error while querying the database: {error}')
         return False  
 
-async def update_default_character(discord_user_id:int, discord_guild_id:int, character: CharacterDB) -> DefaultCharacterDB:
+async def update_discord_user_character(discord_user_id:int, discord_guild_id:int, character: CharacterDB) -> DiscordUserCharacterDB:
     """Update a default character in the database or create a new one if not exists.
 
     Args:
-        default_character (DefaultCharacterDB): _description_
+        discord_user_character (DiscordUserCharacterDB): _description_
 
     Returns:
-        Tuple[DefaultCharacterDB, bool]: Returns a tuple with the updated or created default character and a boolean indicating if the default character was updated (True) or created (False).
+        Tuple[DiscordUserCharacterDB, bool]: Returns a tuple with the updated or created default character and a boolean indicating if the default character was updated (True) or created (False).
     """
     try: 
         async with async_session_scope() as session:
             
-            er_query = select(DefaultCharacterDB).filter(DefaultCharacterDB.discord_guild_id == discord_guild_id,
-                                                                             DefaultCharacterDB.discord_user_id == discord_user_id)
+            er_query = select(DiscordUserCharacterDB).filter(DiscordUserCharacterDB.discord_guild_id == discord_guild_id,
+                                                                             DiscordUserCharacterDB.discord_user_id == discord_user_id)
             er_result = await session.execute(er_query)
             existing_relationship = er_result.scalar()
             
@@ -730,11 +781,11 @@ async def update_default_character(discord_user_id:int, discord_guild_id:int, ch
                 return existing_relationship, character_name, character_realm
             
             else:
-                default_character = DefaultCharacterDB(discord_user_id, discord_guild_id, character.id)
-                session.add(default_character)
+                discord_user_character = DiscordUserCharacterDB(discord_user_id, discord_guild_id, character.id)
+                session.add(discord_user_character)
                 character_name = new_character.name
                 character_realm = new_character.realm
-                return default_character, character_name, character_realm
+                return discord_user_character, character_name, character_realm
 
     except SQLAlchemyError as error:
         print(f'Error while querying the database: {error}')
@@ -816,7 +867,7 @@ async def remove_character(name, realm) -> bool:
         print(f'Error while querying the database: {error}')
         return False
 
-async def remove_default_character(default_character: DefaultCharacterDB) -> bool:
+async def remove_discord_user_character(discord_user_character: DiscordUserCharacterDB) -> bool:
     """Remove a default character from the database.
 
     Returns:
@@ -824,8 +875,8 @@ async def remove_default_character(default_character: DefaultCharacterDB) -> boo
     """
     try:
         async with async_session_scope() as session:
-            query = select(DefaultCharacterDB).filter(DefaultCharacterDB.discord_guild_id == default_character.discord_guild_id,
-                                                                             DefaultCharacterDB.discord_user_id == default_character.discord_user_id)
+            query = select(DiscordUserCharacterDB).filter(DiscordUserCharacterDB.discord_guild_id == discord_user_character.discord_guild_id,
+                                                                             DiscordUserCharacterDB.discord_user_id == discord_user_character.discord_user_id)
             result = await session.execute(query)
             existing_relationship = result.scalar()
             if existing_relationship is not None:
@@ -844,9 +895,8 @@ async def get_all_discord_guild_characters(discord_guild_id: int) -> Optional[Li
         async with async_session_scope() as session:
             query = (
                 select(CharacterDB)
-                .join(GameGuildDB)
-                .join(DiscordGameGuildDB)
-                .filter(DiscordGameGuildDB.discord_guild_id == discord_guild_id)
+                .join(DiscordGuildCharacterDB)
+                .filter(DiscordGuildCharacterDB.discord_guild_id == discord_guild_id)
             )
             result = await session.execute(query)
             characters = result.scalars().unique().all()

@@ -165,25 +165,24 @@ async def get_character(name: str,
 
 @sleep_and_retry
 @limits(calls=CALLS, period=RATE_LIMIT)
-async def get_guild_members(discord_guild_id: int ) -> Optional[List[Member]]:
+async def get_guild_members(name: str, realm: str, region: str ) -> Optional[List[Member]]:
     """Get a list of members from the Raider.IO API."""
     for retry in range(RETRIES):
         try:
-            game_guilds = await db.get_all_game_guilds_by_discord_id(discord_guild_id)
             pattern = re.compile(r'^[^0-9]*$')
             members = []
-            async with httpx.AsyncClient() as client:                
-                for game_guild in game_guilds:
-                    request = await client.get(API_URL+f'guilds/profile?region={game_guild.region}&realm={game_guild.realm}&name={game_guild.name}&fields=members')
-                    for member in request.json()['members']:
-                        if pattern.search(str(member['character']['name'])):
-                            realm = member['character']['profile_url'].split('/')[5]
-                            members.append(Member(rank = member['rank'],
-                                                  name= str(member['character']['name']),
-                                                   class_name = member['character']['class'],
-                                                   last_crawled_at= member['character']['last_crawled_at'],
-                                                   profile_url= member['character']['profile_url'],
-                                                   realm = realm.capitalize()))
+            async with httpx.AsyncClient() as client:               
+                
+                request = await client.get(API_URL+f'guilds/profile?region={region}&realm={realm}&name={name}&fields=members')
+                for member in request.json()['members']:
+                    if pattern.search(str(member['character']['name'])):
+                        realm = member['character']['profile_url'].split('/')[5]
+                        members.append(Member(rank = member['rank'],
+                                                name= str(member['character']['name']),
+                                                class_name = member['character']['class'],
+                                                last_crawled_at= member['character']['last_crawled_at'],
+                                                profile_url= member['character']['profile_url'],
+                                                realm = realm.capitalize()))
                 if len(members) > 0:
                     return members
                 elif len(members) == 0:
@@ -268,6 +267,7 @@ async def get_run_details(dungeon_run : DungeonRunDB, discord_guild_id) -> Optio
                                                             str(roster['character']['realm']['slug']).capitalize(),
                                                             discord_guild_id)
                         
+                      
                         if character_db is not None:
                             guild_member_counter += 1
                             character_id = roster['character']['id']
@@ -302,10 +302,11 @@ async def get_run_details(dungeon_run : DungeonRunDB, discord_guild_id) -> Optio
             return None   
 
 async def crawl_characters(discord_guild_id: int) -> str:
-    """Crawl the Raider.IO API for new data on characters in the database.\n
-    This method has a 0.3 second delay between each API call to avoid rate limiting.
-    This method will only crawl characters with a score greater than 0
-    and that rows that are flagged for reporting.
+    """Crawl the Raider.IO API for a given discord guild to identify new discord_guild_runs.\n
+    
+    This method crawls all characters in a given discord guild and checks if they have any new runs.\n
+    
+    Any new runs are validated for guild membership and then added to the database.\n 
     """
     characters_crawled = 0
     run_counter = 0
@@ -313,7 +314,7 @@ async def crawl_characters(discord_guild_id: int) -> str:
     update_character_counter = 0
     guild_run_counter = 0
     colors = get_score_colors()
-    try:        
+    try:
         characters_list = await db.get_all_discord_guild_characters(discord_guild_id)
         
         print('RaiderIO Crawler: Crawling ' + str(len(characters_list)) + ' characters.')
@@ -404,8 +405,7 @@ async def crawl_characters(discord_guild_id: int) -> str:
                     character.achievement_points = character_io.achievement_points
                     character.spec_name = character_io.spec_name
                     character.role = character_io.role
-                    character.rank = character_io.rank                    
-                    character.guild_name = character_io.guild_name
+                    character.rank = character_io.rank
                     await db.update_character(character)
                     update_character_counter += 1
         return f'Characters crawled: {characters_crawled} |  Updated {update_character_counter} characters and added {run_counter} runs.'
@@ -415,48 +415,66 @@ async def crawl_characters(discord_guild_id: int) -> str:
     finally:
         print('Finished crawling characters.')  
 
-async def crawl_guild_members(discord_guild_id) -> None:
-    """Crawl the Raider.IO API for new guild members. \n
-    This method has a 0.3 second delay between each API call to avoid rate limiting.
+async def crawl_discord_guild_members(discord_guild_id) -> None:
+    """Crawl the Raider.IO API for new guild members for a given DiscordGuild and their associated primary game_guild entities. \n
     """
     print('Crawler: trying to crawl guild members')
     try:
-        score_colors_list = get_score_colors()          
-        members_list = await get_guild_members(discord_guild_id)
-        counter = 0
-        print('RaiderIO Crawler: Crawling ' + str(len(members_list)) + ' guild members.')
-        for member in tqdm(members_list):
-            db_character = await db.get_character_by_name_realm(member.name, member.realm)
-            if db_character is None:
-                
-                character = await get_character(str(member.name),
-                                                str(member.realm),
-                                                score_colors_list)
-                
-                game_guild = await db.get_game_guild_by_name_realm(str(character.guild_name),str(character.realm))
-                
-                
-                new_character = db.CharacterDB(discord_user_id=173958345022111744,
-                                                game_guild_id = game_guild.id,
-                                                guild_name = game_guild.name,
-                                                name = character.name,
-                                                realm = character.realm,
-                                                faction = character.faction,
-                                                region = character.region,
-                                                role = character.role,
-                                                spec_name = character.spec_name,
-                                                class_name = character.class_name,
-                                                achievement_points = character.achievement_points,
-                                                item_level = character.item_level,
-                                                score = character.score,
-                                                rank = character.rank,
-                                                thumbnail_url = character.thumbnail_url,
-                                                url = character.url,
-                                                last_crawled_at = datetime.strptime(character.last_crawled_at,
-                                                                    '%Y-%m-%dT%H:%M:%S.%fZ'),
-                                                is_reporting = True)  
-                await db.add_character(new_character)
-                counter += 1
+        
+        score_colors_list = get_score_colors()
+        discord_guild = await db.get_discord_guild_by_id(discord_guild_id)    
+        
+        game_guild_list = await db.get_all_game_guilds_by_discord_id(discord_guild_id)
+        
+        counter = 0   
+        
+        for game_guild in tqdm(game_guild_list):
+            discord_game_guild = await db.get_discord_game_guild_by_guild_ids(discord_guild_id, game_guild.id)
+            
+            if discord_game_guild is None:
+                continue
+            
+            if discord_game_guild.is_crawlable is False:
+                continue
+            
+            member_list = await get_guild_members(game_guild.name, game_guild.realm, game_guild.region)
+        
+            if member_list is None:                
+                continue
+            
+            else:
+                for member in member_list:
+                    
+                    
+                    character = await get_character(str(member.name),
+                                                    str(member.realm),
+                                                    score_colors_list)
+                                    
+                    new_character = db.CharacterDB(game_guild_id = game_guild.id,
+                                                    name = character.name,
+                                                    realm = character.realm,
+                                                    faction = character.faction,
+                                                    region = character.region,
+                                                    role = character.role,
+                                                    spec_name = character.spec_name,
+                                                    class_name = character.class_name,
+                                                    achievement_points = character.achievement_points,
+                                                    item_level = character.item_level,
+                                                    score = character.score,
+                                                    rank = character.rank,
+                                                    thumbnail_url = character.thumbnail_url,
+                                                    url = character.url,
+                                                    last_crawled_at = datetime.strptime(character.last_crawled_at,
+                                                                        '%Y-%m-%dT%H:%M:%S.%fZ'))
+                    
+                    added_character = await db.add_character(new_character)
+                    
+                    
+                    await db.add_discord_guild_character(discord_guild=discord_guild,
+                                                        character=added_character)             
+
+                    counter += 1
+           
     except Exception as exception:
         print(exception)
         return False

@@ -77,11 +77,11 @@ class Character(commands.Cog):
             else:
                 
                 character = await db.get_character_by_name_realm(name.capitalize(), realm.capitalize())
-                main_char = await db.get_default_character_by_guild_user(discord_guild_id, discord_user_id)
+                main_char = await db.get_discord_user_character_by_guild_user(discord_guild_id, discord_user_id)
                 
                 if main_char is None:
                     
-                    default = db.DefaultCharacterDB(discord_user_id=discord_user_id, discord_guild_id=discord_guild_id, character_id=character.id)
+                    default = db.DiscordUserCharacterDB(discord_user_id=discord_user_id, discord_guild_id=discord_guild_id, character_id=character.id)
                     main_char = await db.add_default_character(default)
                     
                     embed = discord.Embed(title=f'Success! Your main character has been updated to: {main_char[1]}-{main_char[2].capitalize()}.', color=discord.Color.green())

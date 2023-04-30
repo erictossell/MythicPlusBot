@@ -75,31 +75,31 @@ class Admin(commands.Cog):
             await ctx.respond('Crawling Raider.IO guild members...')
             
             
-            await raiderIO.crawl_guild_members(discord_guild_id)
+            await raiderIO.crawl_discord_guild_members(discord_guild_id)
             
             end_time = time.time()
             elapsed_time = end_time - start_time
             await ctx.respond('Finished crawling Raider.IO guild members after ' + str(elapsed_time) + ' seconds.')
     
-    @admin.command(name="crawlruns")
-    async def crawl_runs(self, ctx):
-        """Compare runs to the database and update the database.
+    #@admin.command(name="crawlruns")
+    #async def crawl_runs(self, ctx):
+    #    """Compare runs to the database and update the database.
 
-        Args:
-            ctx (context): The current discord context.
-        """
-        discord_guild_id = int(ctx.guild.id) 
-        async with ctx.typing():
-            print('crawl runs command called')
-            await ctx.respond('Crawling Raider.IO guild runs...')
-            start_time = time.time()            
+    #    Args:
+    #        ctx (context): The current discord context.
+    #    """
+    #    discord_guild_id = int(ctx.guild.id) 
+    #    async with ctx.typing():
+    #        print('crawl runs command called')
+    #        await ctx.respond('Crawling Raider.IO guild runs...')
+    #        start_time = time.time()            
             
-            output = await raiderIO.crawl_dungeon_runs(discord_guild_id)            
-            await ctx.respond(output)
+     #       output = await raiderIO.crawl_dungeon_runs(discord_guild_id)            
+     #       await ctx.respond(output)
                 
-            end_time = time.time()
-            elapsed_time = end_time - start_time
-            await ctx.respond('Finished crawling Raider.IO guild runs after ' + str(elapsed_time) + ' seconds.')
+     #       end_time = time.time()
+     #       elapsed_time = end_time - start_time
+      #      await ctx.respond('Finished crawling Raider.IO guild runs after ' + str(elapsed_time) + ' seconds.')
      
     @commands.Cog.listener()
     async def on_ready(self):

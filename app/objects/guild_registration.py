@@ -47,7 +47,7 @@ class RegisterGuildModal(Modal):
             interaction (discord.Interaction): The interaction object.
         """
         try:
-            wow_guild_name = self.children[0].value.capitalize()
+            wow_guild_name = self.children[0].value
             wow_realm = self.children[1].value.capitalize()
             wow_region = self.children[2].value.lower()            
             
@@ -64,7 +64,7 @@ class RegisterGuildModal(Modal):
                 existing_guild = await db.get_discord_guild_by_id(int(self.discord_guild_id))
                 if existing_guild:
                     
-                    existing_game_guild = await db.get_game_guild_by_name(wow_guild_name, wow_realm)
+                    existing_game_guild = await db.get_game_guild_by_name_realm(wow_guild_name, wow_realm)
                     
                     if existing_game_guild:
                         
