@@ -125,7 +125,6 @@ async def get_game_guild_by_name_realm(name: str, realm: str) -> Optional[GameGu
     except SQLAlchemyError as error:
         print(f'Error while querying the database: {error}')
         return None
-    
 
 async def get_discord_guild_by_id(discord_guild_id: int) -> Optional[DiscordGuildDB]:
     """Look up a specific discord guild in the database.
@@ -632,9 +631,7 @@ async def update_character(character: Character) -> CharacterDB:
                 return None
             else:                
                 if has_any_character_field_changed(existing_character, character):
-                    character_history = CharacterHistoryDB(discord_user_id = existing_character.discord_user_id,
-                                                        discord_guild_id = existing_character.discord_guild_id,
-                                                        guild_name = existing_character.guild_name,
+                    character_history = CharacterHistoryDB(
                                                         name = existing_character.name,
                                                         realm = existing_character.realm,
                                                         faction = existing_character.faction,
@@ -648,14 +645,10 @@ async def update_character(character: Character) -> CharacterDB:
                                                         rank = existing_character.rank,
                                                         thumbnail_url = existing_character.thumbnail_url,
                                                         url = existing_character.url,
-                                                        last_crawled_at= existing_character.last_crawled_at,
-                                                        is_reporting = existing_character.is_reporting)
+                                                        last_crawled_at= existing_character.last_crawled_at)
                     character_history.character = existing_character
                     session.add(character_history)
-                
-                existing_character.discord_user_id = character.discord_user_id
-                existing_character.discord_guild_id = character.discord_guild_id
-                existing_character.guild_name = character.guild_name
+                                
                 existing_character.name = character.name
                 existing_character.realm = character.realm
                 existing_character.faction = character.faction
@@ -670,7 +663,7 @@ async def update_character(character: Character) -> CharacterDB:
                 existing_character.thumbnail_url = character.thumbnail_url
                 existing_character.url = character.url
                 existing_character.last_crawled_at = character.last_crawled_at
-                existing_character.is_reporting = character.is_reporting
+                
                 #print('Tal_DB : updated character: ' + character.name + ' on realm: ' + character.realm)
                 return existing_character
             
@@ -699,10 +692,7 @@ async def update_character_reporting(character: Character) -> bool:
                     existing_character.is_reporting = False
                 else:
                     existing_character.is_reporting = True
-                    character_history = CharacterHistoryDB(discord_user_id = existing_character.discord_user_id,
-                                                        discord_guild_id = existing_character.discord_guild_id,
-                                                        guild_name = existing_character.guild_name,
-                                                        name = existing_character.name,
+                    character_history = CharacterHistoryDB(name = existing_character.name,
                                                         realm = existing_character.realm,
                                                         faction = existing_character.faction,
                                                         region = existing_character.region,
@@ -715,8 +705,7 @@ async def update_character_reporting(character: Character) -> bool:
                                                         rank = existing_character.rank,
                                                         thumbnail_url = existing_character.thumbnail_url,
                                                         url = existing_character.url,
-                                                        last_crawled_at= existing_character.last_crawled_at,
-                                                        is_reporting = existing_character.is_reporting)
+                                                        last_crawled_at= existing_character.last_crawled_at)
                     character_history.character = existing_character
                     session.add(character_history)
                 return True
@@ -1119,7 +1108,7 @@ async def get_top10_runs_for_character_by_score(character: CharacterDB) -> List[
         print(f'Error while querying the database: {error}')
         return None 
 
-async def get_top10_character_by_achievement() -> List[CharacterDB]:
+async def get_top10_character_by_achievement(discord_guild_id: int) -> List[CharacterDB]:
     """Get the top 10 characters by achievement points.
 
     Returns:
@@ -1127,7 +1116,13 @@ async def get_top10_character_by_achievement() -> List[CharacterDB]:
     """
     try:
         async with async_session_scope() as session:
-            query = select(CharacterDB).order_by(CharacterDB.achievement_points.desc()).limit(10)
+            query = (
+                select(CharacterDB)
+                .join(DiscordGuildCharacterDB)
+                .filter(DiscordGuildCharacterDB.discord_guild_id == discord_guild_id)
+                .order_by(CharacterDB.achievement_points.desc())
+                .limit(10)
+                )            
             result = await session.execute(query)
             characters = result.scalars().unique().all()
             
@@ -1136,7 +1131,7 @@ async def get_top10_character_by_achievement() -> List[CharacterDB]:
         print(f'Error while querying the database: {error}')
         return None 
 
-async def get_top10_character_by_mythic_plus() -> List[CharacterDB]:
+async def get_top10_character_by_mythic_plus(discord_guild_id: int) -> List[CharacterDB]:
     """Get the top 10 characters by mythic plus score.
 
     Returns:
@@ -1144,7 +1139,13 @@ async def get_top10_character_by_mythic_plus() -> List[CharacterDB]:
     """
     try:
         async with async_session_scope() as session:
-            query = select(CharacterDB).order_by(CharacterDB.score.desc()).limit(10)
+            query = (
+                    select(CharacterDB)
+                    .join(DiscordGuildCharacterDB)
+                    .filter(DiscordGuildCharacterDB.discord_guild_id == discord_guild_id)
+                    .order_by(CharacterDB.score.desc())
+                    .limit(10)
+                    )
             result = await session.execute(query)
             characters = result.scalars().unique().all()
             
@@ -1153,7 +1154,7 @@ async def get_top10_character_by_mythic_plus() -> List[CharacterDB]:
         print(f'Error while querying the database: {error}')
         return None 
 
-async def get_top10_character_by_highest_item_level() -> List[CharacterDB]:
+async def get_top10_character_by_highest_item_level(discord_guild_id: int) -> List[CharacterDB]:
     """Get the top 10 characters by highest item level.
 
     Returns:
@@ -1162,7 +1163,13 @@ async def get_top10_character_by_highest_item_level() -> List[CharacterDB]:
     try:
         async with async_session_scope() as session:
             
-            query = select(CharacterDB).order_by(CharacterDB.item_level.desc()).limit(10)
+            query = (
+                    select(CharacterDB)
+                    .join(DiscordGuildCharacterDB)
+                    .filter(DiscordGuildCharacterDB.discord_guild_id == discord_guild_id)
+                    .order_by(CharacterDB.item_level.desc())
+                    .limit(10)
+                    )
             result = await session.execute(query)
             characters = result.scalars().unique().all()
             
@@ -1171,11 +1178,11 @@ async def get_top10_character_by_highest_item_level() -> List[CharacterDB]:
         print(f'Error while querying the database: {error}')
         return None 
 
-async def get_top10_guild_runs_this_week() -> List[DungeonRunDB]:
+async def get_top10_guild_runs_this_week(discord_guild_id: int) -> List[DungeonRunDB]:
     try: 
         async with async_session_scope() as session:
             one_week_ago = datetime.now() - timedelta(weeks=1)
-            query = select(DungeonRunDB).filter(DungeonRunDB.is_guild_run == True,
+            query = select(DungeonRunDB).join(DiscordGuildRunDB).filter(DiscordGuildRunDB.discord_guild_id == discord_guild_id,
                                                                                 DungeonRunDB.num_keystone_upgrades >= 1,
                                                                                 DungeonRunDB.completed_at >= one_week_ago).order_by(DungeonRunDB.score.desc()).limit(10)
             result = await session.execute(query)
@@ -1186,10 +1193,10 @@ async def get_top10_guild_runs_this_week() -> List[DungeonRunDB]:
         print(f'Error while querying the database: {error}')
         return None
 
-async def get_top8_guild_runs_all_time() -> List[DungeonRunDB]:
+async def get_top5_guild_runs_all_time(discord_guild_id: int) -> List[DungeonRunDB]:
     try: 
         async with async_session_scope() as session:
-            query = select(DungeonRunDB).filter(DungeonRunDB.is_guild_run == True,
+            query = select(DungeonRunDB).join(DiscordGuildRunDB).filter(DiscordGuildRunDB.discord_guild_id == discord_guild_id,
                                                 DungeonRunDB.num_keystone_upgrades >= 1).order_by(DungeonRunDB.score.desc()).limit(5)
             result = await session.execute(query)
             runs = result.scalars().unique().all()

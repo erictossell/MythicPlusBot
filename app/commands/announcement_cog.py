@@ -30,7 +30,6 @@ class Announcement(commands.Cog):
         await asyncio.sleep(600)
         while not self.is_closed():
             
-            
             for guild in self.bot.guilds:
                 
                 discord_guild_db = await db.get_discord_guild_by_id(guild.id)
