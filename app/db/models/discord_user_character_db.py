@@ -21,9 +21,9 @@ class DiscordUserCharacterDB(Base):
     
      
 
-    def __init__(self, discord_user_id: int, discord_guild_id: int, character_id=None, character=None, version: int = 1):
+    def __init__(self, discord_user_id: int, character_id=None, character=None, version: int = 1):
         self.discord_user_id = discord_user_id
-        self.discord_guild_id = discord_guild_id
+
         if character_id:
             self.character_id = character_id
         else:

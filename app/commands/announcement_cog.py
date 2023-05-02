@@ -90,7 +90,7 @@ class Announcement(commands.Cog):
                     game_guilds = db.get_all_game_guilds_by_discord_id(guild.id)
                     channel = self.bot.get_channel(discord_guild.announcement_channel_id)
                     
-                    guild_crawl = await raiderIO.crawl_guild_members(discord_guild.id)
+                    guild_crawl = await raiderIO.crawl_discord_guild_members(discord_guild.id)
                                       
                     await channel.send(guild_crawl)
                     

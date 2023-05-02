@@ -20,7 +20,7 @@ class Character(commands.Cog):
             
             if name is None:
                 
-                character_relationship = await db.get_default_character_by_guild_user(ctx.guild.id,ctx.author.id)
+                character_relationship = await db.get_discord_user_character_by_guild_user(ctx.author.id)
                 if character_relationship is None:
                     await ctx.respond('You have not registered a character.  Please register a character with /set_main.')
                     return
@@ -77,12 +77,12 @@ class Character(commands.Cog):
             else:
                 
                 character = await db.get_character_by_name_realm(name.capitalize(), realm.capitalize())
-                main_char = await db.get_discord_user_character_by_guild_user(discord_guild_id, discord_user_id)
+                main_char = await db.get_discord_user_character_by_guild_user(discord_user_id)
                 
                 if main_char is None:
                     
-                    default = db.DiscordUserCharacterDB(discord_user_id=discord_user_id, discord_guild_id=discord_guild_id, character_id=character.id)
-                    main_char = await db.add_default_character(default)
+                    default = db.DiscordUserCharacterDB(discord_user_id=discord_user_id, character_id=character.id)
+                    main_char = await db.add_discord_user_character(default)
                     
                     embed = discord.Embed(title=f'Success! Your main character has been updated to: {main_char[1]}-{main_char[2].capitalize()}.', color=discord.Color.green())
                     embed.set_thumbnail(url=character.thumbnail_url)
@@ -90,8 +90,7 @@ class Character(commands.Cog):
                     
                 elif main_char is not None: 
                     
-                    main_char = await db.update_default_character(discord_user_id= discord_user_id,
-                                                                discord_guild_id =discord_guild_id,
+                    main_char = await db.update_discord_user_character(discord_user_id= discord_user_id,
                                                                 character=character)
                     
                     embed = discord.Embed(title=f'Success! Your main character has been updated to: {main_char[1]}-{main_char[2].capitalize()}.', color=discord.Color.green())
@@ -153,7 +152,7 @@ class Character(commands.Cog):
                 
                 if ctx.guild:
                     
-                    main_char = await db.get_default_character_by_guild_user(ctx.guild.id, ctx.author.id)
+                    main_char = await db.get_discord_user_character_by_guild_user(ctx.author.id)
                     char = await db.get_character_by_name_realm(main_char.character.name, main_char.character.realm)
                     
                     if char:
@@ -189,7 +188,7 @@ class Character(commands.Cog):
                 
                 if ctx.guild:
                     
-                    main_char = await db.get_default_character_by_guild_user(ctx.guild.id, ctx.author.id)
+                    main_char = await db.get_discord_user_character_by_guild_user(ctx.author.id)
                     char = await db.get_character_by_name_realm(main_char.character.name, main_char.character.realm)
                     
                     if char:
@@ -229,7 +228,7 @@ class Character(commands.Cog):
                 
                 if ctx.guild:
                     
-                    main_char = await db.get_default_character_by_guild_user(ctx.guild.id, ctx.author.id)
+                    main_char = await db.get_discord_user_character_by_guild_user(ctx.author.id)
                     char = await db.get_character_by_name_realm(main_char.character.name, main_char.character.realm)
                     
                     if char:
