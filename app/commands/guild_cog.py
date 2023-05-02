@@ -108,17 +108,17 @@ class Guild(commands.Cog):
         footer_text = 'Data from [Raider.IO](https://raider.io/)'
 
         if leaderboard_type == 'mythic_plus':
-            characters_list = await db.get_top10_character_by_mythic_plus()
+            characters_list = await db.get_top10_character_by_mythic_plus(ctx.guild.id)
             title = 'Mythic+ Score Leaderboard'
             field_func = lambda leader: (f'{leader.score} - {leader.name} | {leader.spec_name} - {leader.class_name}', f'[M+ Class Rank on {leader.realm.capitalize()}: {leader.rank}]({leader.url})')
 
         elif leaderboard_type == 'achievements':
-            characters_list = await db.get_top10_character_by_achievement()
+            characters_list = await db.get_top10_character_by_achievement(ctx.guild.id)
             title = 'Achievement Point Leaderboard'
             field_func = lambda leader: (f'{leader.achievement_points} - {leader.name} | {leader.spec_name} - {leader.class_name}', f'Last updated: [{leader.last_crawled_at}]({leader.url})')
 
         elif leaderboard_type == 'itemlevel':
-            characters_list = await db.get_top10_character_by_highest_item_level()
+            characters_list = await db.get_top10_character_by_highest_item_level(ctx.guild.id)
             title = 'Item Level Leaderboard'
             field_func = lambda leader: (f'{leader.item_level} - {leader.name} | {leader.spec_name} - {leader.class_name}', f'[M+ Class Rank on {leader.realm.capitalize()}: {leader.rank}]({leader.url})')
 
