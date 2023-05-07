@@ -26,7 +26,7 @@ class Guild(commands.Cog):
                 guild_run_characters = '| '
                 for character in characters_list:
                     guild_run_characters += '['+character.name + f']({character.url})  | '
-                embed.add_field(name=str(counter)+ '.  '+ run.name + '  |  ' + str(run.mythic_level)+'  |  +'+str(run.num_keystone_upgrades), value=run_characters+f'\n[Link to run]({run.url})', inline=False)
+                embed.add_field(name=str(counter)+ '.  '+ run.name + '  |  ' + str(run.mythic_level)+'  |  +'+str(run.num_keystone_upgrades), value=guild_run_characters+f'\n[Link to run]({run.url})', inline=False)
                 counter+=1
             
             embed.add_field(name='Top Runs',value='', inline=False)        
@@ -43,7 +43,7 @@ class Guild(commands.Cog):
             await ctx.respond('Something went wrong :(')
             user = await ctx.bot.fetch_user(173958345022111744)
             channel = await user.create_dm()
-            await channel.send(f'Error in !guildRuns command: {exception}')
+            await channel.send(f'Error in !daily_report command: {exception}')
             
     
     @guild.command(name='runs', help='Gets the best Mythic+ runs for the guild for the week.')
