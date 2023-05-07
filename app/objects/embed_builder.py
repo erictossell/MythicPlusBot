@@ -22,3 +22,18 @@ def announce_guild_run_embed(announcement : db.AnnouncementDB = None,
         for character in characters:
             embed.add_field(name=f'{character.name} - {character.class_name}' , value=f'Score: {character.score}\nClass Rank: {character.rank}', inline=False)
     return embed
+
+
+def daily_guild_report_embed(discord_guild_id : int):
+    
+    discord_guild = db.get_discord_guild_by_id(discord_guild_id)
+    
+    
+    
+    embed=discord.Embed(title="Daily Mythic+ Guild Report")
+    embed.set_author(name="Mythic+ Bot", url="https://www.mythicplusbot.dev")
+    embed.set_footer(text="Data provided by RaiderIO.")
+    
+    
+    
+    return embed

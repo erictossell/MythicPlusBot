@@ -31,8 +31,6 @@ from app.db.models.character_run_db import CharacterRunDB
 
 from app.db.models.announcement_db import AnnouncementDB
 
-
-
 from app.raiderIO.models.character import Character
 from app.raiderIO.models.dungeon_run import DungeonRun
 
@@ -240,7 +238,7 @@ async def get_discord_user_character_by_guild_user(discord_user_id) -> DiscordUs
             if discord_user_character is not None:   
                 character_query = select(CharacterDB).filter(CharacterDB.id == discord_user_character.character_id)
                 characer_result = await session.execute(character_query)
-                discord_user_character.character = characer_result.scalar()               
+                discord_user_character.character = characer_result.scalar()
                 
                 # Return the existing discord_user_character object
                 return discord_user_character
@@ -449,21 +447,20 @@ async def add_character_history(character: CharacterDB) -> CharacterHistoryDB:
     """
     try:
         async with async_session_scope() as session:
-            character_history = CharacterHistoryDB( character.name,
-                                                    character.realm,
-                                                    character.faction,
-                                                    character.region,
-                                                    character.role,
-                                                    character.spec_name,
-                                                    character.class_name,
-                                                    character.achievement_points,
-                                                    character.item_level,
-                                                    character.score,
-                                                    character.rank,
-                                                    character.thumbnail_url,
-                                                    character.url,
-                                                    character.last_crawled_at,
-                                                    character.is_reporting)
+            character_history = CharacterHistoryDB( name = character.name,
+                                                    realm = character.realm,
+                                                    faction = character.faction,
+                                                    region = character.region,
+                                                    role = character.role,
+                                                    spec_name = character.spec_name,
+                                                    class_name = character.class_name,
+                                                    achievement_points = character.achievement_points,
+                                                    item_level = character.item_level,
+                                                    score = character.score,
+                                                    rank = character.rank,
+                                                    thumbnail_url = character.thumbnail_url,
+                                                    url = character.url,
+                                                    last_crawled_at = character.last_crawled_at)
             character_history.character = character
             session.add(character_history)
             return character_history
@@ -877,6 +874,44 @@ async def remove_discord_user_character(discord_user_character: DiscordUserChara
 
 #-------------------------Bulk Read Functions------------------------------#
 
+async def get_daily_guild_runs(discord_guild_id: int) -> Optional[List[DungeonRunDB]]:
+    try:
+        async with async_session_scope() as session:
+            query = (
+                select(DungeonRunDB)                
+                .join(DiscordGuildRunDB.discord_guild_id == discord_guild_id)
+                .filter(DungeonRunDB.completed_at > datetime.utcnow() - timedelta(days=1))
+                .order_by(DungeonRunDB.score)
+                .limit(3)
+            )
+            result = await session.execute(query)
+            dungeon_runs = result.scalars().unique().all()
+            return dungeon_runs
+        
+    except SQLAlchemyError as error:
+        print(f'Error while querying the database: {error}')
+        return None
+
+async def get_daily_non_guild_runs(discord_guild_id: int) -> Optional[List[DungeonRunDB]]:
+    try:
+        async with async_session_scope() as session:
+            query = (
+                select(DungeonRunDB)
+                .join(CharacterRunDB, CharacterRunDB.dungeon_run_id == DungeonRunDB.id)
+                .join(CharacterDB, CharacterDB.id == CharacterRunDB.character_id)
+                .join(DiscordGuildCharacterDB, DiscordGuildCharacterDB.character_id == CharacterDB.id)
+                .filter(DungeonRunDB.completed_at > datetime.utcnow() - timedelta(days=1))
+                .filter(DiscordGuildCharacterDB.discord_guild_id == discord_guild_id)
+                .order_by(DungeonRunDB.score)
+                .limit(3)
+            )
+            result = await session.execute(query)
+            dungeon_runs = result.scalars().unique().all()
+            return dungeon_runs
+    except SQLAlchemyError as error:
+        print(f'Error while querying the database: {error}')
+        return None
+
 async def get_all_discord_guild_characters(discord_guild_id: int) -> Optional[List[CharacterDB]]:
     try:
         async with async_session_scope() as session:
@@ -1102,8 +1137,7 @@ async def get_top10_runs_for_character_by_score(character: CharacterDB) -> List[
                     existing_runs = er_result.scalars().unique().all()
                     
                     return existing_runs              
-                    
-                
+                                    
     except SQLAlchemyError as error:
         print(f'Error while querying the database: {error}')
         return None 

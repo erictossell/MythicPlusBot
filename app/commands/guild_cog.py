@@ -10,6 +10,42 @@ class Guild(commands.Cog):
         
     guild = SlashCommandGroup('guild', description='Guild information commands.')
     
+    
+    @guild.command(name='daily_report', help='Gets the daily guild report.')
+    async def daily_report(self, ctx):
+        try:
+            title = f'🏆 Daily Mythic+ Guild Report for {ctx.guild.name}'
+            description = f'This board only includes registered characters. If you have not registered your off-realm or out-of-guild character, please do so with /character register.'
+            guild_run_list = await db.get_daily_guild_runs(ctx.guild.id)
+            run_list = await db.get_daily_non_guild_runs(ctx.guild.id)
+            embed = discord.Embed(title=title, description=description, color=discord.Color.green())
+            counter = 1
+            embed.add_field(name='Top Guild Runs', value='', inline=False)
+            for run in guild_run_list:
+                characters_list =  await db.get_all_characters_for_run(run.id)
+                guild_run_characters = '| '
+                for character in characters_list:
+                    guild_run_characters += '['+character.name + f']({character.url})  | '
+                embed.add_field(name=str(counter)+ '.  '+ run.name + '  |  ' + str(run.mythic_level)+'  |  +'+str(run.num_keystone_upgrades), value=run_characters+f'\n[Link to run]({run.url})', inline=False)
+                counter+=1
+            
+            embed.add_field(name='Top Runs',value='', inline=False)        
+            for run in run_list:
+                characters_list =  await db.get_all_characters_for_run(run.id)
+                run_characters = '| '
+                for character in characters_list:
+                    run_characters += '['+character.name + f']({character.url})  | '
+                embed.add_field(name=str(counter)+ '.  '+ run.name + '  |  ' + str(run.mythic_level)+'  |  +'+str(run.num_keystone_upgrades), value=run_characters+f'\n[Link to run]({run.url})', inline=False)
+                counter+=1
+            embed.set_footer(text='Data from Raider.IO(https://raider.io/)')
+            
+        except Exception as exception:
+            await ctx.respond('Something went wrong :(')
+            user = await ctx.bot.fetch_user(173958345022111744)
+            channel = await user.create_dm()
+            await channel.send(f'Error in !guildRuns command: {exception}')
+            
+    
     @guild.command(name='runs', help='Gets the best Mythic+ runs for the guild for the week.')
     async def runs(self,ctx):
         """Get the best Mythic+ runs for the guild.
@@ -18,10 +54,10 @@ class Guild(commands.Cog):
             ctx (_type_): _description_
         """
         try:
-            description = '📄 This leaderboard is based on the top 10 registered characters from the Take a Lap Guild.\n\n  ⚠️ If you have not registered your off-realm or out-of-guild character, please do so with !register.'
+            description = f'📄 This leaderboard is based on the top 10 registered characters from the {ctx.guild.name} Guild.\n\n  ⚠️ If you have not registered your off-realm or out-of-guild character, please do so with /character register.'
             dungeon_list = await db.get_top10_guild_runs_this_week(ctx.guild.id)
             
-            embed = discord.Embed(title='🏆 Best Take a Lap Guild Runs', description= description, color=discord.Color.green())
+            embed = discord.Embed(title=f'🏆 Best {ctx.guild.name} Guild Runs', description= description, color=discord.Color.green())
             counter = 1
             for run in dungeon_list:
                 characters_list = await db.get_all_characters_for_run(run.id)
@@ -46,10 +82,10 @@ class Guild(commands.Cog):
             ctx (_type_): _description_
         """
         try:
-            description = '📄 This leaderboard is based on the top 8 registered characters from the Take a Lap Guild.\n\n  ⚠️ If you have not registered your off-realm or out-of-guild character, please do so with !register.'
+            description = f'📄 This leaderboard is based on the top 8 registered characters from the {ctx.guild.name} Guild.\n\n  ⚠️ If you have not registered your off-realm or out-of-guild character, please do so with /character register.'
             dungeon_list = await db.get_top5_guild_runs_all_time(ctx.guild.id)
             
-            embed = discord.Embed(title='🏆 Best Take a Lap Guild Runs', description= description, color=discord.Color.green())
+            embed = discord.Embed(title=f'🏆 Best {ctx.guild.name} Guild Runs', description= description, color=discord.Color.green())
             counter = 1
             for run in dungeon_list:
                 characters_list = await db.get_all_characters_for_run(run.id)
@@ -104,7 +140,7 @@ class Guild(commands.Cog):
         await self.leaderboard_embed(ctx, 'mythic_plus')
 
     async def leaderboard_embed(self, ctx, leaderboard_type):
-        description = '📄 This leaderboard is based on the top 10 registered characters from the Take a Lap Guild.\n\n ⚠️ If you have not registered your off-realm or out-of-guild character, please do so with !register.'
+        description = f'📄 This leaderboard is based on the top 10 registered characters from the {ctx.guild.name} Guild.\n\n ⚠️ If you have not registered your off-realm or out-of-guild character, please do so with /character register.'
         footer_text = 'Data from [Raider.IO](https://raider.io/)'
 
         if leaderboard_type == 'mythic_plus':
