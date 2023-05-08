@@ -879,7 +879,7 @@ async def get_daily_guild_runs(discord_guild_id: int) -> Optional[List[DungeonRu
         async with async_session_scope() as session:
             query = (
                 select(DungeonRunDB)                
-                .join(DiscordGuildRunDB.discord_guild_id == discord_guild_id)
+                .join(DiscordGuildRunDB.dungeon_run_id == DungeonRunDB.id)
                 .filter(DungeonRunDB.completed_at > datetime.utcnow() - timedelta(days=1))
                 .order_by(DungeonRunDB.score)
                 .limit(3)
