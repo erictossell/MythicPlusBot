@@ -1225,7 +1225,7 @@ async def get_top10_guild_runs_this_week(discord_guild_id: int, season: str = 's
                                         DungeonRunDB.season == season)
                 .order_by(DungeonRunDB.score.desc()).limit(10))
             result = await session.execute(query)
-            runs = result.scalars().unique().all()            
+            runs = result.scalars().unique().all()
            
             return runs
     except SQLAlchemyError as error:
