@@ -55,7 +55,7 @@ class Guild(commands.Cog):
         """
         try:
             description = f'📄 This leaderboard is based on the top 10 registered characters from the {ctx.guild.name} Guild.\n\n  ⚠️ If you have not registered your off-realm or out-of-guild character, please do so with /character register.'
-            dungeon_list = await db.get_top10_guild_runs_this_week(ctx.guild.id)
+            dungeon_list = await db.get_top10_guild_runs_this_week(discord_guild_id = ctx.guild.id)
             
             embed = discord.Embed(title=f'🏆 Best {ctx.guild.name} Guild Runs', description= description, color=discord.Color.green())
             counter = 1
@@ -69,7 +69,7 @@ class Guild(commands.Cog):
             embed.set_footer(text='Data from Raider.IO(https://raider.io/)')
             await ctx.respond(embed=embed)
         except Exception as exception:
-            await ctx.respond('Type !help to see how to use this command.')
+            await ctx.respond('Something went wrong :(')
             user = await ctx.bot.fetch_user(173958345022111744)
             channel = await user.create_dm()
             await channel.send(f'Error in !guildRuns command: {exception}')
@@ -83,7 +83,7 @@ class Guild(commands.Cog):
         """
         try:
             description = f'📄 This leaderboard is based on the top 8 registered characters from the {ctx.guild.name} Guild.\n\n  ⚠️ If you have not registered your off-realm or out-of-guild character, please do so with /character register.'
-            dungeon_list = await db.get_top5_guild_runs_all_time(ctx.guild.id)
+            dungeon_list = await db.get_top5_guild_runs_all_time(discord_guild_id = ctx.guild.id)
             
             embed = discord.Embed(title=f'🏆 Best {ctx.guild.name} Guild Runs', description= description, color=discord.Color.green())
             counter = 1

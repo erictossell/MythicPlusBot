@@ -1212,13 +1212,18 @@ async def get_top10_character_by_highest_item_level(discord_guild_id: int) -> Li
         print(f'Error while querying the database: {error}')
         return None 
 
-async def get_top10_guild_runs_this_week(discord_guild_id: int) -> List[DungeonRunDB]:
+async def get_top10_guild_runs_this_week(discord_guild_id: int, season: str = 'season-df-2') -> List[DungeonRunDB]:
     try: 
         async with async_session_scope() as session:
             one_week_ago = datetime.now() - timedelta(weeks=1)
-            query = select(DungeonRunDB).join(DiscordGuildRunDB).filter(DiscordGuildRunDB.discord_guild_id == discord_guild_id,
-                                                                                DungeonRunDB.num_keystone_upgrades >= 1,
-                                                                                DungeonRunDB.completed_at >= one_week_ago).order_by(DungeonRunDB.score.desc()).limit(10)
+            query = (
+                select(DungeonRunDB)
+                .join(DiscordGuildRunDB)
+                .filter(DiscordGuildRunDB.discord_guild_id == discord_guild_id,
+                                        DungeonRunDB.num_keystone_upgrades >= 1,
+                                        DungeonRunDB.completed_at >= one_week_ago,
+                                        DungeonRunDB.season == season)
+                .order_by(DungeonRunDB.score.desc()).limit(10))
             result = await session.execute(query)
             runs = result.scalars().unique().all()            
            
@@ -1227,11 +1232,17 @@ async def get_top10_guild_runs_this_week(discord_guild_id: int) -> List[DungeonR
         print(f'Error while querying the database: {error}')
         return None
 
-async def get_top5_guild_runs_all_time(discord_guild_id: int) -> List[DungeonRunDB]:
+async def get_top5_guild_runs_all_time(discord_guild_id: int, season: str = 'season-df-2') -> List[DungeonRunDB]:
     try: 
         async with async_session_scope() as session:
-            query = select(DungeonRunDB).join(DiscordGuildRunDB).filter(DiscordGuildRunDB.discord_guild_id == discord_guild_id,
-                                                DungeonRunDB.num_keystone_upgrades >= 1).order_by(DungeonRunDB.score.desc()).limit(5)
+            query = (
+                select(DungeonRunDB)
+                .join(DiscordGuildRunDB)
+                .filter(DiscordGuildRunDB.discord_guild_id == discord_guild_id,
+                                                DungeonRunDB.num_keystone_upgrades >= 1,
+                                                DungeonRunDB.season == season)
+                .order_by(DungeonRunDB.score.desc()).limit(5)
+                )
             result = await session.execute(query)
             runs = result.scalars().unique().all()
             
