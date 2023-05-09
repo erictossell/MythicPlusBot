@@ -87,7 +87,7 @@ async def get_character(name: str,
                         guild_name = response.json()['guild']['name']
                     faction = response.json()['faction'] 
                     role = response.json()['active_spec_role']
-                    spec = response.json()['active_spec_name']
+                    spec_name = response.json()['active_spec_name']
                     player_class = response.json()['class']
                     achievement_points = response.json()['achievement_points']
                     item_level = response.json()['gear']['item_level_equipped']    
@@ -98,55 +98,59 @@ async def get_character(name: str,
                     for run in response.json()['mythic_plus_best_runs']:
                         affixes = []
                         for affix in run['affixes']:
-                            affixes.append(Affix(affix['name'],
-                                                    affix['description'],
-                                                    affix['wowhead_url']))
-                        best_runs.append(DungeonRun(run['dungeon'],
-                                                    run['short_name'],
-                                                    run['mythic_level'],
-                                                    run['completed_at'],
-                                                    run['clear_time_ms'],
-                                                    run['par_time_ms'],
-                                                    run['num_keystone_upgrades'],
-                                                    run['score'],
-                                                    affixes, run['url']))
+                            affixes.append(Affix(name = affix['name'],
+                                                 description= affix['description'],
+                                                 wowhead_url= affix['wowhead_url']))
+                        best_runs.append(DungeonRun(name = run['dungeon'],
+                                                    short_name = run['short_name'],
+                                                    mythic_level = run['mythic_level'],
+                                                    completed_at = run['completed_at'],
+                                                    clear_time_ms = run['clear_time_ms'],
+                                                    par_time_ms = run['par_time_ms'],
+                                                    num_keystone_upgrades = run['num_keystone_upgrades'],
+                                                    score =run['score'],
+                                                    affixes = affixes,
+                                                    url = run['url']))
                     for run in response.json()['mythic_plus_recent_runs']:
                         affixes = []
                         for affix in run['affixes']:
-                            affixes.append(Affix(affix['name'],
-                                                    affix['description'],
-                                                    affix['wowhead_url']))
-                        recent_runs.append(DungeonRun(run['dungeon'],
-                                                        run['short_name'],
-                                                        run['mythic_level'],
-                                                        run['completed_at'],
-                                                        run['clear_time_ms'],
-                                                        run['par_time_ms'],
-                                                        run['num_keystone_upgrades'],
-                                                        run['score'],
-                                                        affixes,
-                                                        run['url']))
-                    score_color = util.binary_search_score_colors(score_colors, int(score))
-                    thumbnail = response.json()['thumbnail_url']
+                            affixes.append(Affix(name = affix['name'],
+                                                 description= affix['description'],
+                                                 wowhead_url= affix['wowhead_url']))
+                        recent_runs.append(DungeonRun(name = run['dungeon'],
+                                                    short_name = run['short_name'],
+                                                    mythic_level = run['mythic_level'],
+                                                    completed_at = run['completed_at'],
+                                                    clear_time_ms = run['clear_time_ms'],
+                                                    par_time_ms = run['par_time_ms'],
+                                                    num_keystone_upgrades = run['num_keystone_upgrades'],
+                                                    score =run['score'],
+                                                    affixes = affixes,
+                                                    url = run['url']))
+                    if score_colors[0].score is None:
+                        score_color = score_colors[0].color
+                    else:
+                        score_color = util.binary_search_score_colors(score_colors, int(score))
+                    thumbnail_url = response.json()['thumbnail_url']
                     url = response.json()['profile_url']
                     last_crawled_at = response.json()['last_crawled_at']
-                    character = Character(name,
-                                            realm,
-                                            guild_name,
-                                            faction,
-                                            role,
-                                            spec,
-                                            player_class,
-                                            achievement_points,
-                                            item_level,
-                                            score,
-                                            score_color,
-                                            rank,
-                                            best_runs,
-                                            recent_runs,
-                                            thumbnail,
-                                            url,
-                                            last_crawled_at)
+                    character = Character(name = name,
+                                          realm = realm,
+                                          guild_name= guild_name,
+                                          faction = faction,
+                                          role = role,
+                                          spec_name = spec_name,
+                                          class_name = player_class,
+                                          achievement_points= achievement_points,
+                                          item_level= item_level,
+                                          score = score,
+                                          score_color=  score_color,
+                                          rank= rank,
+                                          best_runs= best_runs,
+                                          recent_runs = recent_runs,
+                                          thumbnail_url = thumbnail_url,
+                                          url= url,
+                                          last_crawled_at= last_crawled_at)
                     return character    
                 else:
                     print('Error: Character not found.')
@@ -213,9 +217,9 @@ async def get_mythic_plus_affixes() -> Optional[List[Affix]]:
                 request = await client.get(API_URL+'mythic-plus/affixes?region=us&locale=en')
                 affixes = []
                 for affix in request.json()['affix_details']:
-                    affixes.append(Affix(affix['name'],
-                                            affix['description'],
-                                            affix['wowhead_url']))
+                    affixes.append(Affix(name = affix['name'],
+                                         description= affix['description'],
+                                         wowhead_url= affix['wowhead_url']))
                 if len(affixes) > 0:
                     return affixes
                 else:
@@ -470,7 +474,7 @@ async def crawl_discord_guild_members(discord_guild_id) -> None:
                     
                     
                     await db.add_discord_guild_character(discord_guild=discord_guild,
-                                                        character=added_character)             
+                                                        character=added_character)
 
                     counter += 1
            

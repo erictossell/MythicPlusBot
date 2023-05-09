@@ -11,7 +11,7 @@ class DungeonRun:
         self.score = score
         self.affixes = affixes
         self.url = url
-        start_index = url.find("/season-df-1/") + len("/season-df-1/")    
+        start_index = url.find("/season-df-2/") + len("/season-df-2/")    
         self.id = url[start_index:].split("-")[0]
         start_index = url.find("/mythic-plus-runs/") + len("/mythic-plus-runs/")
         self.season = url[start_index:].split("/")[0]
