@@ -626,26 +626,7 @@ async def update_character(character: Character) -> CharacterDB:
             existing_character = result.scalars().first()
             if not existing_character:
                 return None
-            else:                
-                if has_any_character_field_changed(existing_character, character):
-                    character_history = CharacterHistoryDB(
-                                                        name = existing_character.name,
-                                                        realm = existing_character.realm,
-                                                        faction = existing_character.faction,
-                                                        region = existing_character.region,
-                                                        role = existing_character.role,
-                                                        spec_name = existing_character.spec_name,
-                                                        class_name = existing_character.class_name,
-                                                        achievement_points = existing_character.achievement_points,
-                                                        item_level = existing_character.item_level,
-                                                        score = existing_character.score,
-                                                        rank = existing_character.rank,
-                                                        thumbnail_url = existing_character.thumbnail_url,
-                                                        url = existing_character.url,
-                                                        last_crawled_at= existing_character.last_crawled_at)
-                    character_history.character = existing_character
-                    session.add(character_history)
-                                
+            else:      
                 existing_character.name = character.name
                 existing_character.realm = character.realm
                 existing_character.faction = character.faction
