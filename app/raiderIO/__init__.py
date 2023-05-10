@@ -151,18 +151,18 @@ async def get_character(name: str,
                                           thumbnail_url = thumbnail_url,
                                           url= url,
                                           last_crawled_at= last_crawled_at)
-                    return character    
+                    return character
                 else:
                     print('Error: Character not found.')
                     return None
         except httpx.ReadTimeout:
             print("Timeout occurred while fetching character data.")
-            
+
             if retry == RETRIES - 1:
                 await asyncio.sleep(2 ** retry)
             else:
                 raise
-            
+
         except Exception as exception:
             print(exception)
             return None
@@ -202,7 +202,7 @@ async def get_guild_members(name: str, realm: str, region: str ) -> Optional[Lis
             print(e)
             print('Error: Guild not found.')
             return None
-        
+
 @sleep_and_retry
 @limits(calls=CALLS, period=RATE_LIMIT)
 async def get_mythic_plus_affixes() -> Optional[List[Affix]]:
