@@ -21,6 +21,8 @@ class Guild(commands.Cog):
             embed = discord.Embed(title=title, description=description, color=discord.Color.green())
             counter = 1
             embed.add_field(name='Top Guild Runs', value='', inline=False)
+            if len(guild_run_list) == 0:
+                embed.add_field(name='No runs for today.', value='', inline=False)
             for run in guild_run_list:
                 characters_list =  await db.get_all_characters_for_run(run.id)
                 guild_run_characters = '| '
@@ -29,7 +31,9 @@ class Guild(commands.Cog):
                 embed.add_field(name=str(counter)+ '.  '+ run.name + '  |  ' + str(run.mythic_level)+'  |  +'+str(run.num_keystone_upgrades), value=guild_run_characters+f'\n[Link to run]({run.url})', inline=False)
                 counter+=1
             
-            embed.add_field(name='Top Runs',value='', inline=False)        
+            embed.add_field(name='Top Runs',value='', inline=False)
+            if len(run_list) == 0:
+                embed.add_field(name='No runs for today.', value='', inline=False)    
             for run in run_list:
                 characters_list =  await db.get_all_characters_for_run(run.id)
                 run_characters = '| '
@@ -38,6 +42,8 @@ class Guild(commands.Cog):
                 embed.add_field(name=str(counter)+ '.  '+ run.name + '  |  ' + str(run.mythic_level)+'  |  +'+str(run.num_keystone_upgrades), value=run_characters+f'\n[Link to run]({run.url})', inline=False)
                 counter+=1
             embed.set_footer(text='Data from Raider.IO(https://raider.io/)')
+            
+            await ctx.respond(embed=embed)
             
         except Exception as exception:
             await ctx.respond('Something went wrong :(')

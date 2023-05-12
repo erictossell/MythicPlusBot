@@ -7,7 +7,7 @@ from contextlib import asynccontextmanager
 from datetime import datetime, timedelta
 from typing import Optional, List
 from psycopg2 import IntegrityError
-from sqlalchemy import select
+from sqlalchemy import desc, select
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import sessionmaker, joinedload
@@ -859,9 +859,9 @@ async def get_daily_guild_runs(discord_guild_id: int) -> Optional[List[DungeonRu
     try:
         async with async_session_scope() as session:
             query = (
-                select(DungeonRunDB)                
-                .join(DiscordGuildRunDB.dungeon_run_id == DungeonRunDB.id)
-                .filter(DungeonRunDB.completed_at > datetime.utcnow() - timedelta(days=1))
+                select(DungeonRunDB)
+                .join(DiscordGuildRunDB.dungeon_run)
+                .filter(DungeonRunDB.completed_at > datetime.utcnow() - timedelta(days=1), DiscordGuildRunDB.discord_guild_id == discord_guild_id)
                 .order_by(DungeonRunDB.score)
                 .limit(3)
             )
@@ -878,12 +878,11 @@ async def get_daily_non_guild_runs(discord_guild_id: int) -> Optional[List[Dunge
         async with async_session_scope() as session:
             query = (
                 select(DungeonRunDB)
-                .join(CharacterRunDB, CharacterRunDB.dungeon_run_id == DungeonRunDB.id)
+                .join(CharacterRunDB.dungeon_run)
                 .join(CharacterDB, CharacterDB.id == CharacterRunDB.character_id)
                 .join(DiscordGuildCharacterDB, DiscordGuildCharacterDB.character_id == CharacterDB.id)
-                .filter(DungeonRunDB.completed_at > datetime.utcnow() - timedelta(days=1))
-                .filter(DiscordGuildCharacterDB.discord_guild_id == discord_guild_id)
-                .order_by(DungeonRunDB.score)
+                .filter(DungeonRunDB.completed_at > datetime.utcnow() - timedelta(days=1), DiscordGuildCharacterDB.discord_guild_id == discord_guild_id)
+                .order_by(desc(DungeonRunDB.score))
                 .limit(3)
             )
             result = await session.execute(query)
