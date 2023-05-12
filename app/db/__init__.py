@@ -6,7 +6,7 @@ import os
 from collections import defaultdict
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta
-from typing import Optional, List
+from typing import Optional, List, defaultdict
 from psycopg2 import IntegrityError
 from sqlalchemy import desc, select
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
