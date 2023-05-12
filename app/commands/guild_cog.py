@@ -25,7 +25,7 @@ class Guild(commands.Cog):
             embed = discord.Embed(title=title, description=description, color=discord.Color.green())
             counter = 1
             
-            embed.add_field(name='Top Guild Runs', value='', inline=False)
+            embed.add_field(name='-------Top Guild Runs-------', value='', inline=False)
             
             if len(guild_run_list) == 0:
                 embed.add_field(name='No runs for today.', value='', inline=False)
@@ -38,7 +38,7 @@ class Guild(commands.Cog):
                 embed.add_field(name=str(counter)+ '.  '+ run.name + '  |  ' + str(run.mythic_level)+'  |  +'+str(run.num_keystone_upgrades) + f' | {run.completed_at}', value=guild_run_characters+f'\n[Link to run]({run.url})', inline=False)
                 counter+=1
             
-            embed.add_field(name='Top Runs',value='', inline=False)
+            embed.add_field(name='---------Top Runs---------',value='', inline=False)
             if len(run_list) == 0:
                 embed.add_field(name='No runs for today.', value='', inline=False)
                 
@@ -68,15 +68,14 @@ class Guild(commands.Cog):
             ctx (_type_): _description_
         """
         try:
-            description = f'📄 This leaderboard is based on the top 10 registered characters from the {ctx.guild.name} Guild.\n\n  ⚠️ If you have not registered your off-realm or out-of-guild character, please do so with /character register.'
+            description = f'📄 This leaderboard is based on the top runs from registered characters in the {ctx.guild.name} Guild.\n\n  ⚠️ If you have not registered your off-realm or out-of-guild character, please do so with /character register.'
             dungeon_list = await db.get_top10_guild_runs_this_week(discord_guild_id = ctx.guild.id)
             
             embed = discord.Embed(title=f'🏆 Best {ctx.guild.name} Guild Runs', description= description, color=discord.Color.green())
             counter = 1
-            for run in dungeon_list:
-                characters_list = await db.get_all_characters_for_run(run.id)
+            for run, characters in dungeon_list:
                 run_characters = '| '
-                for character in characters_list:
+                for character in characters:
                     run_characters += '['+character.name + f']({character.url})  | '
                 embed.add_field(name=str(counter)+ '.  '+ run.name + '  |  ' + str(run.mythic_level)+'  |  +'+str(run.num_keystone_upgrades), value=run_characters+f'\n[Link to run]({run.url})', inline=False)
                 counter+=1
@@ -96,15 +95,14 @@ class Guild(commands.Cog):
             ctx (_type_): _description_
         """
         try:
-            description = f'📄 This leaderboard is based on the top 8 registered characters from the {ctx.guild.name} Guild.\n\n  ⚠️ If you have not registered your off-realm or out-of-guild character, please do so with /character register.'
+            description = f'📄 This leaderboard is based on the top runs from registered characters in the {ctx.guild.name} Guild.\n\n  ⚠️ If you have not registered your off-realm or out-of-guild character, please do so with /character register.'
             dungeon_list = await db.get_top5_guild_runs_all_time(discord_guild_id = ctx.guild.id)
             
             embed = discord.Embed(title=f'🏆 Best {ctx.guild.name} Guild Runs', description= description, color=discord.Color.green())
             counter = 1
-            for run in dungeon_list:
-                characters_list = await db.get_all_characters_for_run(run.id)
+            for run, characters in dungeon_list:
                 run_characters = '| '
-                for character in characters_list:
+                for character in characters:
                     run_characters += '['+character.name + f']({character.url})  | '
                 embed.add_field(name=str(counter)+ '.  '+ run.name + '  |  ' + str(run.mythic_level)+'  |  +'+str(run.num_keystone_upgrades), value=run_characters+f'\n[Link to run]({run.url})', inline=False)
                 counter+=1

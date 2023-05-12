@@ -28,21 +28,15 @@ class Character(commands.Cog):
             name = character_relationship.character.name if name is None else name  
             character_title = await db.get_character_by_name_realm(name.capitalize(), realm.capitalize())
             
-            run_list = await db.get_top10_runs_for_character_by_score(character_title)
+            dungeon_list = await db.get_top10_runs_for_character_by_score(character_title)
             
-            for run in run_list:
-                characters_list = await db.get_all_characters_for_run(run.id)
-                run_characters = '| '
-                for character in characters_list:
-                    run_characters += '['+character.name + f']({character.url})  | '
-                run.characters = run_characters
-                
-            embed = discord.Embed(title=f'🏆 Best Runs for {character_title.name}', description= f'[{character_title.name}\'s Raider.IO Profile]({character_title.url})', color=discord.Color.green())
-            
+            embed = discord.Embed(title=f'Best Mythic+ Runs for {character_title.name}-{character_title.realm.capitalize()}', color=discord.Color.blue())
             counter = 1
-            
-            for run in run_list:
-                embed.add_field(name=str(counter)+ '.  '+ run.name + '  |  ' + str(run.mythic_level)+'  |  +'+str(run.num_keystone_upgrades), value=run.characters+f'\n[Link to run]({run.url})', inline=True)
+            for run, characters in dungeon_list:
+                run_characters = '| '
+                for character in characters:
+                    run_characters += '['+character.name + f']({character.url})  | '
+                embed.add_field(name=str(counter)+ '.  '+ run.name + '  |  ' + str(run.mythic_level)+'  |  +'+str(run.num_keystone_upgrades), value=run_characters+f'\n[Link to run]({run.url})', inline=False)
                 counter+=1
                 
             embed.set_footer(text='Data from Raider.IO(https://raider.io/)')

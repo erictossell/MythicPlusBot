@@ -865,8 +865,8 @@ async def get_daily_guild_runs(discord_guild_id: int) -> Optional[defaultdict[li
                 .join(CharacterRunDB, CharacterRunDB.dungeon_run_id == DungeonRunDB.id)
                 .join(CharacterDB, CharacterRunDB.character_id == CharacterDB.id)
                 .filter(DungeonRunDB.completed_at > datetime.utcnow() - timedelta(days=1), DiscordGuildRunDB.discord_guild_id == discord_guild_id)
-                .order_by(DungeonRunDB.score)
-                .limit(5)
+                .order_by(desc(DungeonRunDB.score))
+                .limit(15)
             )
             result = await session.execute(query)
             grouped_result = defaultdict(list)
@@ -901,7 +901,9 @@ async def get_daily_non_guild_runs(discord_guild_id: int) -> Optional[defaultdic
                 .join(CharacterRunDB.dungeon_run)
                 .join(CharacterDB, CharacterDB.id == CharacterRunDB.character_id)
                 .join(DiscordGuildCharacterDB, DiscordGuildCharacterDB.character_id == CharacterDB.id)
-                .where(DungeonRunDB.id.in_(select(subquery_alias.c.id)))  # Use a select() construct explicitly
+                .where(DungeonRunDB.id.in_(select(subquery_alias.c.id)))
+                .order_by(desc(DungeonRunDB.score))
+                .distinct()# Use a select() construct explicitly
             )
 
             result = await session.execute(query)
@@ -1102,7 +1104,7 @@ async def get_all_characters_for_run(run_id: int) -> List[CharacterRunDB]:
         print(f'Error while querying the database: {error}')
         return None 
 
-async def get_top10_runs_for_character_by_score(character: CharacterDB) -> List[CharacterRunDB]:
+async def get_top10_runs_for_character_by_score(character: CharacterDB) -> Optional[defaultdict[list[DungeonRunDB], list[CharacterDB]]]:
     """Get all runs for a character.
 
     Args:
@@ -1123,11 +1125,13 @@ async def get_top10_runs_for_character_by_score(character: CharacterDB) -> List[
             
             else:
                 
-                existing_character_runs_query = select(CharacterRunDB)\
-                                        .join(DungeonRunDB, CharacterRunDB.dungeon_run_id == DungeonRunDB.id)\
-                                        .filter(CharacterRunDB.character_id == existing_character.id)\
-                                        .order_by(DungeonRunDB.score.desc())\
-                                        .limit(10)
+                existing_character_runs_query = (
+                                            select(CharacterRunDB)
+                                            .join(DungeonRunDB, CharacterRunDB.dungeon_run_id == DungeonRunDB.id)
+                                            .filter(CharacterRunDB.character_id == existing_character.id)
+                                            .order_by(DungeonRunDB.score.desc())
+                                            .limit(10)
+                                        )
                 result = await session.execute(existing_character_runs_query)
                 existing_character_runs = result.scalars().unique().all()
                 
@@ -1136,11 +1140,21 @@ async def get_top10_runs_for_character_by_score(character: CharacterDB) -> List[
                 
                 else:
                     
-                    existing_runs_query = select(DungeonRunDB).filter(DungeonRunDB.id.in_([run.dungeon_run_id for run in existing_character_runs]))
-                    er_result = await session.execute(existing_runs_query)
-                    existing_runs = er_result.scalars().unique().all()
+                    existing_runs_query = (
+                        select(DungeonRunDB, CharacterDB)
+                        .join(CharacterRunDB, DungeonRunDB.id == CharacterRunDB.dungeon_run_id)
+                        .join(CharacterDB, CharacterRunDB.character_id == CharacterDB.id)
+                        .filter(DungeonRunDB.id.in_([run.dungeon_run_id for run in existing_character_runs]))
+                        .order_by(DungeonRunDB.score.desc())
+                        )
+                    result = await session.execute(existing_runs_query)
                     
-                    return existing_runs              
+                    grouped_result = defaultdict(list)
+                    for dungeon_run, character in result:
+                        grouped_result[dungeon_run].append(character)
+
+                    dungeon_runs_with_characters = list(grouped_result.items())
+                    return dungeon_runs_with_characters           
                                     
     except SQLAlchemyError as error:
         print(f'Error while querying the database: {error}')
@@ -1216,22 +1230,38 @@ async def get_top10_character_by_highest_item_level(discord_guild_id: int) -> Li
         print(f'Error while querying the database: {error}')
         return None 
 
-async def get_top10_guild_runs_this_week(discord_guild_id: int, season: str = 'season-df-2') -> List[DungeonRunDB]:
+async def get_top10_guild_runs_this_week(discord_guild_id: int, season: str = 'season-df-2') -> Optional[defaultdict[list[DungeonRunDB], list[CharacterDB]]]:
     try: 
         async with async_session_scope() as session:
             one_week_ago = datetime.now() - timedelta(weeks=1)
-            query = (
-                select(DungeonRunDB)
+            
+            top_runs_subquery = (
+                select(DungeonRunDB.id)
                 .join(DiscordGuildRunDB)
                 .filter(DiscordGuildRunDB.discord_guild_id == discord_guild_id,
-                                        DungeonRunDB.num_keystone_upgrades >= 1,
-                                        DungeonRunDB.completed_at >= one_week_ago,
-                                        DungeonRunDB.season == season)
-                .order_by(DungeonRunDB.score.desc()).limit(10))
+                        DungeonRunDB.num_keystone_upgrades >= 1,
+                        DungeonRunDB.completed_at >= one_week_ago,
+                        DungeonRunDB.season == season)
+                .order_by(DungeonRunDB.score.desc()).limit(7)
+            ).alias("top_runs")
+            
+            
+            
+            query = (
+                select(DungeonRunDB, CharacterDB)
+                .join(top_runs_subquery, top_runs_subquery.c.id == DungeonRunDB.id)
+                .join(CharacterRunDB, CharacterRunDB.dungeon_run_id == DungeonRunDB.id)
+                .join(CharacterDB, CharacterRunDB.character_id == CharacterDB.id)
+                .order_by(DungeonRunDB.score.desc())
+)
             result = await session.execute(query)
-            runs = result.scalars().unique().all()
-           
-            return runs
+            
+            grouped_result = defaultdict(list)
+            for dungeon_run, character in result:
+                grouped_result[dungeon_run].append(character)
+
+            dungeon_runs_with_characters = list(grouped_result.items())
+            return dungeon_runs_with_characters
     except SQLAlchemyError as error:
         print(f'Error while querying the database: {error}')
         return None
@@ -1239,19 +1269,34 @@ async def get_top10_guild_runs_this_week(discord_guild_id: int, season: str = 's
 async def get_top5_guild_runs_all_time(discord_guild_id: int, season: str = 'season-df-2') -> List[DungeonRunDB]:
     try: 
         async with async_session_scope() as session:
-            query = (
-                select(DungeonRunDB)
+            
+            top_runs_subquery = (
+                select(DungeonRunDB.id)
                 .join(DiscordGuildRunDB)
                 .filter(DiscordGuildRunDB.discord_guild_id == discord_guild_id,
-                                                DungeonRunDB.num_keystone_upgrades >= 1,
-                                                DungeonRunDB.season == season)
-                .order_by(DungeonRunDB.score.desc()).limit(5)
-                )
+                        DungeonRunDB.num_keystone_upgrades >= 1,
+                        DungeonRunDB.season == season)
+                .order_by(DungeonRunDB.score.desc()).limit(7)
+            ).alias("top_runs")
+            
+            
+            
+            query = (
+                select(DungeonRunDB, CharacterDB)
+                .join(top_runs_subquery, top_runs_subquery.c.id == DungeonRunDB.id)
+                .join(CharacterRunDB, CharacterRunDB.dungeon_run_id == DungeonRunDB.id)
+                .join(CharacterDB, CharacterRunDB.character_id == CharacterDB.id)
+                .order_by(DungeonRunDB.score.desc()))
+                
             result = await session.execute(query)
-            runs = result.scalars().unique().all()
             
-            
-            return runs
+            grouped_result = defaultdict(list)
+            for dungeon_run, character in result:
+                grouped_result[dungeon_run].append(character)
+
+            dungeon_runs_with_characters = list(grouped_result.items())
+            return dungeon_runs_with_characters
+  
     except SQLAlchemyError as error:
         print(f'Error while querying the database: {error}')
         return None
