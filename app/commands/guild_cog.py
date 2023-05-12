@@ -14,32 +14,40 @@ class Guild(commands.Cog):
     @guild.command(name='daily_report', help='Gets the daily guild report.')
     async def daily_report(self, ctx):
         try:
+            
+            
             title = f'🏆 Daily Mythic+ Guild Report for {ctx.guild.name}'
             description = f'This board only includes registered characters. If you have not registered your off-realm or out-of-guild character, please do so with /character register.'
+            
             guild_run_list = await db.get_daily_guild_runs(ctx.guild.id)
             run_list = await db.get_daily_non_guild_runs(ctx.guild.id)
+            
             embed = discord.Embed(title=title, description=description, color=discord.Color.green())
             counter = 1
+            
             embed.add_field(name='Top Guild Runs', value='', inline=False)
+            
             if len(guild_run_list) == 0:
                 embed.add_field(name='No runs for today.', value='', inline=False)
-            for run in guild_run_list:
-                characters_list =  await db.get_all_characters_for_run(run.id)
+                
+            for run, characters in guild_run_list:                
+                
                 guild_run_characters = '| '
-                for character in characters_list:
+                for character in characters:
                     guild_run_characters += '['+character.name + f']({character.url})  | '
-                embed.add_field(name=str(counter)+ '.  '+ run.name + '  |  ' + str(run.mythic_level)+'  |  +'+str(run.num_keystone_upgrades), value=guild_run_characters+f'\n[Link to run]({run.url})', inline=False)
+                embed.add_field(name=str(counter)+ '.  '+ run.name + '  |  ' + str(run.mythic_level)+'  |  +'+str(run.num_keystone_upgrades) + f' | {run.completed_at}', value=guild_run_characters+f'\n[Link to run]({run.url})', inline=False)
                 counter+=1
             
             embed.add_field(name='Top Runs',value='', inline=False)
             if len(run_list) == 0:
-                embed.add_field(name='No runs for today.', value='', inline=False)    
-            for run in run_list:
-                characters_list =  await db.get_all_characters_for_run(run.id)
+                embed.add_field(name='No runs for today.', value='', inline=False)
+                
+            for run, characters in run_list:
+                
                 run_characters = '| '
-                for character in characters_list:
+                for character in characters:
                     run_characters += '['+character.name + f']({character.url})  | '
-                embed.add_field(name=str(counter)+ '.  '+ run.name + '  |  ' + str(run.mythic_level)+'  |  +'+str(run.num_keystone_upgrades), value=run_characters+f'\n[Link to run]({run.url})', inline=False)
+                embed.add_field(name=str(counter)+ '.  '+ run.name + '  |  ' + str(run.mythic_level)+'  |  +'+str(run.num_keystone_upgrades) + f' | {run.completed_at}', value=run_characters+f'\n[Link to run]({run.url})', inline=False)
                 counter+=1
             embed.set_footer(text='Data from Raider.IO(https://raider.io/)')
             

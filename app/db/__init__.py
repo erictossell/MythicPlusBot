@@ -3,6 +3,7 @@
 #Author: Eriim\
 import logging
 import os
+from collections import defaultdict
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta
 from typing import Optional, List
@@ -427,7 +428,7 @@ async def add_character(character: CharacterDB) -> CharacterDB:
             query = select(CharacterDB).filter(CharacterDB.name == character.name, CharacterDB.realm == character.realm)
             result = await session.execute(query)
             existing_character = result.scalar()
-            if existing_character is None:                
+            if existing_character is None:
                 new_character = session.add(character)
                 return new_character
             else:
@@ -855,39 +856,62 @@ async def remove_discord_user_character(discord_user_character: DiscordUserChara
 
 #-------------------------Bulk Read Functions------------------------------#
 
-async def get_daily_guild_runs(discord_guild_id: int) -> Optional[List[DungeonRunDB]]:
+async def get_daily_guild_runs(discord_guild_id: int) -> Optional[defaultdict[list[DungeonRunDB], list[CharacterDB]]]:
     try:
         async with async_session_scope() as session:
             query = (
-                select(DungeonRunDB)
+                select(DungeonRunDB, CharacterDB)
                 .join(DiscordGuildRunDB.dungeon_run)
+                .join(CharacterRunDB, CharacterRunDB.dungeon_run_id == DungeonRunDB.id)
+                .join(CharacterDB, CharacterRunDB.character_id == CharacterDB.id)
                 .filter(DungeonRunDB.completed_at > datetime.utcnow() - timedelta(days=1), DiscordGuildRunDB.discord_guild_id == discord_guild_id)
                 .order_by(DungeonRunDB.score)
-                .limit(3)
+                .limit(5)
             )
             result = await session.execute(query)
-            dungeon_runs = result.scalars().unique().all()
-            return dungeon_runs
+            grouped_result = defaultdict(list)
+            for dungeon_run, character in result:
+                grouped_result[dungeon_run].append(character)
+
+            dungeon_runs_with_characters = list(grouped_result.items())
+            return dungeon_runs_with_characters
         
     except SQLAlchemyError as error:
         print(f'Error while querying the database: {error}')
         return None
 
-async def get_daily_non_guild_runs(discord_guild_id: int) -> Optional[List[DungeonRunDB]]:
+async def get_daily_non_guild_runs(discord_guild_id: int) -> Optional[defaultdict[list[DungeonRunDB], list[CharacterDB]]]:
     try:
         async with async_session_scope() as session:
-            query = (
-                select(DungeonRunDB)
+            subquery = (
+                select(DungeonRunDB.id, DungeonRunDB.score)  # Select only the id column
                 .join(CharacterRunDB.dungeon_run)
                 .join(CharacterDB, CharacterDB.id == CharacterRunDB.character_id)
                 .join(DiscordGuildCharacterDB, DiscordGuildCharacterDB.character_id == CharacterDB.id)
                 .filter(DungeonRunDB.completed_at > datetime.utcnow() - timedelta(days=1), DiscordGuildCharacterDB.discord_guild_id == discord_guild_id)
                 .order_by(desc(DungeonRunDB.score))
                 .limit(3)
+                .distinct()
             )
+
+            subquery_alias = subquery.subquery().alias()  # Add this line to create the alias
+
+            query = (
+                select(DungeonRunDB, CharacterDB)
+                .join(CharacterRunDB.dungeon_run)
+                .join(CharacterDB, CharacterDB.id == CharacterRunDB.character_id)
+                .join(DiscordGuildCharacterDB, DiscordGuildCharacterDB.character_id == CharacterDB.id)
+                .where(DungeonRunDB.id.in_(select(subquery_alias.c.id)))  # Use a select() construct explicitly
+            )
+
             result = await session.execute(query)
-            dungeon_runs = result.scalars().unique().all()
-            return dungeon_runs
+            
+            grouped_result = defaultdict(list)
+            for dungeon_run, character in result:
+                grouped_result[dungeon_run].append(character)
+
+            dungeon_runs_with_characters = list(grouped_result.items())
+            return dungeon_runs_with_characters
     except SQLAlchemyError as error:
         print(f'Error while querying the database: {error}')
         return None
