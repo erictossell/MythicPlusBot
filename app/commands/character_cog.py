@@ -5,6 +5,7 @@ from discord.ext import commands
 import app.db as db
 from app.objects.character_registration import RegisterView
 import app.raiderIO as raiderIO
+from app.util import hex_to_rgb
 
 class Character(commands.Cog):
     def __init__(self, bot):
@@ -29,8 +30,9 @@ class Character(commands.Cog):
             character_title = await db.get_character_by_name_realm(name.capitalize(), realm.capitalize())
             
             dungeon_list = await db.get_top10_runs_for_character_by_score(character_title)
-            
-            embed = discord.Embed(title=f'Best Mythic+ Runs for {character_title.name}-{character_title.realm.capitalize()}', color=discord.Color.blue())
+            bot_user = await ctx.bot.fetch_user(1073958413488369794)
+            embed = discord.Embed(title=f'Best Mythic+ Runs for {character_title.name}-{character_title.realm.capitalize()}', color=discord.Color.from_rgb(*hex_to_rgb('#c300ff')))
+            embed.set_author(name='Mythic+ Bot', icon_url=bot_user.avatar, url='https://www.mythicplusbot.dev/')
             counter = 1
             for run, characters in dungeon_list:
                 run_characters = '| '

@@ -2,6 +2,7 @@ import discord
 from discord.commands import SlashCommandGroup
 from discord.ext import commands
 import app.db as db
+from app.util import hex_to_rgb
 
 class Guild(commands.Cog):
     def __init__(self, bot):
@@ -9,47 +10,58 @@ class Guild(commands.Cog):
         print('Guild cog is initializing....')
         
     guild = SlashCommandGroup('guild', description='Guild information commands.')
+
     
-    
-    @guild.command(name='daily_report', help='Gets the daily guild report.')
+    @guild.command(name='daily', help='Gets the daily guild report.')
     async def daily_report(self, ctx):
         try:
-            
-            
-            title = f'🏆 Daily Mythic+ Guild Report for {ctx.guild.name}'
+
+            title = f'🏆 Daily Mythic+ Report for {ctx.guild.name}'
             description = f'This board only includes registered characters. If you have not registered your off-realm or out-of-guild character, please do so with /character register.'
-            
+            footer = 'Data from Raider.IO'
             guild_run_list = await db.get_daily_guild_runs(ctx.guild.id)
-            run_list = await db.get_daily_non_guild_runs(ctx.guild.id)
             
-            embed = discord.Embed(title=title, description=description, color=discord.Color.green())
+            bot_user = await ctx.bot.fetch_user(1073958413488369794)
+
+            embed = discord.Embed(title=title, description=description, color=discord.Color.from_rgb(*hex_to_rgb('#c300ff')))
+            
+            embed.set_author(name='Mythic+ Bot', icon_url=bot_user.avatar, url='https://www.mythicplusbot.dev/')
+            embed.add_field(name='------- Top Guild Runs in the last 24 hours -------', value='', inline=False)
             counter = 1
-            
-            embed.add_field(name='-------Top Guild Runs-------', value='', inline=False)
-            
             if len(guild_run_list) == 0:
                 embed.add_field(name='No runs for today.', value='', inline=False)
-                
-            for run, characters in guild_run_list:                
-                
+
+            for run, characters in guild_run_list:
+
                 guild_run_characters = '| '
+
                 for character in characters:
+                    
                     guild_run_characters += '['+character.name + f']({character.url})  | '
+
                 embed.add_field(name=str(counter)+ '.  '+ run.name + '  |  ' + str(run.mythic_level)+'  |  +'+str(run.num_keystone_upgrades) + f' | {run.completed_at}', value=guild_run_characters+f'\n[Link to run]({run.url})', inline=False)
+
                 counter+=1
+                
+            previous_run_count = counter - 1
             
-            embed.add_field(name='---------Top Runs---------',value='', inline=False)
+            run_list = await db.get_daily_non_guild_runs(ctx.guild.id, (8-previous_run_count))
+            embed.add_field(name='--------- Top Runs in the last 24 hours ---------',value='', inline=False)
             if len(run_list) == 0:
                 embed.add_field(name='No runs for today.', value='', inline=False)
-                
+
+            counter = 1
             for run, characters in run_list:
-                
+
                 run_characters = '| '
+
                 for character in characters:
+
                     run_characters += '['+character.name + f']({character.url})  | '
+
                 embed.add_field(name=str(counter)+ '.  '+ run.name + '  |  ' + str(run.mythic_level)+'  |  +'+str(run.num_keystone_upgrades) + f' | {run.completed_at}', value=run_characters+f'\n[Link to run]({run.url})', inline=False)
                 counter+=1
-            embed.set_footer(text='Data from Raider.IO(https://raider.io/)')
+            embed.set_footer(text=footer)
             
             await ctx.respond(embed=embed)
             
@@ -58,8 +70,7 @@ class Guild(commands.Cog):
             user = await ctx.bot.fetch_user(173958345022111744)
             channel = await user.create_dm()
             await channel.send(f'Error in !daily_report command: {exception}')
-            
-    
+                
     @guild.command(name='runs', help='Gets the best Mythic+ runs for the guild for the week.')
     async def runs(self,ctx):
         """Get the best Mythic+ runs for the guild.
@@ -68,10 +79,15 @@ class Guild(commands.Cog):
             ctx (_type_): _description_
         """
         try:
+            title= '🏆 Top Guild Runs for the Week'
             description = f'📄 This leaderboard is based on the top runs from registered characters in the {ctx.guild.name} Guild.\n\n  ⚠️ If you have not registered your off-realm or out-of-guild character, please do so with /character register.'
             dungeon_list = await db.get_top10_guild_runs_this_week(discord_guild_id = ctx.guild.id)
+            footer = 'Data from raider.io'
+            bot_user = await ctx.bot.fetch_user(1073958413488369794)
+
+            embed = discord.Embed(title=title, description=description, color=discord.Color.from_rgb(*hex_to_rgb('#c300ff')))
             
-            embed = discord.Embed(title=f'🏆 Best {ctx.guild.name} Guild Runs', description= description, color=discord.Color.green())
+            embed.set_author(name='Mythic+ Bot', icon_url=bot_user.avatar, url='https://www.mythicplusbot.dev/')
             counter = 1
             for run, characters in dungeon_list:
                 run_characters = '| '
@@ -79,7 +95,7 @@ class Guild(commands.Cog):
                     run_characters += '['+character.name + f']({character.url})  | '
                 embed.add_field(name=str(counter)+ '.  '+ run.name + '  |  ' + str(run.mythic_level)+'  |  +'+str(run.num_keystone_upgrades), value=run_characters+f'\n[Link to run]({run.url})', inline=False)
                 counter+=1
-            embed.set_footer(text='Data from Raider.IO(https://raider.io/)')
+            embed.set_footer(text=footer)
             await ctx.respond(embed=embed)
         except Exception as exception:
             await ctx.respond('Something went wrong :(')
@@ -95,10 +111,15 @@ class Guild(commands.Cog):
             ctx (_type_): _description_
         """
         try:
+            title = '🏆 Top Guild Runs of All Time'
             description = f'📄 This leaderboard is based on the top runs from registered characters in the {ctx.guild.name} Guild.\n\n  ⚠️ If you have not registered your off-realm or out-of-guild character, please do so with /character register.'
             dungeon_list = await db.get_top5_guild_runs_all_time(discord_guild_id = ctx.guild.id)
+            footer = 'Data from raider.io'
+            bot_user = await ctx.bot.fetch_user(1073958413488369794)
+
+            embed = discord.Embed(title=title, description=description, color=discord.Color.from_rgb(*hex_to_rgb('#c300ff')))
             
-            embed = discord.Embed(title=f'🏆 Best {ctx.guild.name} Guild Runs', description= description, color=discord.Color.green())
+            embed.set_author(name='Mythic+ Bot', icon_url=bot_user.avatar, url='https://www.mythicplusbot.dev/')
             counter = 1
             for run, characters in dungeon_list:
                 run_characters = '| '
@@ -106,7 +127,7 @@ class Guild(commands.Cog):
                     run_characters += '['+character.name + f']({character.url})  | '
                 embed.add_field(name=str(counter)+ '.  '+ run.name + '  |  ' + str(run.mythic_level)+'  |  +'+str(run.num_keystone_upgrades), value=run_characters+f'\n[Link to run]({run.url})', inline=False)
                 counter+=1
-            embed.set_footer(text='Data from Raider.IO(https://raider.io/)')
+            embed.set_footer(text=footer)
             await ctx.respond(embed=embed)
         except Exception as exception:
             await ctx.respond('Type !help to see how to use this command.')
@@ -148,12 +169,13 @@ class Guild(commands.Cog):
             user = await ctx.bot.fetch_user(173958345022111744)
             channel = await user.create_dm()
             await channel.send(f'Error in !leaderboard command: {exception}')
+            
     async def mythic_plus_leaderboard(self, ctx):
         await self.leaderboard_embed(ctx, 'mythic_plus')
 
     async def leaderboard_embed(self, ctx, leaderboard_type):
         description = f'📄 This leaderboard is based on the top 10 registered characters from the {ctx.guild.name} Guild.\n\n ⚠️ If you have not registered your off-realm or out-of-guild character, please do so with /character register.'
-        footer_text = 'Data from [Raider.IO](https://raider.io/)'
+        footer_text = 'Data from raider.io'
 
         if leaderboard_type == 'mythic_plus':
             characters_list = await db.get_top10_character_by_mythic_plus(ctx.guild.id)
@@ -170,7 +192,11 @@ class Guild(commands.Cog):
             title = 'Item Level Leaderboard'
             field_func = lambda leader: (f'{leader.item_level} - {leader.name} | {leader.spec_name} - {leader.class_name}', f'[M+ Class Rank on {leader.realm.capitalize()}: {leader.rank}]({leader.url})')
 
-        embed = discord.Embed(title=title, description=description, color=discord.Color.green())
+        bot_user = await ctx.bot.fetch_user(1073958413488369794)
+
+        embed = discord.Embed(title=title, description=description, color=discord.Color.from_rgb(*hex_to_rgb('#c300ff')))
+        
+        embed.set_author(name='Mythic+ Bot', icon_url=bot_user.avatar, url='https://www.mythicplusbot.dev/')
         thumbnail = characters_list[0].thumbnail_url
         embed.set_thumbnail(url=thumbnail)
 
