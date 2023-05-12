@@ -6,7 +6,7 @@ import os
 from collections import defaultdict
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta
-from typing import Optional, List, defaultdict
+from typing import Optional, List, DefaultDict
 from psycopg2 import IntegrityError
 from sqlalchemy import desc, select
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
@@ -856,7 +856,7 @@ async def remove_discord_user_character(discord_user_character: DiscordUserChara
 
 #-------------------------Bulk Read Functions------------------------------#
 
-async def get_daily_guild_runs(discord_guild_id: int) -> Optional[defaultdict[list[DungeonRunDB], list[CharacterDB]]]:
+async def get_daily_guild_runs(discord_guild_id: int) -> Optional[DefaultDict[List[DungeonRunDB], List[CharacterDB]]]:
     try:
         async with async_session_scope() as session:
             subquery = (
@@ -892,7 +892,7 @@ async def get_daily_guild_runs(discord_guild_id: int) -> Optional[defaultdict[li
         print(f'Error while querying the database: {error}')
         return None
 
-async def get_daily_non_guild_runs(discord_guild_id: int, number_of_runs: int) -> Optional[defaultdict[list[DungeonRunDB], list[CharacterDB]]]:
+async def get_daily_non_guild_runs(discord_guild_id: int, number_of_runs: int) -> Optional[DefaultDict[List[DungeonRunDB], List[CharacterDB]]]:
     try:
         async with async_session_scope() as session:
             subquery = (
@@ -1116,7 +1116,7 @@ async def get_all_characters_for_run(run_id: int) -> List[CharacterRunDB]:
         print(f'Error while querying the database: {error}')
         return None 
 
-async def get_top10_runs_for_character_by_score(character: CharacterDB) -> Optional[defaultdict[list[DungeonRunDB], list[CharacterDB]]]:
+async def get_top10_runs_for_character_by_score(character: CharacterDB) -> Optional[DefaultDict[List[DungeonRunDB], List[CharacterDB]]]:
     """Get all runs for a character.
 
     Args:
@@ -1242,7 +1242,7 @@ async def get_top10_character_by_highest_item_level(discord_guild_id: int) -> Li
         print(f'Error while querying the database: {error}')
         return None 
 
-async def get_top10_guild_runs_this_week(discord_guild_id: int, season: str = 'season-df-2') -> Optional[defaultdict[list[DungeonRunDB], list[CharacterDB]]]:
+async def get_top10_guild_runs_this_week(discord_guild_id: int, season: str = 'season-df-2') -> Optional[DefaultDict[List[DungeonRunDB], List[CharacterDB]]]:
     try: 
         async with async_session_scope() as session:
             one_week_ago = datetime.now() - timedelta(weeks=1)
