@@ -10,6 +10,9 @@ class DiscordGuildCharacterDB(Base):
     
     id = Column(Integer, primary_key=True)
     
+    guild_character_score = Column(Integer, nullable=True)
+    
+    
     discord_guild_id = Column(BigInteger, ForeignKey('discord_guilds.id'))
     discord_guild = relationship("DiscordGuildDB", back_populates="discord_guild_characters")
     

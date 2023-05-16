@@ -49,12 +49,9 @@ class Admin(commands.Cog):
             start_time = time.time()
             await ctx.respond('Crawling Raider.IO characters...')
             
-            game_guilds = await db.get_all_game_guilds_by_discord_id(discord_guild_id)
-            
-            for game_guild in game_guilds:
-                await raiderIO.crawl_characters(game_guild.id)            
-                output = await raiderIO.crawl_characters(discord_guild_id)
-                await ctx.respond(output)
+              
+            output = await raiderIO.crawl_characters(discord_guild_id)
+            await ctx.respond(output)
                 
             end_time = time.time()
             elapsed_time = end_time - start_time
@@ -81,6 +78,33 @@ class Admin(commands.Cog):
             elapsed_time = end_time - start_time
             await ctx.respond('Finished crawling Raider.IO guild members after ' + str(elapsed_time) + ' seconds.')
     
+    @admin.command(name='set_announcement_channel')
+    async def set_announcement_channel(self, ctx):
+        discord_guild = await db.get_discord_guild_by_id(ctx.guild.id)
+        
+        if discord_guild is None:
+            await ctx.respond('This command can only be used by admins within a Discord Server.')
+            return
+
+        discord_guild.announcement_channel_id = ctx.channel.id
+        
+        await db.update_discord_guild(discord_guild)
+        
+        await ctx.respond(f'Announcement channel set to {ctx.channel.name}.')
+    
+    @admin.command(name='disable_announcements')
+    async def disable_announcements(self, ctx):
+        discord_guild = await db.get_discord_guild_by_id(ctx.guild.id)
+        
+        if discord_guild is None:
+            await ctx.respond('This command can only be used by admins within a Discord Server.')
+            return
+
+        discord_guild.announcement_channel_id = None
+        
+        await db.update_discord_guild(discord_guild)
+        
+        await ctx.respond('Announcements disabled.')    
     #@admin.command(name="crawlruns")
     #async def crawl_runs(self, ctx):
     #    """Compare runs to the database and update the database.

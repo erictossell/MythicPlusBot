@@ -1,11 +1,14 @@
 
+
 import asyncio
+import datetime
 from discord.ext import commands, tasks
 from datetime import time
 import app.db as db
-from app.objects.embed_builder import announce_guild_run_embed
+from app.objects.embed_builder import announce_guild_run_embed, daily_guild_report_embed
 import app.raiderIO as raiderIO
 import app.util as util
+
 
 
 class Announcement(commands.Cog):
@@ -18,15 +21,58 @@ class Announcement(commands.Cog):
         self.bot = bot
         print("Announcement cog is initializing....")
        
-        self.announcement_task = self.bot.loop.create_task(self.send_announcements())
+        # self.announcement_task = self.bot.loop.create_task(self.send_announcements())
         self.crawl_task = self.bot.loop.create_task(self.crawl_for_data())
+        self.daily_report_task = self.bot.loop.create_task(self.send_daily_report())
         self.is_closed = bot.is_closed
+        self.time_until_daily_report = util.time_until_target(hour=20, minute=0)
+         
+        
+    @tasks.loop()
+    async def send_daily_report(self):
+        await self.bot.wait_until_ready()
+        
+        while not self.is_closed(): 
+            
+            self.time_until_daily_report = util.time_until_target(hour=20, minute=0)
+            await asyncio.sleep(self.time_until_daily_report)
+            
+            for guild in self.bot.guilds:
+                
+                discord_guild_db = await db.get_discord_guild_by_id(guild.id)
+                
+                if discord_guild_db is None:
+                    await db.add_discord_guild(db.DiscordGuildDB(id = guild.id,
+                                                                 discord_guild_name = guild.name))
+            
+                elif discord_guild_db.is_announcing is False:
+                    continue
+                
+                elif discord_guild_db.announcement_channel_id is None:
+                    continue
+                
+                else:
+                    channel = self.bot.get_channel(discord_guild_db.announcement_channel_id)
+                                        
+                    guild_run_list = await db.get_daily_guild_runs(discord_guild_db.id)
+                    bot_user = await self.bot.fetch_user(1073958413488369794)
 
+                    
+                    previous_run_count = len(guild_run_list)
+                    run_list = await db.get_daily_non_guild_runs(discord_guild_id=discord_guild_db.id, number_of_runs= (8-previous_run_count))
+                    
+                    embed = daily_guild_report_embed(bot=self.bot,
+                                                         discord_guild_db=discord_guild_db,
+                                                         guild_run_list=guild_run_list,
+                                                         run_list=run_list,
+                                                         bot_user=bot_user)
+                    await channel.send(embed=embed)
+
+    
     @tasks.loop(time=time(hour=22, minute=5, second=0))
     async def send_announcements(self):
         await self.bot.wait_until_ready()
-        
-        
+               
         await asyncio.sleep(600)
         while not self.is_closed():
             
@@ -52,7 +98,7 @@ class Announcement(commands.Cog):
                     continue
                 
                 else:
-                    characters_list = await db.get_all_characters_for_run(announcement.dungeon_run.id)
+                    characters_list = await db.get_all_characters_for_run(announcement.dungeon_run_id)
                     
                     embed = announce_guild_run_embed(announcement=announcement,
                                                     dungeon_run=announcement.dungeon_run,
@@ -86,8 +132,8 @@ class Announcement(commands.Cog):
                                 
                 else:       
                     
-                    game_guilds = db.get_all_game_guilds_by_discord_id(guild.id)
-                    channel = self.bot.get_channel(discord_guild.announcement_channel_id)
+                    game_guilds = await db.get_all_game_guilds_by_discord_id(guild.id)
+                    channel = self.bot.get_channel(1098345786149982279)
                     
                     guild_crawl = await raiderIO.crawl_discord_guild_members(discord_guild.id)
                                       
@@ -102,8 +148,7 @@ class Announcement(commands.Cog):
                         print("It's less than 20 minutes until midnight.")         
             await asyncio.sleep(3600*3)
             
-                    
-                    
+    
 
 def setup(bot):
     bot.add_cog(Announcement(bot))

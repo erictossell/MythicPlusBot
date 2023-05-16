@@ -2,6 +2,7 @@ import discord
 from discord.commands import SlashCommandGroup
 from discord.ext import commands
 import app.db as db
+from app.objects.embed_builder import daily_guild_report_embed
 from app.util import hex_to_rgb
 
 class Guild(commands.Cog):
@@ -16,52 +17,20 @@ class Guild(commands.Cog):
     async def daily_report(self, ctx):
         try:
 
-            title = f'🏆 Daily Mythic+ Report for {ctx.guild.name}'
-            description = f'This board only includes registered characters. If you have not registered your off-realm or out-of-guild character, please do so with /character register.'
-            footer = 'Data from Raider.IO'
-            guild_run_list = await db.get_daily_guild_runs(ctx.guild.id)
+            
             
             bot_user = await ctx.bot.fetch_user(1073958413488369794)
 
-            embed = discord.Embed(title=title, description=description, color=discord.Color.from_rgb(*hex_to_rgb('#c300ff')))
+            guild_run_list = await db.get_daily_guild_runs(discord_guild_id=ctx.guild.id)
             
-            embed.set_author(name='Mythic+ Bot', icon_url=bot_user.avatar, url='https://www.mythicplusbot.dev/')
-            embed.add_field(name='------- Top Guild Runs in the last 24 hours -------', value='', inline=False)
-            counter = 1
-            if len(guild_run_list) == 0:
-                embed.add_field(name='No runs for today.', value='', inline=False)
-
-            for run, characters in guild_run_list:
-
-                guild_run_characters = '| '
-
-                for character in characters:
-                    
-                    guild_run_characters += '['+character.name + f']({character.url})  | '
-
-                embed.add_field(name=str(counter)+ '.  '+ run.name + '  |  ' + str(run.mythic_level)+'  |  +'+str(run.num_keystone_upgrades) + f' | {run.completed_at}', value=guild_run_characters+f'\n[Link to run]({run.url})', inline=False)
-
-                counter+=1
-                
-            previous_run_count = counter - 1
+            discord_guild_db = await db.get_discord_guild_by_id(ctx.guild.id)
             
-            run_list = await db.get_daily_non_guild_runs(ctx.guild.id, (8-previous_run_count))
-            embed.add_field(name='--------- Top Runs in the last 24 hours ---------',value='', inline=False)
-            if len(run_list) == 0:
-                embed.add_field(name='No runs for today.', value='', inline=False)
-
-            counter = 1
-            for run, characters in run_list:
-
-                run_characters = '| '
-
-                for character in characters:
-
-                    run_characters += '['+character.name + f']({character.url})  | '
-
-                embed.add_field(name=str(counter)+ '.  '+ run.name + '  |  ' + str(run.mythic_level)+'  |  +'+str(run.num_keystone_upgrades) + f' | {run.completed_at}', value=run_characters+f'\n[Link to run]({run.url})', inline=False)
-                counter+=1
-            embed.set_footer(text=footer)
+            run_list = await db.get_daily_non_guild_runs(discord_guild_id=ctx.guild.id, number_of_runs= (8-len(guild_run_list)))
+            embed = daily_guild_report_embed(bot=self.bot,
+                                                    discord_guild_db=discord_guild_db,
+                                                    guild_run_list=guild_run_list,
+                                                    non_guild_run_list=run_list,
+                                                    bot_user=bot_user)
             
             await ctx.respond(embed=embed)
             

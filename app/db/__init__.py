@@ -93,6 +93,24 @@ async def get_discord_game_guild_by_guild_ids(discord_guild_id: int, game_guild_
         print(f'Error while querying the database: {error}')
         return None
 
+async def get_discord_guild_character_by_name(discord_guild_id: int, name :str) -> Optional[DiscordGuildCharacterDB]:
+    try:
+        async with async_session_scope() as session:
+            query = (
+                select(DiscordGuildCharacterDB)
+                .join(CharacterDB)
+                .filter(CharacterDB.name == name, DiscordGuildCharacterDB.discord_guild_id == discord_guild_id)
+            )
+            result = await session.execute(query)
+            existing_discord_guild_character = result.scalar()
+            if existing_discord_guild_character:
+                return existing_discord_guild_character
+            else:
+                return None
+    except SQLAlchemyError as error:
+        print(f'Error while querying the database: {error}')
+        return None
+
 async def get_character_by_name_realm_and_discord_guild(name: str, realm: str, discord_guild_id: int) -> Optional[CharacterDB]:
     try:
         async with async_session_scope() as session:
@@ -252,36 +270,20 @@ async def get_discord_user_character_by_guild_user(discord_user_id) -> DiscordUs
 async def get_next_announcement_by_guild_id(discord_guild_id: int) -> AnnouncementDB:
     try:
         async with async_session_scope() as session:
-            query = select(AnnouncementDB).filter(AnnouncementDB.discord_guild_id == discord_guild_id, AnnouncementDB.has_been_sent == False).order_by(AnnouncementDB.created_at.asc())
+            
+            #timedelta for one week ago
+            one_week_ago = datetime.now() - timedelta(days=7)
+            #retreive guild announcements for runs completed in the last week
+            query = (
+                select(AnnouncementDB)
+                .options(joinedload(AnnouncementDB.dungeon_run))  # eager load dungeon_run                
+                .join(DungeonRunDB.announcements)
+                .filter(AnnouncementDB.discord_guild_id == discord_guild_id, DungeonRunDB.completed_at >= one_week_ago, AnnouncementDB.has_been_sent == False)
+                .order_by(DungeonRunDB.completed_at.desc())
+            )
             result = await session.execute(query)
-            existing_announcement = result.scalar()
-            if existing_announcement is None:
-                return None
-            else:
-                announcement = AnnouncementDB(id = existing_announcement.id,
-                                              discord_guild_id = existing_announcement.discord_guild_id,
-                                              announcement_channel_id = existing_announcement.announcement_channel_id,
-                                              title = existing_announcement.title,
-                                              content = existing_announcement.content,
-                                              has_been_sent = existing_announcement.has_been_sent)
-                existing_announcement.dungeon_run = (await session.execute(
-                        select(DungeonRunDB).filter(DungeonRunDB.id == existing_announcement.dungeon_run_id)
-                    )).scalar()
-                if existing_announcement.dungeon_run is not None:
-                    
-                    dungeon_run = DungeonRunDB(id = existing_announcement.dungeon_run.id,
-                                                    season = existing_announcement.dungeon_run.season,
-                                                    name= existing_announcement.dungeon_run.name,
-                                                    short_name= existing_announcement.dungeon_run.short_name,
-                                                    mythic_level= existing_announcement.dungeon_run.mythic_level,
-                                                    completed_at= existing_announcement.dungeon_run.completed_at,
-                                                    clear_time_ms= existing_announcement.dungeon_run.clear_time_ms,
-                                                    par_time_ms= existing_announcement.dungeon_run.par_time_ms,
-                                                    num_keystone_upgrades= existing_announcement.dungeon_run.num_keystone_upgrades,
-                                                    score= existing_announcement.dungeon_run.score,
-                                                    url= existing_announcement.dungeon_run.url)
-                    announcement.dungeon_run = dungeon_run
-                return announcement
+            announcement = result.scalar()
+            return announcement
     except SQLAlchemyError as error:
         print(f'Error while querying the database: {error}')
         return None            
@@ -587,18 +589,27 @@ async def update_discord_guild(discord_guild: DiscordGuildDB) -> DiscordGuildDB:
     """
     try:
         async with async_session_scope() as session:
+            
             existing_guild_query = select(DiscordGuildDB).filter(DiscordGuildDB.id == discord_guild.id)
+            
             existing_guild_result = await session.execute(existing_guild_query)
+            
             existing_guild = existing_guild_result.scalar()
+            
             if not existing_guild:                
                 return None
-            else:
-                existing_guild.wow_guild_name = discord_guild.wow_guild_name
-                existing_guild.wow_realm = discord_guild.wow_realm
-                existing_guild.wow_region = discord_guild.wow_region
+            
+            else:                
+                existing_guild.discord_guild_name = discord_guild.discord_guild_name
                 existing_guild.announcement_channel_id = discord_guild.announcement_channel_id
+                
+                
                 if discord_guild.announcement_channel_id:
                     existing_guild.is_announcing = True
+                
+                else: 
+                    existing_guild.is_announcing = False
+                    
                 return existing_guild
             
     except IntegrityError as error:
@@ -610,6 +621,33 @@ async def update_discord_guild(discord_guild: DiscordGuildDB) -> DiscordGuildDB:
     except Exception as error:
         print(f'Error while updating the guild: {error}')
         return None
+    
+async def update_discord_guild_character(discord_guild_character = DiscordGuildCharacterDB) -> DiscordGuildCharacterDB:
+    """Update an existing discord guild character in the database.
+
+    Args:
+        discord_guild_character (_type_, optional): _description_. Defaults to DiscordGuildCharacterDB.
+
+    Returns:
+        DiscordGuildCharacterDB: _description_
+    """
+    
+    try: 
+        async with async_session_scope() as session:
+            query = select(DiscordGuildCharacterDB).filter(DiscordGuildCharacterDB.discord_guild_id == discord_guild_character.discord_guild_id,
+                                                              DiscordGuildCharacterDB.character_id == discord_guild_character.character_id)
+            result = await session.execute(query)
+            existing_discord_guild_character = result.scalar()
+            if not existing_discord_guild_character:
+                return None
+            else:
+                existing_discord_guild_character.guild_character_score = discord_guild_character.guild_character_score
+                
+                return existing_discord_guild_character
+    except SQLAlchemyError as error:
+        print(f'Error while querying the database: {error}')
+        return None
+    
             
 async def update_character(character: Character) -> CharacterDB:
     """Update an existing character in the database.

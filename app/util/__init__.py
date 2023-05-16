@@ -63,3 +63,12 @@ def seconds_until(hours, minutes):
     if (future_exec - now).days < 0:
         future_exec = datetime.datetime.combine(now + datetime.timedelta(days=1), given_time)
     return (future_exec - now).total_seconds()
+
+def time_until_target(hour, minute) -> datetime.timedelta:
+    now = datetime.datetime.now()
+    target = datetime.datetime(now.year, now.month, now.day, hour, minute)
+    
+    if now > target:
+        target += datetime.timedelta(days=1)
+    
+    return (target - now).total_seconds()

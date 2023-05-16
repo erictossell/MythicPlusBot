@@ -1,6 +1,10 @@
 import discord
-from typing import List
+from typing import List, Tuple
+from app import util
 import app.db as db
+from app.db.models.character_db import CharacterDB
+from app.db.models.discord_guild_db import DiscordGuildDB
+from app.db.models.dungeon_run_db import DungeonRunDB
 
 def announce_guild_run_embed(announcement : db.AnnouncementDB = None,
                              color : discord.Color = discord.Color.green(),
@@ -24,16 +28,53 @@ def announce_guild_run_embed(announcement : db.AnnouncementDB = None,
     return embed
 
 
-def daily_guild_report_embed(discord_guild_id : int):
+def daily_guild_report_embed(bot : discord.Client,
+                            discord_guild_db : DiscordGuildDB,
+                             guild_run_list : List[Tuple[DungeonRunDB, List[CharacterDB]]] = None,
+                             non_guild_run_list : List[Tuple[DungeonRunDB, List[CharacterDB]]] = None,
+                             bot_user = None) -> discord.Embed:
     
-    discord_guild = db.get_discord_guild_by_id(discord_guild_id)
+    title = f'🏆 Daily Mythic+ Report for {discord_guild_db.discord_guild_name}'
+    description = f'This board only includes registered characters. If you have not registered your off-realm or out-of-guild character, please do so with /character register.'
+    footer = 'Data from Raider.IO'   
     
+
+    embed = discord.Embed(title=title, description=description, color=discord.Color.from_rgb(*util.hex_to_rgb('#c300ff')))
     
+    embed.set_author(name='Mythic+ Bot', icon_url=bot_user.avatar, url='https://www.mythicplusbot.dev/')
+    embed.add_field(name='------- Top Guild Runs in the last 24 hours -------', value='', inline=False)
+    counter = 1
+    if len(guild_run_list) == 0:
+        embed.add_field(name='No runs for today.', value='', inline=False)
+
+    for run, characters in guild_run_list:
+
+        guild_run_characters = '| '
+
+        for character in characters:
+            
+            guild_run_characters += '['+character.name + f']({character.url})  | '
+        plus = '+' * run.num_keystone_upgrades
+        embed.add_field(name=str(counter)+ '.  '+ str(run.mythic_level)+(plus)+' ' + run.short_name + ' | ' + str(run.score), value=guild_run_characters+f'\n[{run.completed_at}]({run.url})', inline=False)
+
+        counter+=1
+     
     
-    embed=discord.Embed(title="Daily Mythic+ Guild Report")
-    embed.set_author(name="Mythic+ Bot", url="https://www.mythicplusbot.dev")
-    embed.set_footer(text="Data provided by RaiderIO.")
-    
-    
+    embed.add_field(name='--------- Top Runs in the last 24 hours ---------',value='', inline=False)
+    if len(non_guild_run_list) == 0:
+        embed.add_field(name='No runs for today.', value='', inline=False)
+
+    counter = 1
+    for run, characters in non_guild_run_list:
+
+        run_characters = '| '
+
+        for character in characters:
+
+            run_characters += '['+character.name + f']({character.url})  | '
+        plus = '+' * run.num_keystone_upgrades
+        embed.add_field(name=str(counter)+ '.  '+ str(run.mythic_level)+(plus)+' ' + run.short_name + ' | ' + str(run.score), value=run_characters+f'\n[{run.completed_at}]({run.url})', inline=False)
+        counter+=1
+    embed.set_footer(text=footer)
     
     return embed
