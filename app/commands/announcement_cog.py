@@ -64,7 +64,7 @@ class Announcement(commands.Cog):
                     embed = daily_guild_report_embed(bot=self.bot,
                                                          discord_guild_db=discord_guild_db,
                                                          guild_run_list=guild_run_list,
-                                                         run_list=run_list,
+                                                         non_guild_run_list=run_list,
                                                          bot_user=bot_user)
                     await channel.send(embed=embed)
 
@@ -132,7 +132,6 @@ class Announcement(commands.Cog):
                                 
                 else:       
                     
-                    game_guilds = await db.get_all_game_guilds_by_discord_id(guild.id)
                     channel = self.bot.get_channel(1098345786149982279)
                     
                     guild_crawl = await raiderIO.crawl_discord_guild_members(discord_guild.id)

@@ -443,7 +443,7 @@ async def crawl_discord_guild_members(discord_guild_id) -> None:
     try:
         
         score_colors_list = get_score_colors()
-        discord_guild = await db.get_discord_guild_by_id(discord_guild_id)    
+        discord_guild = await db.get_discord_guild_by_id(discord_guild_id)
         
         game_guild_list = await db.get_all_game_guilds_by_discord_id(discord_guild_id)
         
