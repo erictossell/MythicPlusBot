@@ -34,11 +34,7 @@ cogs_list = ['app.commands.general_cog',
              'app.commands.character_cog',
              'app.commands.announcement_cog']
 
-logger = logging.getLogger('discord')
-logger.setLevel(logging.DEBUG)
-handler = logging.FileHandler(filename='discord.log', encoding='utf-8', mode='w')
-handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
-logger.addHandler(handler)
+
 
 def load_extensions():
     """Load the cogs from the cogs_list.

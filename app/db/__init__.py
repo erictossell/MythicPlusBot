@@ -41,9 +41,7 @@ RAILWAY = os.getenv('RAILWAY_POSTGRES')
 DEV_POSTGRES = os.getenv('DEV_POSTGRES')
 DEV_RAILWAY = os.getenv('DEV_RAILWAY')
 
-logging.basicConfig(filename='tal.log',
-                    level=logging.DEBUG,
-                    format='%(asctime)s %(levelname)s %(name)s %(message)s')
+
 
 async_engine = create_async_engine(
     DEV_RAILWAY,
