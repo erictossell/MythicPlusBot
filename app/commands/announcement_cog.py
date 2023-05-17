@@ -112,6 +112,8 @@ class Announcement(commands.Cog):
 
     @tasks.loop(time=time(hour=0, minute=0, second=0))
     async def crawl_for_data(self):
+        
+        
         await self.bot.wait_until_ready()
         
         while not self.is_closed():
@@ -130,7 +132,7 @@ class Announcement(commands.Cog):
                 elif discord_guild.announcement_channel_id is None:
                     continue
                                 
-                else:       
+                else:
                     
                     channel = self.bot.get_channel(1098345786149982279)
                     
@@ -144,7 +146,7 @@ class Announcement(commands.Cog):
                     
             if util.seconds_until(0,0) < 1200:
                         # If it's less than 20 minutes until midnight, run this code.
-                        print("It's less than 20 minutes until midnight.")         
+                        print("It's less than 20 minutes until midnight.")
             await asyncio.sleep(3600*3)
             
     
