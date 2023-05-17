@@ -348,9 +348,22 @@ async def crawl_characters(discord_guild_id: int) -> str:
                                                 realm=character.realm,
                                                 score_colors=colors)
 
+            
             if not character_io:
                 continue
-
+            
+            character.last_crawled_at = datetime.strptime(character_io.last_crawled_at,
+                                                                '%Y-%m-%dT%H:%M:%S.%fZ')
+            character.score = character_io.score
+            character.item_level = character_io.item_level
+            character.achievement_points = character_io.achievement_points
+            character.spec_name = character_io.spec_name
+            character.role = character_io.role
+            character.rank = character_io.rank
+            await db.update_character(character)
+            update_character_counter += 1
+            
+            
             for run in character_io.best_runs:
 
                 if run is None:
@@ -417,18 +430,9 @@ async def crawl_characters(discord_guild_id: int) -> str:
 
                         guild_run_counter += 1
 
-            if character.name == character_io.name and character.realm == character_io.realm:
+            
 
-                character.last_crawled_at = datetime.strptime(character_io.last_crawled_at,
-                                                                '%Y-%m-%dT%H:%M:%S.%fZ')
-                character.score = character_io.score
-                character.item_level = character_io.item_level
-                character.achievement_points = character_io.achievement_points
-                character.spec_name = character_io.spec_name
-                character.role = character_io.role
-                character.rank = character_io.rank
-                await db.update_character(character)
-                update_character_counter += 1
+                
         return f'{discord_guild.discord_guild_name} Characters crawled: {characters_crawled} |  Updated {update_character_counter} characters and added {run_counter} runs.'
 
     except Exception as exception:
