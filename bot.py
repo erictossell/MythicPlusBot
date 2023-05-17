@@ -4,12 +4,8 @@
 
 #Imports
 import os
-import logging
 import discord
 from dotenv import load_dotenv
-from discord.ext import commands
-
-from app import db
 
 #Load Environment variables
 load_dotenv('configurations/main.env')
@@ -22,7 +18,6 @@ SUPPORT_SERVER_ID = os.getenv('SUPPORT_SERVER_ID')
 intents = discord.Intents( guilds=True, members=True)
 intents.guilds = True
 
-
 bot = discord.Bot(intents=intents,
                    activity=discord.Activity(type=discord.ActivityType.watching,
                                              name="for slash commands!"))
@@ -33,8 +28,6 @@ cogs_list = ['app.commands.general_cog',
              'app.commands.guild_cog',
              'app.commands.character_cog',
              'app.commands.announcement_cog']
-
-
 
 def load_extensions():
     """Load the cogs from the cogs_list.
