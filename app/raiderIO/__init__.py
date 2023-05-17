@@ -411,7 +411,7 @@ async def crawl_characters(discord_guild_id: int) -> str:
 
                     is_guild = await get_run_details(run_db, discord_guild_id)
                     runs_crawled += 1
-                    discord_guild = await db.get_discord_guild_by_id(discord_guild_id)
+                    
 
                     if is_guild is True:
                         announcement = db.AnnouncementDB(discord_guild_id=discord_guild_id,
@@ -451,10 +451,10 @@ async def crawl_discord_guild_members(discord_guild_id) -> None:
         
         game_guild_list = await db.get_all_game_guilds_by_discord_id(discord_guild_id)
         
-        counter = 0   
+           
         
         for game_guild in tqdm(game_guild_list):
-            
+            counter = 0
             discord_game_guild = await db.get_discord_game_guild_by_guild_ids(discord_guild_id, game_guild.id)
             
             if discord_game_guild is None:
@@ -505,7 +505,7 @@ async def crawl_discord_guild_members(discord_guild_id) -> None:
                                                             character=added_character)
 
                     counter += 1
-        return f'Crawler: verified {counter}  characters to the database for the guild {game_guild.name}.'   
+            return f'Crawler: verified {counter}  characters to the database for the guild {game_guild.name}.'   
     except Exception as exception:
         print(exception)
         return False
