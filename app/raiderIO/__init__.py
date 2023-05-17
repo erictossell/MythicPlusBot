@@ -463,7 +463,7 @@ async def crawl_discord_guild_members(discord_guild_id) -> None:
         score_colors_list = get_score_colors()
         discord_guild = await db.get_discord_guild_by_id(discord_guild_id)
         game_guild_list = await db.get_all_game_guilds_by_discord_id(discord_guild_id)
-        return_string = ""
+        return_list = []
         for game_guild in game_guild_list:
             counter = 0
             discord_game_guild = await db.get_discord_game_guild_by_guild_ids(discord_guild_id, game_guild.id)
@@ -521,8 +521,8 @@ async def crawl_discord_guild_members(discord_guild_id) -> None:
                                                         character=added_character)
                     
                 counter += 1
-            return_string.append(f'Crawler: verified {counter}  characters to the database for the guild {game_guild.name}.\n')
-        return return_string
+            return_list.append(f'Crawler: verified {counter}  characters to the database for the guild {game_guild.name}.\n')
+        return return_list
     except Exception as exception:
         print(exception)
         return False
