@@ -907,7 +907,9 @@ async def get_daily_guild_runs(discord_guild_id: int) -> Optional[DefaultDict[Li
             subquery_alias = subquery.subquery().alias()
             
             query = (
-                select(DungeonRunDB, CharacterDB)
+                select(DungeonRunDB, CharacterRunDB)
+                .options(joinedload(DungeonRunDB.character_runs))
+                .options(joinedload(CharacterRunDB.character))
                 .join(CharacterRunDB.dungeon_run)
                 .join(CharacterDB, CharacterDB.id == CharacterRunDB.character_id)
                 .join(DiscordGuildCharacterDB, DiscordGuildCharacterDB.character_id == CharacterDB.id)
@@ -917,6 +919,7 @@ async def get_daily_guild_runs(discord_guild_id: int) -> Optional[DefaultDict[Li
             )
 
             result = await session.execute(query)
+            result = result.unique()
             grouped_result = defaultdict(list)
             for dungeon_run, character in result:
                 grouped_result[dungeon_run].append(character)
@@ -945,7 +948,10 @@ async def get_daily_non_guild_runs(discord_guild_id: int, number_of_runs: int) -
             subquery_alias = subquery.subquery().alias()  # Add this line to create the alias
 
             query = (
-                select(DungeonRunDB, CharacterDB)
+                select(DungeonRunDB, CharacterRunDB)
+                .options(joinedload(DungeonRunDB.character_runs))
+                .options(joinedload(CharacterRunDB.character))
+                
                 .join(CharacterRunDB.dungeon_run)
                 .join(CharacterDB, CharacterDB.id == CharacterRunDB.character_id)
                 .join(DiscordGuildCharacterDB, DiscordGuildCharacterDB.character_id == CharacterDB.id)
@@ -955,7 +961,8 @@ async def get_daily_non_guild_runs(discord_guild_id: int, number_of_runs: int) -
             )
 
             result = await session.execute(query)
-            
+            result = result.unique()
+
             grouped_result = defaultdict(list)
             for dungeon_run, character in result:
                 grouped_result[dungeon_run].append(character)

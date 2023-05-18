@@ -74,9 +74,11 @@ async def get_character(name: str,
     for retry in range(RETRIES):
         try:
             async with httpx.AsyncClient() as client:
+                
                 response = await client.get(API_URL + f'characters/profile?region={region}&realm={realm}&name={name}&fields=guild,gear,mythic_plus_scores_by_season:current,mythic_plus_ranks,mythic_plus_best_runs,mythic_plus_recent_runs', timeout=TIMEOUT) 
+                
                 if response.status_code == 404:
-                    return None
+                    return 
                 elif response.status_code == 429:
                     return None 
                 elif response.status_code == 500:
@@ -155,16 +157,9 @@ async def get_character(name: str,
                     return character
                 else:
                     print('Error: Character not found.')
-                    return None
-        except httpx.TimeoutException:
-            print("Timeout occurred while fetching character data.")
-
-            if retry == RETRIES - 1:
-                await asyncio.sleep(BACKOFF_FACTOR ** retry)
-            else:
-                raise
+                    return None       
             
-        except (httpx.ReadTimeout, ssl.SSLWantReadError):
+        except (httpx.TimeoutException, httpx.ReadTimeout, ssl.SSLWantReadError):
             if retry == RETRIES - 1:
                 raise
             else:
@@ -352,7 +347,7 @@ async def crawl_characters(discord_guild_id: int) -> str:
 
 
             character_io = None
-            retries = 3
+            retries = 5
             while retries > 0:
                 try:
                     character_io = await get_character(str(character.name),
@@ -477,7 +472,7 @@ async def crawl_discord_guild_members(discord_guild_id) -> None:
 
             for member in tqdm(member_list):
                 character = None
-                retries = 3
+                retries = 5
                 while retries > 0:
                     try:
                         character = await get_character(str(member.name),

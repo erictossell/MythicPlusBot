@@ -143,27 +143,27 @@ class Character(commands.Cog):
             realm (str): Realm of the character.
         """
         try:
-        
-            if not name:
-                
-                if ctx.guild:
+            async with ctx.typing():
+                if not name:
                     
-                    main_char = await db.get_discord_user_character_by_guild_user(ctx.author.id)
-                    char = await db.get_character_by_name_realm(main_char.character.name, main_char.character.realm)
-                    
-                    if char:
-                        name, realm = char.name, char.realm
+                    if ctx.guild:
                         
+                        main_char = await db.get_discord_user_character_by_guild_user(ctx.author.id)
+                        char = await db.get_character_by_name_realm(main_char.character.name, main_char.character.realm)
+                        
+                        if char:
+                            name, realm = char.name, char.realm
+                            
+                        else:
+                            await ctx.respond('Please provide a character name and realm or set a main character.')
+                            return                    
                     else:
-                        await ctx.respond('Please provide a character name and realm or set a main character.')
-                        return                    
-                else:
-                    await ctx.respond('Please provide a character name and realm.')
-                    return
+                        await ctx.respond('Please provide a character name and realm.')
+                        return
 
-            character = await raiderIO.get_character(name, realm)
-            
-            await ctx.respond(embed=character.get_character_embed())
+                character = await raiderIO.get_character(name, realm)
+                
+                await ctx.respond(embed=character.get_character_embed())
 
         except Exception as exception:
             await ctx.respond(f' I was not able to find a character with name: {name}. Type !help to see how to use this command.')
@@ -179,30 +179,30 @@ class Character(commands.Cog):
             ctx (context): The current discord context.
         """
         try:
-        
-            if not name:
-                
-                if ctx.guild:
+            async with ctx.typing():
+                if not name:
                     
-                    main_char = await db.get_discord_user_character_by_guild_user(ctx.author.id)
-                    char = await db.get_character_by_name_realm(main_char.character.name, main_char.character.realm)
-                    
-                    if char:
-                        name, realm = char.name, char.realm
+                    if ctx.guild:
                         
+                        main_char = await db.get_discord_user_character_by_guild_user(ctx.author.id)
+                        char = await db.get_character_by_name_realm(main_char.character.name, main_char.character.realm)
+                        
+                        if char:
+                            name, realm = char.name, char.realm
+                            
+                        else:
+                            await ctx.respond('Please provide a character name and realm or set a main character.')
+                            return                    
                     else:
-                        await ctx.respond('Please provide a character name and realm or set a main character.')
-                        return                    
-                else:
-                    await ctx.respond('Please provide a character name and realm.')
-                    return
+                        await ctx.respond('Please provide a character name and realm.')
+                        return
+                    
+                if not realm:
+                    realm = 'Area-52'
+                    
+                character = await raiderIO.get_character(name, realm)
                 
-            if not realm:
-                realm = 'Area-52'
-                
-            character = await raiderIO.get_character(name, realm)
-            
-            await ctx.respond(embed=character.get_recent_runs_embed())
+                await ctx.respond(embed=character.get_recent_runs_embed())
 
         except Exception as exception:
             await ctx.respond('Type !help to see how to use this command.')
@@ -220,28 +220,29 @@ class Character(commands.Cog):
             realm (str): Realm of the character
         """
         try:
-            if not name:
-                
-                if ctx.guild:
+            async with ctx.typing():
+                if not name:
                     
-                    main_char = await db.get_discord_user_character_by_guild_user(ctx.author.id)
-                    char = await db.get_character_by_name_realm(main_char.character.name, main_char.character.realm)
-                    
-                    if char:
-                        name, realm = char.name, char.realm
+                    if ctx.guild:
                         
+                        main_char = await db.get_discord_user_character_by_guild_user(ctx.author.id)
+                        char = await db.get_character_by_name_realm(main_char.character.name, main_char.character.realm)
+                        
+                        if char:
+                            name, realm = char.name, char.realm
+                            
+                        else:
+                            await ctx.respond('Please provide a character name and realm or set a main character.')
+                            return                    
                     else:
-                        await ctx.respond('Please provide a character name and realm or set a main character.')
-                        return                    
-                else:
-                    await ctx.respond('Please provide a character name and realm.')
-                    return
-                
-            if not realm:
-                realm = 'Area-52'
+                        await ctx.respond('Please provide a character name and realm.')
+                        return
+                    
+                if not realm:
+                    realm = 'Area-52'
 
-            character = await raiderIO.get_character(name, realm)
-            await ctx.respond(embed=character.get_best_runs_embed())
+                character = await raiderIO.get_character(name, realm)
+                await ctx.respond(embed=character.get_best_runs_embed())
 
         except Exception as exception:
             await ctx.respond('Type !help to see how to use this command.')

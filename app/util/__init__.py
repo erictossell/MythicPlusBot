@@ -1,8 +1,9 @@
 import datetime
+from datetime import time
 from typing import Tuple, List
 from app.raiderIO.models.score_color import ScoreColor
 
-def convert_millis(millis) -> str:
+def convert_millis(millis) -> time:
     """Convert milliseconds to hours, minutes, seconds.
 
     Args:
@@ -11,10 +12,15 @@ def convert_millis(millis) -> str:
     Returns:
         str: Date time in hours, minutes, seconds.
     """
-    seconds=(millis/1000)%60
-    minutes=(millis/(1000*60))%60
-    hours=(millis/(1000*60*60))%24
-    return "%d:%02d:%02d" % (hours, minutes, seconds)
+    seconds = (millis/1000) % 60
+    seconds = int(seconds)
+    minutes = (millis/(1000*60)) % 60
+    minutes = int(minutes)
+    hours = (millis/(1000*60*60)) % 24
+    hours = int(hours)
+    time = datetime.time(hours, minutes, seconds)
+    
+    return time
 
 def hex_to_rgb(hex) -> Tuple[int]:
     """Convert hex to rgb.
@@ -72,3 +78,14 @@ def time_until_target(hour, minute) -> datetime.timedelta:
         target += datetime.timedelta(days=1)
     
     return (target - now).total_seconds()
+
+def time_without_leading_zeros(t: time):
+    if t.hour == 0:
+        if t.minute == 0:
+            return f"{t.second}s"
+        else: 
+            return f"{t.minute}m {t.second}s"
+    else:
+        return f"{t.hour}h {t.minute}m {t.second}s"
+    
+
