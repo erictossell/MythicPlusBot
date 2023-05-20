@@ -122,7 +122,7 @@ class Announcement(commands.Cog):
         await self.bot.wait_until_ready()
         
         while not self.is_closed():
-            await asyncio.sleep(600)
+            
             
             for guild in self.bot.guilds:            
                 discord_guild = await db.get_discord_guild_by_id(guild.id)
@@ -159,7 +159,7 @@ class Announcement(commands.Cog):
             if util.seconds_until(0,0) < 1200:
                         # If it's less than 20 minutes until midnight, run this code.
                         print("It's less than 20 minutes until midnight.")
-            await asyncio.sleep(3600*2)
+            await asyncio.sleep(3600*1)
             
     
 
