@@ -1,9 +1,15 @@
+import os
 import discord
 from discord.commands import SlashCommandGroup
 from discord.ext import commands
+from dotenv import load_dotenv
 import app.db as db
 from app.objects.embed_builder import daily_guild_report_embed
 from app.util import hex_to_rgb
+
+load_dotenv('configurations/main.env')
+SUPPORT_SERVER_ID = os.getenv('SUPPORT_SERVER_ID')
+SUPPORT_SERVER_CHANNEL_ID = os.getenv('SUPPORT_SERVER_CHANNEL_ID')
 
 class Guild(commands.Cog):
     def __init__(self, bot):
@@ -35,10 +41,11 @@ class Guild(commands.Cog):
             await ctx.respond(embed=embed)
             
         except Exception as exception:
-            await ctx.respond('Something went wrong :(')
-            user = await ctx.bot.fetch_user(173958345022111744)
-            channel = await user.create_dm()
-            await channel.send(f'Error in !daily_report command: {exception}')
+            print(exception)
+            await ctx.respond('Something went wrong :( Talk to the bot developer for help.')
+            error_channel = await ctx.bot.fetch_guild(SUPPORT_SERVER_ID).fetch_channel(SUPPORT_SERVER_CHANNEL_ID)
+           
+            await error_channel.send(f'Error in !register command: {exception}')
                 
     @guild.command(name='runs', help='Gets the best Mythic+ runs for the guild for the week.')
     async def runs(self,ctx):
@@ -67,10 +74,11 @@ class Guild(commands.Cog):
             embed.set_footer(text=footer)
             await ctx.respond(embed=embed)
         except Exception as exception:
-            await ctx.respond('Something went wrong :(')
-            user = await ctx.bot.fetch_user(173958345022111744)
-            channel = await user.create_dm()
-            await channel.send(f'Error in !guildRuns command: {exception}')
+            print(exception)
+            await ctx.respond('Something went wrong :( Talk to the bot developer for help.')
+            error_channel = await ctx.bot.fetch_guild(SUPPORT_SERVER_ID).fetch_channel(SUPPORT_SERVER_CHANNEL_ID)
+           
+            await error_channel.send(f'Error in !register command: {exception}')
     
     @guild.command(name='top_runs', help='Gets the top 10 Mythic+ runs for the guild.')
     async def top_runs(self, ctx):
@@ -99,30 +107,33 @@ class Guild(commands.Cog):
             embed.set_footer(text=footer)
             await ctx.respond(embed=embed)
         except Exception as exception:
-            await ctx.respond('Type !help to see how to use this command.')
-            user = await ctx.bot.fetch_user(173958345022111744)
-            channel = await user.create_dm()
-            await channel.send(f'Error in !guildRuns command: {exception}')
+            print(exception)
+            await ctx.respond('Something went wrong :( Talk to the bot developer for help.')
+            error_channel = await ctx.bot.fetch_guild(SUPPORT_SERVER_ID).fetch_channel(SUPPORT_SERVER_CHANNEL_ID)
+           
+            await error_channel.send(f'Error in !register command: {exception}')
     
     @guild.command(name='achievements')
     async def achievements(self, ctx):
         try:
             await self.leaderboard_embed(ctx, 'achievements')
         except Exception as exception:
-            await ctx.respond('Type !help to see how to use this command.')
-            user = await ctx.bot.fetch_user(173958345022111744)
-            channel = await user.create_dm()
-            await channel.send(f'Error in !leaderboard achievements command: {exception}')
+            print(exception)
+            await ctx.respond('Something went wrong :( Talk to the bot developer for help.')
+            error_channel = await ctx.bot.fetch_guild(SUPPORT_SERVER_ID).fetch_channel(SUPPORT_SERVER_CHANNEL_ID)
+           
+            await error_channel.send(f'Error in !register command: {exception}')
             
     @guild.command(name='item_level')
     async def item_level(self, ctx):
         try:
             await self.leaderboard_embed(ctx, 'itemlevel')
         except Exception as exception:
-            await ctx.respond('Type !help to see how to use this command.')
-            user = await ctx.bot.fetch_user(173958345022111744)
-            channel = await user.create_dm()
-            await channel.send(f'Error in !leaderboard itemlevel command: {exception}')
+            print(exception)
+            await ctx.respond('Something went wrong :( Talk to the bot developer for help.')
+            error_channel = await ctx.bot.fetch_guild(SUPPORT_SERVER_ID).fetch_channel(SUPPORT_SERVER_CHANNEL_ID)
+           
+            await error_channel.send(f'Error in !register command: {exception}')
             
     @guild.command(name='mythic_plus', help='Gets the current Mythic+ leaderboard.')
     async def mythic_plus(self, ctx):
@@ -134,10 +145,11 @@ class Guild(commands.Cog):
         try:
             await self.mythic_plus_leaderboard(ctx)
         except Exception as exception:
-            await ctx.respond('Type !help to see how to use this command.')
-            user = await ctx.bot.fetch_user(173958345022111744)
-            channel = await user.create_dm()
-            await channel.send(f'Error in !leaderboard command: {exception}')
+            print(exception)
+            await ctx.respond('Something went wrong :( Talk to the bot developer for help.')
+            error_channel = await ctx.bot.fetch_guild(SUPPORT_SERVER_ID).fetch_channel(SUPPORT_SERVER_CHANNEL_ID)
+           
+            await error_channel.send(f'Error in !register command: {exception}')
             
     async def mythic_plus_leaderboard(self, ctx):
         await self.leaderboard_embed(ctx, 'mythic_plus')
@@ -179,10 +191,12 @@ class Guild(commands.Cog):
     @commands.Cog.listener()
     async def on_application_command_error(self, ctx, error):
         if isinstance(error, commands.errors.CommandNotFound):
-            await ctx.respond('Something went wrong :( Talk to Eriim about this error. ')
-            user = await ctx.bot.fetch_user(173958345022111744)
-            channel = await user.create_dm()
-            await channel.send(f'Error in !leaderboard command: {error}')
+            
+            print(error)
+            await ctx.respond('Something went wrong :( Talk to the bot developer for help.')
+            error_channel = await ctx.bot.fetch_guild(SUPPORT_SERVER_ID).fetch_channel(SUPPORT_SERVER_CHANNEL_ID)
+           
+            await error_channel.send(f'Error in !register command: {error}')
             
 def setup(bot):
     bot.add_cog(Guild(bot))

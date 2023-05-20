@@ -658,7 +658,11 @@ async def update_character(character: Character) -> CharacterDB:
     """
     try:
         async with async_session_scope() as session:
-            existing_character_query = select(CharacterDB).filter(CharacterDB.name == character.name, CharacterDB.realm == character.realm)
+            
+            existing_character_query = (
+                select(CharacterDB)
+                .filter(CharacterDB.name == character.name, CharacterDB.realm == character.realm)
+                )
             result = await session.execute(existing_character_query)
             existing_character = result.scalars().first()
             if not existing_character:

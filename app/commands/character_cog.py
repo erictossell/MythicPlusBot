@@ -1,11 +1,18 @@
+import os
 from typing import Optional
 import discord
 from discord.commands import SlashCommandGroup
 from discord.ext import commands
+from dotenv import load_dotenv
 import app.db as db
 from app.objects.character_registration import RegisterView
 import app.raiderIO as raiderIO
 from app.util import hex_to_rgb
+
+load_dotenv('configurations/main.env')
+SUPPORT_SERVER_ID = os.getenv('SUPPORT_SERVER_ID')
+SUPPORT_SERVER_CHANNEL_ID = os.getenv('SUPPORT_SERVER_CHANNEL_ID')
+
 
 class Character(commands.Cog):
     def __init__(self, bot):
@@ -47,10 +54,11 @@ class Character(commands.Cog):
             await ctx.respond(embed=embed)
             
         except Exception as exception:
-            await ctx.channel.send('Type !help to see how to use this command.')
-            user = await ctx.bot.fetch_user(173958345022111744)
-            channel = await user.create_dm()
-            await channel.send(f'Error in !charRuns command: {exception}')
+            print(exception)
+            await ctx.respond('Something went wrong :( Talk to the bot developer for help.')
+            error_channel = await ctx.bot.fetch_guild(SUPPORT_SERVER_ID).fetch_channel(SUPPORT_SERVER_CHANNEL_ID)
+           
+            await error_channel.send(f'Error in !register command: {exception}')
 
     @character.command(name='set_main', help='Sets the default character for a user.')
     async def set_main(self, ctx, name: str, realm: Optional[str] = 'Area-52'):
@@ -100,10 +108,11 @@ class Character(commands.Cog):
                     await ctx.respond(embed=embed)
 
         except Exception as exception:
-            await ctx.channel.send('Type !help to see how to use this command.')
-            user = await ctx.bot.fetch_user(173958345022111744)
-            channel = await user.create_dm()
-            await channel.send(f'Error in !register command: {exception}')
+            print(exception)
+            await ctx.respond('Something went wrong :( Talk to the bot developer for help.')
+            error_channel = await ctx.bot.fetch_guild(SUPPORT_SERVER_ID).fetch_channel(SUPPORT_SERVER_CHANNEL_ID)
+           
+            await error_channel.send(f'Error in !register command: {exception}')
 
     @character.command(name='register', help='Register a character that is not in the guild.')
     async def register(self, ctx):
@@ -128,10 +137,11 @@ class Character(commands.Cog):
                 await channel.send('Please click the button below to register your character. This message will self destruct in 60 seconds.', view=view, delete_after=60)
         
         except Exception as exception:
-            await ctx.channel.send('Type !help to see how to use this command.')
-            user = await ctx.bot.fetch_user(173958345022111744)
-            channel = await user.create_dm()
-            await channel.send(f'Error in !register command: {exception}')
+            print(exception)
+            await ctx.respond('Something went wrong :( Talk to the bot developer for help.')
+            error_channel = await ctx.bot.fetch_guild(SUPPORT_SERVER_ID).fetch_channel(SUPPORT_SERVER_CHANNEL_ID)
+           
+            await error_channel.send(f'Error in !register command: {exception}')
 
     @character.command(name='profile', help='View a character\'s profile.')
     async def profile(self, ctx, name: str = None, realm: str = 'Area-52'):
@@ -164,12 +174,20 @@ class Character(commands.Cog):
                 character = await raiderIO.get_character(name, realm)
                 
                 await ctx.respond(embed=character.get_character_embed())
+                
+                character_db = await db.get_character_by_name_realm(name.capitalize(), realm.capitalize())
+                
+                if character_db is not None:
+                    character_db = await db.update_character(character)
+                    
+                
 
         except Exception as exception:
-            await ctx.respond(f' I was not able to find a character with name: {name}. Type !help to see how to use this command.')
-            user = await ctx.bot.fetch_user(173958345022111744)
-            channel = await user.create_dm()
-            await channel.send(f'Error in !character command: {exception}')
+            print(exception)
+            await ctx.respond('Something went wrong :( Talk to the bot developer for help.')
+            error_channel = await ctx.bot.fetch_guild(SUPPORT_SERVER_ID).fetch_channel(SUPPORT_SERVER_CHANNEL_ID)
+           
+            await error_channel.send(f'Error in !register command: {exception}')
 
     @character.command(name='recent_runs', help='View a character\'s recent runs directly from RaiderIO.')
     async def recent_runs(self, ctx, name: str = None, realm: str = None):
@@ -203,12 +221,18 @@ class Character(commands.Cog):
                 character = await raiderIO.get_character(name, realm)
                 
                 await ctx.respond(embed=character.get_recent_runs_embed())
+                
+                character_db = await db.get_character_by_name_realm(name.capitalize(), realm.capitalize())
+                
+                if character_db is not None:
+                    character_db = await db.update_character(character)
 
         except Exception as exception:
-            await ctx.respond('Type !help to see how to use this command.')
-            user = await ctx.bot.fetch_user(173958345022111744)
-            channel = await user.create_dm()
-            await channel.send(f'Error in !recent command: {exception}')  
+            print(exception)
+            await ctx.respond('Something went wrong :( Talk to the bot developer for help.')
+            error_channel = await ctx.bot.fetch_guild(SUPPORT_SERVER_ID).fetch_channel(SUPPORT_SERVER_CHANNEL_ID)
+           
+            await error_channel.send(f'Error in !register command: {exception}') 
 
     @character.command(name='best_runs', help='Usage: !best <character name> <realm> (optional on Area-52)')
     async def best_runs(self, ctx, name: str = None, realm: str = None):
@@ -243,12 +267,18 @@ class Character(commands.Cog):
 
                 character = await raiderIO.get_character(name, realm)
                 await ctx.respond(embed=character.get_best_runs_embed())
+                
+                character_db = await db.get_character_by_name_realm(name.capitalize(), realm.capitalize())
+                
+                if character_db is not None:
+                    character_db = await db.update_character(character)
 
         except Exception as exception:
-            await ctx.respond('Type !help to see how to use this command.')
-            user = await ctx.bot.fetch_user(173958345022111744)
-            channel = await user.create_dm()
-            await channel.send(f'Error in !best command: {exception}')
+            print(exception)
+            await ctx.respond('Something went wrong :( Talk to the bot developer for help.')
+            error_channel = await ctx.bot.fetch_guild(SUPPORT_SERVER_ID).fetch_channel(SUPPORT_SERVER_CHANNEL_ID)
+           
+            await error_channel.send(f'Error in !register command: {exception}')
 
     
 

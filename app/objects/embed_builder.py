@@ -59,11 +59,11 @@ def daily_guild_report_embed(bot : discord.Client,
         dps = ''
         for character_run in character_runs:
             if character_run.spec_name in TANK_SPECS:
-                tank = f'[🛡️ {character_run.character.name}]({character_run.character.url})  | '
+                tank = f'🛡️ [{character_run.character.name}]({character_run.character.url})  | '
             elif character_run.spec_name in HEALER_SPECS:
-                healer = f'[💚 {character_run.character.name}]({character_run.character.url})  | '
+                healer = f'💚 [{character_run.character.name}]({character_run.character.url})  | '
             else:
-                dps +=  f'[⚔️ {character_run.character.name}]({character_run.character.url})  | '
+                dps +=  f'⚔️ [{character_run.character.name}]({character_run.character.url})  | '
                 
           
             
@@ -92,11 +92,11 @@ def daily_guild_report_embed(bot : discord.Client,
         dps = ''
         for character_run in character_runs:
             if character_run.spec_name in TANK_SPECS:
-                tank = f'[🛡️ {character_run.character.name}]({character_run.character.url})  | '
+                tank = f'🛡️[{character_run.character.name}]({character_run.character.url})  | '
             elif character_run.spec_name in HEALER_SPECS:
-                healer = f'[💚 {character_run.character.name}]({character_run.character.url})  | '
+                healer = f'💚[{character_run.character.name}]({character_run.character.url})  | '
             else:
-                dps +=  f'[⚔️ {character_run.character.name}]({character_run.character.url})  | '
+                dps +=  f'⚔️[{character_run.character.name}]({character_run.character.url})  | '
                    
         run_characters += tank + healer + dps
         plus = '+' * run.num_keystone_upgrades

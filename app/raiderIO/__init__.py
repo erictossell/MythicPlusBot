@@ -18,7 +18,7 @@ from app.raiderIO.models.score_color import ScoreColor
 import app.util as util
 
 API_URL = 'https://raider.io/api/v1/'
-CALLS = 250
+CALLS = 12
 RATE_LIMIT=60
 TIMEOUT = 10
 RETRIES = 5
@@ -345,7 +345,6 @@ async def crawl_characters(discord_guild_id: int) -> str:
         for character in tqdm(characters_list):
             characters_crawled += 1
 
-
             character_io = None
             retries = 5
             while retries > 0:
@@ -374,8 +373,7 @@ async def crawl_characters(discord_guild_id: int) -> str:
             character.rank = character_io.rank
             await db.update_character(character)
             update_character_counter += 1
-            
-            
+
             for run in character_io.best_runs:
 
                 if run is None:
@@ -388,11 +386,23 @@ async def crawl_characters(discord_guild_id: int) -> str:
                     run_db = await db.add_dungeon_run(convert.dungeon_run_io(run))
                     run_counter += 1
 
-                    is_guild = await get_run_details(run_db, discord_guild_id)
-                    runs_crawled += 1
-                    
+                    is_guild_run = None
+                    retries = 3
+                    while retries > 0:
+                        try:
+                            is_guild_run = await get_run_details(run_db, discord_guild_id)
+                            break
+                        except (httpx.ReadTimeout, ssl.SSLWantReadError):
+                            await asyncio.sleep(2 ** (3 - retries))
+                            retries -= 1
 
-                    if is_guild is True:
+                    if is_guild_run is None:
+                        print(f"Could not fetch run details for {run_db.name}. Skipping.")
+                        continue
+
+                    runs_crawled += 1
+
+                    if is_guild_run is True:
                         announcement = db.AnnouncementDB(discord_guild_id=discord_guild_id,
                                                         announcement_channel_id=discord_guild.announcement_channel_id,
                                                         title=f'🧙‍♂️ New guild run: {run_db.mythic_level} - {run_db.name} on {run_db.completed_at}',
@@ -421,11 +431,23 @@ async def crawl_characters(discord_guild_id: int) -> str:
                     run_db = await db.add_dungeon_run(convert.dungeon_run_io(run))
                     run_counter += 1
 
-                    is_guild = await get_run_details(run_db, discord_guild_id)
+                    is_guild_run = None
+                    retries = 3
+                    while retries > 0:
+                        try:
+                            is_guild_run = await get_run_details(run_db, discord_guild_id)
+                            break
+                        except (httpx.ReadTimeout, ssl.SSLWantReadError):
+                            await asyncio.sleep(2 ** (3 - retries))
+                            retries -= 1
+
+                    if is_guild_run is None:
+                        print(f"Could not fetch run details for {run_db.name}. Skipping.")
+                        continue
+                    
                     runs_crawled += 1
                     
-
-                    if is_guild is True:
+                    if is_guild_run is True:
                         announcement = db.AnnouncementDB(discord_guild_id=discord_guild_id,
                                                         announcement_channel_id=discord_guild.announcement_channel_id,
                                                         title=f'🧙‍♂️ New guild run: {run_db.mythic_level} - {run_db.name} on {run_db.completed_at}',
@@ -441,9 +463,6 @@ async def crawl_characters(discord_guild_id: int) -> str:
                                                         dungeon_run=run_db)
 
                         guild_run_counter += 1
-
-            
-
                 
         return f'{discord_guild.discord_guild_name} Characters crawled: {characters_crawled} |  Updated {update_character_counter} characters and added {run_counter} runs.'
 
@@ -458,7 +477,8 @@ async def crawl_discord_guild_members(discord_guild_id) -> None:
         score_colors_list = get_score_colors()
         discord_guild = await db.get_discord_guild_by_id(discord_guild_id)
         game_guild_list = await db.get_all_game_guilds_by_discord_id(discord_guild_id)
-        return_list = []
+        return_string = ""
+        
         for game_guild in game_guild_list:
             counter = 0
             discord_game_guild = await db.get_discord_game_guild_by_guild_ids(discord_guild_id, game_guild.id)
@@ -471,6 +491,13 @@ async def crawl_discord_guild_members(discord_guild_id) -> None:
                 continue
 
             for member in tqdm(member_list):
+                
+                #check database for existing member
+                existing_member = await db.get_character_by_name_realm(member.name, member.realm)
+                
+                if existing_member is not None:                    
+                    continue  
+                    
                 character = None
                 retries = 5
                 while retries > 0:
@@ -516,8 +543,8 @@ async def crawl_discord_guild_members(discord_guild_id) -> None:
                                                         character=added_character)
                     
                 counter += 1
-            return_list.append(f'Crawler: verified {counter}  characters to the database for the guild {game_guild.name}.\n')
-        return return_list
+            return_string += f'Crawler: verified {counter}  characters to the database for the guild {game_guild.name}.\n'
+        return return_string
     except Exception as exception:
         print(exception)
         return False

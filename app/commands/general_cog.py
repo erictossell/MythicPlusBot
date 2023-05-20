@@ -1,9 +1,15 @@
 # Description: General commands for the bot.
+import os
 import discord
 from discord.ext import commands
+from dotenv import load_dotenv
 from app.objects.dice import Dice
 from app.objects.poll.createPollButton import CreatePollButton
 import app.raiderIO as raiderIO
+
+load_dotenv('configurations/main.env')
+SUPPORT_SERVER_ID = os.getenv('SUPPORT_SERVER_ID')
+SUPPORT_SERVER_CHANNEL_ID = os.getenv('SUPPORT_SERVER_CHANNEL_ID')
 
 class GeneralCog(commands.Cog):
     """The general commands cog.
@@ -38,10 +44,11 @@ class GeneralCog(commands.Cog):
             dice = Dice(int(sides))
             await ctx.respond(dice.roll())
         except Exception as exception:
-            await ctx.respond('@Eriim needs to fix this particular command :(')
-            user = await ctx.bot.fetch_user(173958345022111744)
-            channel = await user.create_dm()
-            await channel.send(f'Error in !roll command: {exception}')
+            print(exception)
+            await ctx.respond('Something went wrong :( Talk to the bot developer for help.')
+            error_channel = await ctx.bot.fetch_guild(SUPPORT_SERVER_ID).fetch_channel(SUPPORT_SERVER_CHANNEL_ID)
+           
+            await error_channel.send(f'Error in !register command: {exception}')
     @commands.slash_command(name='affixes', help='Gets the current Mythic+ affixes.')
     async def affixes(self, ctx):
         """This command gets the current Mythic+ affixes.
@@ -60,10 +67,11 @@ class GeneralCog(commands.Cog):
             await ctx.respond(embed=embed)
             
         except Exception as exception:
-            await ctx.respond('Type !help to see how to use this command.')
-            user = await ctx.bot.fetch_user(173958345022111744)
-            channel = await user.create_dm()
-            await channel.send(f'Error in !affixes command: {exception}')
+            print(exception)
+            await ctx.respond('Something went wrong :( Talk to the bot developer for help.')
+            error_channel = await ctx.bot.fetch_guild(SUPPORT_SERVER_ID).fetch_channel(SUPPORT_SERVER_CHANNEL_ID)
+           
+            await error_channel.send(f'Error in !register command: {exception}')
     @commands.slash_command(name='poll', description='Sends a poll to the channel.')
     async def poll (self,ctx):
         """A poll using the new modal features.
@@ -71,10 +79,10 @@ class GeneralCog(commands.Cog):
         Args:
             ctx (context): The current discord context.
         """
-        print('testPoll command called')
+        print('Poll command called')
         view = CreatePollButton()
         await ctx.send(view=view)
-        await ctx.respond('----- TalBot Poll -----')
+        await ctx.respond('----- Mythic+ Bot Poll -----')
 
 def setup(bot):
     """Set up the general cog.

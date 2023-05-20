@@ -111,8 +111,7 @@ class Announcement(commands.Cog):
             await asyncio.sleep(300)
 
     @tasks.loop(time=time(hour=0, minute=0, second=0))
-    async def crawl_for_data(self):
-        
+    async def crawl_for_data(self):        
         
         await self.bot.wait_until_ready()
         
@@ -136,13 +135,17 @@ class Announcement(commands.Cog):
                     
                     channel = self.bot.get_channel(1098345786149982279)
                     
-                    guild_crawl = await raiderIO.crawl_discord_guild_members(discord_guild.id)
-                                      
-                    await channel.send(guild_crawl)
+                    try:
+                        
+                        guild_crawl = await asyncio.wait_for(raiderIO.crawl_discord_guild_members(discord_guild.id), timeout=300.0)
+                        await channel.send(guild_crawl)
+                        
+                        character_crawl = await asyncio.wait_for(raiderIO.crawl_characters(discord_guild.id), timeout=300.0)
+                        await channel.send(character_crawl)
                     
-                    character_crawl = await raiderIO.crawl_characters(discord_guild.id)
-                    
-                    await channel.send(character_crawl)
+                    except TimeoutError:
+                        print(f"Timeout occurred when trying to crawl data for guild id: {discord_guild.id}")
+                        continue
                     
             if util.seconds_until(0,0) < 1200:
                         # If it's less than 20 minutes until midnight, run this code.
