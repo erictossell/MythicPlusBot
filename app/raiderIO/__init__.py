@@ -18,7 +18,7 @@ from app.raiderIO.models.score_color import ScoreColor
 import app.util as util
 
 API_URL = 'https://raider.io/api/v1/'
-CALLS = 12
+CALLS = 125
 RATE_LIMIT=60
 TIMEOUT = 10
 RETRIES = 5
