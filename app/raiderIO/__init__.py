@@ -18,7 +18,7 @@ from app.raiderIO.models.score_color import ScoreColor
 import app.util as util
 
 API_URL = 'https://raider.io/api/v1/'
-CALLS = 125
+CALLS = 200
 RATE_LIMIT=60
 TIMEOUT = 10
 RETRIES = 5
@@ -544,6 +544,9 @@ async def crawl_discord_guild_members(discord_guild_id) -> None:
                     
                 counter += 1
             return_string += f'Crawler: verified {counter}  characters to the database for the guild {game_guild.name}.\n'
+        
+        if return_string == "":
+            return_string = "Crawler: no new characters were added to the database."
         return return_string
     except Exception as exception:
         print(exception)

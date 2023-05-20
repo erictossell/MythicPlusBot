@@ -1,13 +1,19 @@
 
 
 import asyncio
-import datetime
+import os
 from discord.ext import commands, tasks
 from datetime import time
+
+from dotenv import load_dotenv
 import app.db as db
 from app.objects.embed_builder import announce_guild_run_embed, daily_guild_report_embed
 import app.raiderIO as raiderIO
 import app.util as util
+
+load_dotenv('configurations/main.env')
+SUPPORT_SERVER_ID = os.getenv('SUPPORT_SERVER_ID')
+SUPPORT_SERVER_CHANNEL_ID = os.getenv('SUPPORT_SERVER_CHANNEL_ID')
 
 
 
@@ -133,7 +139,7 @@ class Announcement(commands.Cog):
                                 
                 else:
                     
-                    channel = self.bot.get_channel(1098345786149982279)
+                    channel = self.bot.get_channel(SUPPORT_SERVER_CHANNEL_ID)
                     
                     try:
                         
