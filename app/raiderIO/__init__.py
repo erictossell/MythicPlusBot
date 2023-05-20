@@ -132,6 +132,8 @@ async def get_character(name: str,
                                                     url = run['url']))
                     if score_colors[0].score is None:
                         score_color = score_colors[0].color
+                    elif score_colors is None:
+                        score_color = '#c300ff'
                     else:
                         score_color = util.binary_search_score_colors(score_colors, int(score))
                     thumbnail_url = response.json()['thumbnail_url']
@@ -474,7 +476,19 @@ async def crawl_characters(discord_guild_id: int) -> str:
 async def crawl_discord_guild_members(discord_guild_id) -> None:
     print('Crawler: trying to crawl guild members')
     try:
-        score_colors_list = get_score_colors()
+        
+        score_colors_list = None
+        retries = 3
+        while retries > 0:
+            try:
+                score_colors_list = get_score_colors()
+                break
+            except (httpx.ReadTimeout, ssl.SSLWantReadError):
+                await asyncio.sleep(2 ** (3 - retries))
+                retries -= 1
+        
+              
+        
         discord_guild = await db.get_discord_guild_by_id(discord_guild_id)
         game_guild_list = await db.get_all_game_guilds_by_discord_id(discord_guild_id)
         return_string = ""

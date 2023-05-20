@@ -13,7 +13,7 @@ import app.util as util
 
 load_dotenv('configurations/main.env')
 SUPPORT_SERVER_ID = os.getenv('SUPPORT_SERVER_ID')
-SUPPORT_SERVER_CHANNEL_ID = os.getenv('SUPPORT_SERVER_CHANNEL_ID')
+SUPPORT_CHANNEL_ID = os.getenv('SUPPORT_CHANNEL_ID')
 
 
 
@@ -139,18 +139,21 @@ class Announcement(commands.Cog):
                                 
                 else:
                     
-                    channel = self.bot.get_channel(SUPPORT_SERVER_CHANNEL_ID)
+                    channel = self.bot.get_channel(int(SUPPORT_CHANNEL_ID))
                     
                     try:
                         
-                        guild_crawl = await asyncio.wait_for(raiderIO.crawl_discord_guild_members(discord_guild.id), timeout=300.0)
+                        guild_crawl = await asyncio.wait_for(raiderIO.crawl_discord_guild_members(discord_guild.id), timeout=600.0)
                         await channel.send(guild_crawl)
                         
-                        character_crawl = await asyncio.wait_for(raiderIO.crawl_characters(discord_guild.id), timeout=300.0)
+                        character_crawl = await asyncio.wait_for(raiderIO.crawl_characters(discord_guild.id), timeout=600.0)
                         await channel.send(character_crawl)
                     
                     except TimeoutError:
                         print(f"Timeout occurred when trying to crawl data for guild id: {discord_guild.id}")
+                        continue
+                    except Exception:
+                        print(f"An error occurred when trying to crawl data for guild id: {discord_guild.id}")
                         continue
                     
             if util.seconds_until(0,0) < 1200:

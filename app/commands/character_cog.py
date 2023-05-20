@@ -11,7 +11,7 @@ from app.util import hex_to_rgb
 
 load_dotenv('configurations/main.env')
 SUPPORT_SERVER_ID = os.getenv('SUPPORT_SERVER_ID')
-SUPPORT_SERVER_CHANNEL_ID = os.getenv('SUPPORT_SERVER_CHANNEL_ID')
+SUPPORT_CHANNEL_ID = os.getenv('SUPPORT_CHANNEL_ID')
 
 
 class Character(commands.Cog):
@@ -56,7 +56,7 @@ class Character(commands.Cog):
         except Exception as exception:
             print(exception)
             await ctx.respond('Something went wrong :( Talk to the bot developer for help.')
-            error_channel = await ctx.bot.fetch_guild(SUPPORT_SERVER_ID).fetch_channel(SUPPORT_SERVER_CHANNEL_ID)
+            error_channel = await ctx.bot.fetch_guild(SUPPORT_SERVER_ID).fetch_channel(SUPPORT_CHANNEL_ID)
            
             await error_channel.send(f'Error in !register command: {exception}')
 
@@ -110,7 +110,7 @@ class Character(commands.Cog):
         except Exception as exception:
             print(exception)
             await ctx.respond('Something went wrong :( Talk to the bot developer for help.')
-            error_channel = await ctx.bot.fetch_guild(SUPPORT_SERVER_ID).fetch_channel(SUPPORT_SERVER_CHANNEL_ID)
+            error_channel = await ctx.bot.fetch_guild(int(SUPPORT_SERVER_ID)).fetch_channel(int(SUPPORT_CHANNEL_ID))
            
             await error_channel.send(f'Error in !register command: {exception}')
 
@@ -139,7 +139,7 @@ class Character(commands.Cog):
         except Exception as exception:
             print(exception)
             await ctx.respond('Something went wrong :( Talk to the bot developer for help.')
-            error_channel = await ctx.bot.fetch_guild(SUPPORT_SERVER_ID).fetch_channel(SUPPORT_SERVER_CHANNEL_ID)
+            error_channel = await ctx.bot.fetch_guild(int(SUPPORT_SERVER_ID)).fetch_channel(int(SUPPORT_CHANNEL_ID))
            
             await error_channel.send(f'Error in !register command: {exception}')
 
@@ -185,7 +185,7 @@ class Character(commands.Cog):
         except Exception as exception:
             print(exception)
             await ctx.respond('Something went wrong :( Talk to the bot developer for help.')
-            error_channel = await ctx.bot.fetch_guild(SUPPORT_SERVER_ID).fetch_channel(SUPPORT_SERVER_CHANNEL_ID)
+            error_channel = await ctx.bot.fetch_guild(int(SUPPORT_SERVER_ID)).fetch_channel(int(SUPPORT_CHANNEL_ID))
            
             await error_channel.send(f'Error in !register command: {exception}')
 
@@ -230,7 +230,7 @@ class Character(commands.Cog):
         except Exception as exception:
             print(exception)
             await ctx.respond('Something went wrong :( Talk to the bot developer for help.')
-            error_channel = await ctx.bot.fetch_guild(SUPPORT_SERVER_ID).fetch_channel(SUPPORT_SERVER_CHANNEL_ID)
+            error_channel = await ctx.bot.fetch_guild(int(SUPPORT_SERVER_ID)).fetch_channel(int(SUPPORT_CHANNEL_ID))
            
             await error_channel.send(f'Error in !register command: {exception}') 
 
@@ -276,7 +276,7 @@ class Character(commands.Cog):
         except Exception as exception:
             print(exception)
             await ctx.respond('Something went wrong :( Talk to the bot developer for help.')
-            error_channel = await ctx.bot.fetch_guild(SUPPORT_SERVER_ID).fetch_channel(SUPPORT_SERVER_CHANNEL_ID)
+            error_channel = await ctx.bot.fetch_guild(int(SUPPORT_SERVER_ID)).fetch_channel(int(SUPPORT_CHANNEL_ID))
            
             await error_channel.send(f'Error in !register command: {exception}')
 

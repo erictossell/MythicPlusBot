@@ -10,7 +10,7 @@ import app.db as db
 
 load_dotenv('configurations/main.env')
 SUPPORT_SERVER_ID = os.getenv('SUPPORT_SERVER_ID')
-SUPPORT_SERVER_CHANNEL_ID = os.getenv('SUPPORT_SERVER_CHANNEL_ID')
+SUPPORT_CHANNEL_ID = os.getenv('SUPPORT_CHANNEL_ID')
 
 class Admin(commands.Cog):
     def __init__(self, bot):
@@ -32,7 +32,7 @@ class Admin(commands.Cog):
         except Exception as e:
             print(e)
             await ctx.respond('Something went wrong :( Talk to Eriim about this error. ')
-            error_channel = await ctx.bot.fetch_guild(SUPPORT_SERVER_ID).fetch_channel(SUPPORT_SERVER_CHANNEL_ID)
+            error_channel = await ctx.bot.fetch_guild(int(SUPPORT_SERVER_ID)).fetch_channel(int(SUPPORT_CHANNEL_ID))           
            
             await error_channel.send(f'Error in !register command: {e}')
        
