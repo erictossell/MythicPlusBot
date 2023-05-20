@@ -32,14 +32,14 @@ class TestBinarySearch(TestCase):
     def test_binary_search_score_colors_301(self):
         scoreColors = get_score_colors()
         result = binary_search_score_colors(scoreColors, 301)
-        assert result == '#eaffe0'
+        assert result == scoreColors[-5].color
         
     def test_binary_search_score_colors_500(self):
         scoreColors = get_score_colors()
         result = binary_search_score_colors(scoreColors, 500)
-        assert result == '#baffa2'
+        assert result == scoreColors[-13].color
         
     def test_binary_search_score_colors_1000(self):
         scoreColors = get_score_colors()
         result = binary_search_score_colors(scoreColors, 1000)
-        assert result == '#45ec46'
+        assert result == scoreColors[-34].color

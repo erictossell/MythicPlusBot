@@ -681,7 +681,9 @@ async def update_character(character: Character) -> CharacterDB:
                 existing_character.rank = character.rank
                 existing_character.thumbnail_url = character.thumbnail_url
                 existing_character.url = character.url
-                existing_character.last_crawled_at = character.last_crawled_at
+                existing_character.last_crawled_at = datetime.strptime(character.last_crawled_at,
+                                                                '%Y-%m-%dT%H:%M:%S.%fZ')
+                
                 
                 #print('Tal_DB : updated character: ' + character.name + ' on realm: ' + character.realm)
                 return existing_character

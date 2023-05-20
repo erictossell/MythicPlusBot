@@ -10,7 +10,7 @@ class TestCharacterDB:
     def mock_session(self):
         session = MagicMock()
         with patch("db.Session", return_value=session):
-            with db.session_scope() as session:
+            with db.async_session_scope() as session:
                 yield session
     @pytest.mark.usefixtures("mock_session")
     def test_add_character_run(self, mock_session):
