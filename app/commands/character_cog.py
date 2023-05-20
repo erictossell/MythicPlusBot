@@ -1,3 +1,4 @@
+import datetime
 import os
 from typing import Optional
 import discord
@@ -178,6 +179,8 @@ class Character(commands.Cog):
                 character_db = await db.get_character_by_name_realm(name.capitalize(), realm.capitalize())
                 
                 if character_db is not None:
+                    character.last_crawled_at = datetime.strptime(character.last_crawled_at,
+                                                                '%Y-%m-%dT%H:%M:%S.%fZ')
                     character_db = await db.update_character(character)
                     
                 
@@ -225,6 +228,8 @@ class Character(commands.Cog):
                 character_db = await db.get_character_by_name_realm(name.capitalize(), realm.capitalize())
                 
                 if character_db is not None:
+                    character.last_crawled_at = datetime.strptime(character.last_crawled_at,
+                                                                '%Y-%m-%dT%H:%M:%S.%fZ')
                     character_db = await db.update_character(character)
 
         except Exception as exception:
@@ -271,6 +276,8 @@ class Character(commands.Cog):
                 character_db = await db.get_character_by_name_realm(name.capitalize(), realm.capitalize())
                 
                 if character_db is not None:
+                    character.last_crawled_at = datetime.strptime(character.last_crawled_at,
+                                                                '%Y-%m-%dT%H:%M:%S.%fZ')
                     character_db = await db.update_character(character)
 
         except Exception as exception:
