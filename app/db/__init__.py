@@ -186,7 +186,7 @@ async def get_character_by_name_realm(name: str, realm: str) -> Optional[Charact
         print(f'Error while querying the database: {error}')
         return None
 
-async def get_run_by_id(run_id: int) -> Optional[DungeonRunDB]:
+async def get_run_by_id(run_id: int, season:str) -> Optional[DungeonRunDB]:
     """Look up a specific run in the database.
 
     Args:
@@ -197,7 +197,11 @@ async def get_run_by_id(run_id: int) -> Optional[DungeonRunDB]:
     """
     try:
         async with async_session_scope() as session:
-            run_query = select(DungeonRunDB).options(joinedload(DungeonRunDB.character_runs)).filter(DungeonRunDB.id == run_id)
+            run_query = (
+                select(DungeonRunDB)
+                .options(joinedload(DungeonRunDB.character_runs))
+                .filter(DungeonRunDB.dungeon_id == run_id, DungeonRunDB.season == season)
+                )
             result = await session.execute(run_query)
             existing_run = result.scalar()
             return existing_run
@@ -1128,7 +1132,7 @@ async def get_all_runs_not_crawled() -> List[DungeonRunDB]:
         print(f'Error while querying the database: {error}')
         return None
     
-async def get_all_characters_for_run(run_id: int) -> List[CharacterRunDB]:
+async def get_all_characters_for_run(run_id: int, season: str) -> List[CharacterRunDB]:
     """Get all characters for a run.
 
     Args:
@@ -1140,7 +1144,7 @@ async def get_all_characters_for_run(run_id: int) -> List[CharacterRunDB]:
     try:
         async with async_session_scope() as session:
             
-            query = select(DungeonRunDB).filter(DungeonRunDB.id == run_id)
+            query = select(DungeonRunDB).filter(DungeonRunDB.dungeon_id == run_id, DungeonRunDB.season == season)
             result = await session.execute(query)
             existing_run = result.scalar()
             

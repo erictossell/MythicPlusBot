@@ -12,7 +12,8 @@ class DungeonRunDB(Base):
 
     __tablename__ = 'dungeon_runs'
 
-    id = Column(BigInteger, primary_key=True)
+    id = Column(Integer, primary_key=True)
+    dungeon_id = Column(BigInteger)
     season = Column(String)
     name = Column(String)
     short_name = Column(String)

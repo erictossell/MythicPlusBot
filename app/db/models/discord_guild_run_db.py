@@ -12,7 +12,7 @@ class DiscordGuildRunDB(Base):
     discord_guild_id = Column(BigInteger, ForeignKey('discord_guilds.id'))
     discord_guild = relationship("DiscordGuildDB", back_populates="discord_guild_runs")
     
-    dungeon_run_id = Column(BigInteger, ForeignKey('dungeon_runs.id'))
+    dungeon_run_id = Column(Integer, ForeignKey('dungeon_runs.id'))
     dungeon_run = relationship("DungeonRunDB", back_populates="discord_guild_runs")
     
     modified_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
