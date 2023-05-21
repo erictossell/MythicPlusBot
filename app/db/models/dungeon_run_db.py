@@ -33,7 +33,7 @@ class DungeonRunDB(Base):
     announcements = relationship("AnnouncementDB", back_populates="dungeon_run")
     discord_guild_runs = relationship("DiscordGuildRunDB", back_populates="dungeon_run")
 
-    def __init__(self, id, season, name, short_name, mythic_level, completed_at, clear_time_ms, par_time_ms, num_keystone_upgrades, score, url):
+    def __init__(self, dungeon_id, season, name, short_name, mythic_level, completed_at, clear_time_ms, par_time_ms, num_keystone_upgrades, score, url):
         """
         DungeonRunDB constructor.
 
@@ -50,7 +50,7 @@ class DungeonRunDB(Base):
             score (int): The score obtained during the dungeon run.
             url (str): The URL related to the dungeon run.
         """
-        self.id = id
+        self.dungeon_id = dungeon_id
         self.season = season
         self.name = name
         self.short_name = short_name

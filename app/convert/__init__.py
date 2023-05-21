@@ -30,7 +30,7 @@ def character_io(character: Character, discord_user_id: int, discord_guild_id: i
     return character_db
 
 def dungeon_run_io(run: DungeonRun) -> DungeonRunDB:
-    return DungeonRunDB(id = run.id,
+    return DungeonRunDB(dungeon_id = run.id,
                            season = run.season,
                            name = run.name,
                            short_name = run.short_name,
