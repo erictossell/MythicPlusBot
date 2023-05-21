@@ -381,7 +381,7 @@ async def crawl_characters(discord_guild_id: int) -> str:
                 if run is None:
                     return f'Error: An error occurred while crawling {character.name}'
 
-                if run is not None and await db.get_run_by_id(int(run.id)) is None:
+                if run is not None and await db.get_run_by_id(int(run.id), run.season) is None:
 
                     run.completed_at = datetime.strptime(run.completed_at,
                                                             '%Y-%m-%dT%H:%M:%S.%fZ')
@@ -426,7 +426,7 @@ async def crawl_characters(discord_guild_id: int) -> str:
                 if run is None:
                     return f'Error: An error occurred while crawling {character.name}'
 
-                elif run is not None and await db.get_run_by_id(int(run.id)) is None:
+                elif run is not None and await db.get_run_by_id(int(run.id), run.season) is None:
 
                     run.completed_at = datetime.strptime(run.completed_at,
                                                             '%Y-%m-%dT%H:%M:%S.%fZ')
