@@ -6,13 +6,14 @@ import asyncio
 from typing import List, Optional
 from ratelimit import limits, sleep_and_retry
 import httpx
-from app import convert
+
 import app.db as db
 from app.db.models.dungeon_run_db import DungeonRunDB
 from app.raiderIO.models.affix import Affix
 from app.raiderIO.models.character import Character
 from app.raiderIO.models.dungeon_run import DungeonRun
 from app.raiderIO.models.member import Member
+from app import convert
 
 from app.raiderIO.models.score_color import ScoreColor
 import app.util as util
@@ -362,9 +363,7 @@ async def crawl_characters(discord_guild_id: int) -> str:
             if character_io is None:
                 print(f"Could not fetch character {character.name}. Skipping.")
                 continue
-            
-            
-            
+
             character.last_crawled_at = datetime.strptime(character_io.last_crawled_at,
                                                                 '%Y-%m-%dT%H:%M:%S.%fZ')
             character.score = character_io.score
@@ -379,9 +378,10 @@ async def crawl_characters(discord_guild_id: int) -> str:
             for run in character_io.best_runs:
 
                 if run is None:
-                    return f'Error: An error occurred while crawling {character.name}'
+                    return f'Error: An error occurred while crawling {character.name} for new runs.'
 
-                if run is not None and await db.get_run_by_id(int(run.id), run.season) is None:
+                if run is not None and await db.get_run_by_id(int(run.id),
+                                                              run.season) is None:
 
                     run.completed_at = datetime.strptime(run.completed_at,
                                                             '%Y-%m-%dT%H:%M:%S.%fZ')
@@ -424,7 +424,7 @@ async def crawl_characters(discord_guild_id: int) -> str:
             for run in character_io.recent_runs:
 
                 if run is None:
-                    return f'Error: An error occurred while crawling {character.name}'
+                    return f'Error: An error occurred while crawling {character.name} for new runs.'
 
                 elif run is not None and await db.get_run_by_id(int(run.id), run.season) is None:
 

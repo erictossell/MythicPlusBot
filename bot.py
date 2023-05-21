@@ -38,6 +38,6 @@ def load_extensions():
 def main():
     """The main function for the bot."""
     load_extensions()
-    bot.run(os.getenv('DISCORD_TOKEN'))
+    bot.run(TOKEN)
 
 main()

@@ -37,15 +37,17 @@ from app.raiderIO.models.dungeon_run import DungeonRun
 
 
 load_dotenv('configurations/main.env')
-RAILWAY = os.getenv('RAILWAY_POSTGRES')
-DEV_POSTGRES = os.getenv('DEV_POSTGRES')
+
 DEV_RAILWAY = os.getenv('DEV_RAILWAY')
 
 
 
 async_engine = create_async_engine(
     DEV_RAILWAY,
-    echo=False, logging_name='sqlalchemy.engine', echo_pool=True, pool_pre_ping=True
+    echo=False,
+    logging_name='sqlalchemy.engine',
+    echo_pool=True,
+    pool_pre_ping=True
 )
 
 async def create_schema():
