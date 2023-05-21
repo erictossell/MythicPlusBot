@@ -257,7 +257,7 @@ async def get_run_details(dungeon_run : DungeonRunDB, discord_guild_id) -> Optio
         try:
             async with httpx.AsyncClient() as client:
 
-                request = await client.get(API_URL +f'mythic-plus/run-details?season={dungeon_run.season}&id={dungeon_run.id}', timeout=TIMEOUT)
+                request = await client.get(API_URL +f'mythic-plus/run-details?season={dungeon_run.season}&id={dungeon_run.dungeon_id}', timeout=TIMEOUT)
 
                 if request.status_code != 200:
                     return None
