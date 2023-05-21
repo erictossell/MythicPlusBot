@@ -379,7 +379,7 @@ async def crawl_characters(discord_guild_id: int) -> str:
 
                 if run is None:
                     return f'Error: An error occurred while crawling {character.name} for new runs.'
-
+                
                 if run is not None and await db.get_run_by_id(int(run.id),
                                                               run.season) is None:
 

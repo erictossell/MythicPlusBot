@@ -487,14 +487,17 @@ async def add_dungeon_run(dungeon_run: DungeonRunDB) -> DungeonRunDB:
     """
     try:
         async with async_session_scope() as session:
-            query = select(DungeonRunDB).filter(DungeonRunDB.id == int(dungeon_run.id))
+            query = (
+                select(DungeonRunDB)
+                .filter(DungeonRunDB.dungeon_id == int(dungeon_run.dungeon_id), DungeonRunDB.season == dungeon_run.season)
+            )
             result = await session.execute(query)
             existing_dungeon_run = result.scalar()
             if existing_dungeon_run is None:
-                dungeon_run.id = int(dungeon_run.id)
+                dungeon_run.dungeon_id = int(dungeon_run.dungeon_id)
                 session.add(dungeon_run)
                 return dungeon_run
-            elif existing_dungeon_run.id == dungeon_run.id:
+            elif existing_dungeon_run.dungeon_id == dungeon_run.dungeon_id:
                 return existing_dungeon_run
             else:
                 return False
