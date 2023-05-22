@@ -374,12 +374,15 @@ async def crawl_characters(discord_guild_id: int) -> str:
             character.rank = character_io.rank
             await db.update_character(character)
             update_character_counter += 1
+            
+            if character.item_level < 300:
+                continue
 
             for run in character_io.best_runs:
 
                 if run is None:
                     return f'Error: An error occurred while crawling {character.name} for new runs.'
-                
+
                 if run is not None and await db.get_run_by_id(int(run.id),
                                                               run.season) is None:
 

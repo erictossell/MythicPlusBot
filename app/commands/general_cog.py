@@ -50,7 +50,7 @@ class GeneralCog(commands.Cog):
             await error_channel.send(f'Error in !register command: {exception}')
     @commands.slash_command(name='affixes', help='Gets the current Mythic+ affixes.')
     async def affixes(self, ctx):
-        """This command gets the current Mythic+ affixes.
+        """Display the weekly M+ Affixes.
 
         Args:
             ctx (context): The current discord context.
@@ -73,7 +73,7 @@ class GeneralCog(commands.Cog):
             await error_channel.send(f'Error in !register command: {exception}')
     @commands.slash_command(name='poll', description='Sends a poll to the channel.')
     async def poll (self,ctx):
-        """A poll using the new modal features.
+        """Create a simple poll to vote as a group.
 
         Args:
             ctx (context): The current discord context.

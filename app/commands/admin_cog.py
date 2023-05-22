@@ -21,12 +21,13 @@ class Admin(commands.Cog):
     
     @admin.command(name="register")
     async def register(self,ctx):
-        """This command registers the guild with the bot.
+        """Register a World of Warcraft guild for reporting in this Discord Server.
 
         Args:
             ctx (context): The current discord context.
         """
         try:
+            
             print('register command called')
             await ctx.respond(view=RegisterGuildView(discord_guild_id=ctx.guild.id))
         except Exception as e:
@@ -35,51 +36,15 @@ class Admin(commands.Cog):
             error_channel = await ctx.bot.fetch_guild(int(SUPPORT_SERVER_ID)).fetch_channel(int(SUPPORT_CHANNEL_ID))           
            
             await error_channel.send(f'Error in !register command: {e}')
+    
        
-    @admin.command(name="crawl")    
-    async def crawl(self, ctx):
-        """Crawl the guild for new runs.
-
-        Args:
-            ctx (context): the current discord context.
-        """
-        discord_guild_id = int(ctx.guild.id)        
-        async with ctx.typing():
-            print('crawl command called')
-            start_time = time.time()
-            await ctx.respond('Crawling Raider.IO characters...')
-            
-              
-            output = await raiderIO.crawl_characters(discord_guild_id)
-            await ctx.respond(output)
-                
-            end_time = time.time()
-            elapsed_time = end_time - start_time
-            
-            await ctx.respond('Finished crawling Raider.IO guild members for new runs after ' + str(elapsed_time) + ' seconds.')
-    
-    @admin.command(name="crawlguild")
-    async def crawl_guild(self, ctx):
-        """Crawl the guild for new members.
-
-        Args:
-            ctx (context): The current discord context.
-        """
-        discord_guild_id = int(ctx.guild.id)        
-        async with ctx.typing():
-            print('crawl guild command called')
-            start_time = time.time()
-            await ctx.respond('Crawling Raider.IO guild members...')
-            
-            
-            await raiderIO.crawl_discord_guild_members(discord_guild_id)
-            
-            end_time = time.time()
-            elapsed_time = end_time - start_time
-            await ctx.respond('Finished crawling Raider.IO guild members after ' + str(elapsed_time) + ' seconds.')
-    
     @admin.command(name='set_announcement_channel')
     async def set_announcement_channel(self, ctx):
+        """Set the channel you call this command in to be the announcement channel for your server.
+
+        Args:
+            ctx (_type_): _description_
+        """
         discord_guild = await db.get_discord_guild_by_id(ctx.guild.id)
         
         if discord_guild is None:
@@ -94,6 +59,11 @@ class Admin(commands.Cog):
     
     @admin.command(name='disable_announcements')
     async def disable_announcements(self, ctx):
+        """Turn off Mythic+ Bot announcements for this Discord Server.
+
+        Args:
+            ctx (context): the current discord context
+        """
         discord_guild = await db.get_discord_guild_by_id(ctx.guild.id)
         
         if discord_guild is None:
@@ -105,26 +75,7 @@ class Admin(commands.Cog):
         await db.update_discord_guild(discord_guild)
         
         await ctx.respond('Announcements disabled.')    
-    #@admin.command(name="crawlruns")
-    #async def crawl_runs(self, ctx):
-    #    """Compare runs to the database and update the database.
-
-    #    Args:
-    #        ctx (context): The current discord context.
-    #    """
-    #    discord_guild_id = int(ctx.guild.id) 
-    #    async with ctx.typing():
-    #        print('crawl runs command called')
-    #        await ctx.respond('Crawling Raider.IO guild runs...')
-    #        start_time = time.time()            
-            
-     #       output = await raiderIO.crawl_dungeon_runs(discord_guild_id)            
-     #       await ctx.respond(output)
-                
-     #       end_time = time.time()
-     #       elapsed_time = end_time - start_time
-      #      await ctx.respond('Finished crawling Raider.IO guild runs after ' + str(elapsed_time) + ' seconds.')
-     
+    
     @commands.Cog.listener()
     async def on_ready(self):
         print('Connected to Discord as {0.user}'.format(self.bot))
@@ -140,16 +91,17 @@ class Admin(commands.Cog):
         print(f'{self.bot.user} has joined the following guild:\n'
               f'{guild.name}(id: {guild.id})')
         await db.add_discord_guild(db.DiscordGuildDB(id = guild.id, discord_guild_name=guild.name))
-        await guild.system_channel.send('Hello! I am a bot that tracks your guild\'s runs on Raider.IO. '
-                                        'Type /help to see a list of commands.') 
+        await guild.system_channel.send('Hello! I am Mythic+ Bot. I provide advanced Discord reporting for Mythic+ data.\nPlease go to https://www.mythicplusbot.dev/ if you would like guidance setting some of my features up 😊.') 
      
     @commands.Cog.listener()
     async def on_application_command_error(self, ctx, error):
         if isinstance(error, commands.errors.CommandNotFound):
+            
+            print(error)
             await ctx.respond('Something went wrong :( Talk to Eriim about this error. ')
-            user = await ctx.bot.fetch_user(173958345022111744)
-            channel = await user.create_dm()
-            await channel.send(f'Error in !leaderboard command: {error}')
+            error_channel = await ctx.bot.fetch_guild(int(SUPPORT_SERVER_ID)).fetch_channel(int(SUPPORT_CHANNEL_ID))           
+           
+            await error_channel.send(f'Error in !register command: {error}')
             
 def setup(bot):
     bot.add_cog(Admin(bot))    

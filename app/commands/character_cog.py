@@ -24,7 +24,7 @@ class Character(commands.Cog):
 
     @character.command(name='runs', help='Gets the best Mythic+ runs for a character.')
     async def runs(self,ctx, name: str = None, realm: str = 'Area-52'):
-        """Gets the best Mythic+ runs for a character."""
+        """Get the best mythic plus runs captured by the bot for a given character."""
         try:
             
             if name is None:
@@ -63,7 +63,7 @@ class Character(commands.Cog):
 
     @character.command(name='set_main', help='Sets the default character for a user.')
     async def set_main(self, ctx, name: str, realm: Optional[str] = 'Area-52'):
-        """Sets a user's default character.
+        """Set your default character for all character commands.
 
         Args:
             ctx (context): The current discord context.
@@ -117,8 +117,7 @@ class Character(commands.Cog):
 
     @character.command(name='register', help='Register a character that is not in the guild.')
     async def register(self, ctx):
-        """The register command allows a user to register a character that is not in the guild. 
-            This command will DM the user a button to click to register their character.
+        """Register individual characters to the Discord server.
 
         Args:
             ctx (context): The current discord context.
@@ -146,7 +145,7 @@ class Character(commands.Cog):
 
     @character.command(name='profile', help='View a character\'s profile.')
     async def profile(self, ctx, name: str = None, realm: str = 'Area-52'):
-        """This command returns a character's profile.
+        """Display a character profile from raider IO.
 
         Args:
             ctx (context): The current discord context.
@@ -194,7 +193,7 @@ class Character(commands.Cog):
 
     @character.command(name='recent_runs', help='View a character\'s recent runs directly from RaiderIO.')
     async def recent_runs(self, ctx, name: str = None, realm: str = None):
-        """This command returns the recent runs for a given character.
+        """Display the most recent runs for a character.
 
         Args:
             ctx (context): The current discord context.
@@ -241,7 +240,7 @@ class Character(commands.Cog):
 
     @character.command(name='best_runs', help='Usage: !best <character name> <realm> (optional on Area-52)')
     async def best_runs(self, ctx, name: str = None, realm: str = None):
-        """The best command returns the best runs for a given character.
+        """Display the best runs for a character.
 
         Args:
             ctx (context): Pass the current discord context

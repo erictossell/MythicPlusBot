@@ -21,9 +21,12 @@ class Guild(commands.Cog):
     
     @guild.command(name='daily', help='Gets the daily guild report.')
     async def daily_report(self, ctx):
-        try:
+        """Display the guilds best runs in the last 24 hours.
 
-            
+        Args:
+            ctx (discord.ctx): The current discord context.
+        """
+        try:
             
             bot_user = await ctx.bot.fetch_user(1073958413488369794)
 
@@ -49,10 +52,10 @@ class Guild(commands.Cog):
                 
     @guild.command(name='runs', help='Gets the best Mythic+ runs for the guild for the week.')
     async def runs(self,ctx):
-        """Get the best Mythic+ runs for the guild.
+        """Display the best Mythic+ runs in the last 7 days completed as a guild.
 
         Args:
-            ctx (_type_): _description_
+            ctx (discord.ctx): The current discord context.
         """
         try:
             title= '🏆 Top Guild Runs for the Week'
@@ -80,9 +83,9 @@ class Guild(commands.Cog):
            
             await error_channel.send(f'Error in !register command: {exception}')
     
-    @guild.command(name='top_runs', help='Gets the top 10 Mythic+ runs for the guild.')
+    @guild.command(name='top_runs', help='Gets the top 5 Mythic+ runs for the guild.')
     async def top_runs(self, ctx):
-        """_summary_
+        """Display the top 5 runs of all time completed as a guild.
 
         Args:
             ctx (_type_): _description_
@@ -115,6 +118,11 @@ class Guild(commands.Cog):
     
     @guild.command(name='achievements')
     async def achievements(self, ctx):
+        """Display the top 10 achievement earners in your guild.
+
+        Args:
+            ctx (_type_): _description_
+        """
         try:
             await self.leaderboard_embed(ctx, 'achievements')
         except Exception as exception:
@@ -126,6 +134,11 @@ class Guild(commands.Cog):
             
     @guild.command(name='item_level')
     async def item_level(self, ctx):
+        """Display the top 10 players by item level.
+
+        Args:
+            ctx (_type_): _description_
+        """
         try:
             await self.leaderboard_embed(ctx, 'itemlevel')
         except Exception as exception:
@@ -137,7 +150,7 @@ class Guild(commands.Cog):
             
     @guild.command(name='mythic_plus', help='Gets the current Mythic+ leaderboard.')
     async def mythic_plus(self, ctx):
-        """Gets the current Mythic+ leaderboard.
+        """Display the top 10 players by M+ score.
 
         Args:
             ctx (context): The current discord context.
@@ -152,6 +165,11 @@ class Guild(commands.Cog):
             await error_channel.send(f'Error in !register command: {exception}')
             
     async def mythic_plus_leaderboard(self, ctx):
+        """Display the top 10 players by M+ score.
+
+        Args:
+            ctx (context): The current discord context.
+        """
         await self.leaderboard_embed(ctx, 'mythic_plus')
 
     async def leaderboard_embed(self, ctx, leaderboard_type):
