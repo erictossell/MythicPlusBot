@@ -78,11 +78,11 @@ class GeneralCog(commands.Cog):
         Args:
             ctx (context): The current discord context.
         """
-        async with ctx.typing():
+       
 
-            print('Poll command called')
-            view = CreatePollButton()
-            await ctx.send(view=view)
+        print('Poll command called')
+        view = CreatePollButton()        
+        await ctx.respond(view=view)
         
         
 
