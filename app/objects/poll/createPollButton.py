@@ -34,6 +34,7 @@ class CreatePollButton(discord.ui.View):
             print('button clicked')    
             
             await interaction.response.send_modal(CreatePollModal(title="Create a Poll"))
+            await interaction.message.delete()
 
         except Exception as e:
             print('Error occured:', e)

@@ -73,7 +73,7 @@ class GeneralCog(commands.Cog):
             await error_channel.send(f'Error in !register command: {exception}')
     @commands.slash_command(name='poll', description='Sends a poll to the channel.')
     async def poll (self,ctx):
-        """Create a simple poll to vote as a group.
+        """Create a simple poll to vote as a group with up to 4 options.
 
         Args:
             ctx (context): The current discord context.
@@ -81,7 +81,6 @@ class GeneralCog(commands.Cog):
         print('Poll command called')
         view = CreatePollButton()
         await ctx.send(view=view)
-        await ctx.respond('----- Mythic+ Bot Poll -----')
 
 def setup(bot):
     """Set up the general cog.
