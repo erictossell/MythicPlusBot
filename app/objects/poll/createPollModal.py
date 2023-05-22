@@ -23,11 +23,11 @@ class CreatePollModal(discord.ui.Modal):
             if child.value:
                 embed.add_field(name=chr(0x1F1E6 + i), value=child.value)
                 
-        await interaction.response.send_message(embed=embed)
+        message = await interaction.channel.send(embed=embed)
         
         
         for i, child in enumerate(self.children[1:]):
             if child.value:
-                await interaction.message.add_reaction(chr(0x1F1E6 + i))
+                await message.add_reaction(chr(0x1F1E6 + i))
        
                 
