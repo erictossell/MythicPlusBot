@@ -242,7 +242,7 @@ async def get_mythic_plus_affixes() -> Optional[List[Affix]]:
 
 @sleep_and_retry
 @limits(calls=CALLS, period=RATE_LIMIT)
-async def get_run_details(dungeon_run : DungeonRunDB, discord_guild_id) -> Optional[bool]:
+async def get_run_details(dungeon_run : DungeonRunDB, discord_guild_id, players_per_run: int) -> Optional[bool]:
     """Get a guild run from the Raider.IO API.
 
     Args:
@@ -296,7 +296,7 @@ async def get_run_details(dungeon_run : DungeonRunDB, discord_guild_id) -> Optio
                             discord_guild_character = await db.get_discord_guild_character_by_name(discord_guild_id=discord_guild_id, name=character_db.name)
                             
                             discord_guild_character_list.append(discord_guild_character)
-                    if guild_member_counter >= 4:
+                    if guild_member_counter >= players_per_run:
                         for discord_guild_character in discord_guild_character_list:
                             if discord_guild_character.guild_character_score is None:
                                 discord_guild_character.guild_character_score = 0 + 1
@@ -395,7 +395,7 @@ async def crawl_characters(discord_guild_id: int) -> str:
                     retries = 3
                     while retries > 0:
                         try:
-                            is_guild_run = await get_run_details(run_db, discord_guild_id)
+                            is_guild_run = await get_run_details(run_db, discord_guild_id, discord_guild.players_per_run)
                             break
                         except (httpx.ReadTimeout, ssl.SSLWantReadError):
                             await asyncio.sleep(2 ** (3 - retries))
@@ -440,7 +440,7 @@ async def crawl_characters(discord_guild_id: int) -> str:
                     retries = 3
                     while retries > 0:
                         try:
-                            is_guild_run = await get_run_details(run_db, discord_guild_id)
+                            is_guild_run = await get_run_details(run_db, discord_guild_id, discord_guild.players_per_run)
                             break
                         except (httpx.ReadTimeout, ssl.SSLWantReadError):
                             await asyncio.sleep(2 ** (3 - retries))
@@ -468,7 +468,7 @@ async def crawl_characters(discord_guild_id: int) -> str:
                                                         dungeon_run=run_db)
 
                         guild_run_counter += 1
-                
+
         return f'{discord_guild.discord_guild_name} Characters crawled: {characters_crawled} |  Updated {update_character_counter} characters and added {run_counter} runs.'
 
     except Exception as exception:

@@ -34,7 +34,7 @@ def announce_guild_run_embed(announcement : db.AnnouncementDB = None,
 
 
 def daily_guild_report_embed(bot : discord.Client,
-                            discord_guild_db : DiscordGuildDB,
+                             discord_guild_db : DiscordGuildDB,
                              guild_run_list : List[Tuple[DungeonRunDB, List[CharacterDB]]] = None,
                              non_guild_run_list : List[Tuple[DungeonRunDB, List[CharacterDB]]] = None,
                              bot_user = None) -> discord.Embed:
@@ -108,5 +108,8 @@ def daily_guild_report_embed(bot : discord.Client,
             embed.add_field(name=str(counter)+ '.  '+ str(run.mythic_level)+(plus)+' | ' + run.name, value=run_characters+f'\n[{util.time_without_leading_zeros(util.convert_millis(run.clear_time_ms))}/{util.time_without_leading_zeros(util.convert_millis(run.par_time_ms))} - {util.time_without_leading_zeros(util.convert_millis(over_under))} over time.]({run.url})', inline=False)
         counter+=1
     embed.set_footer(text=footer)
-    
+
     return embed
+
+
+

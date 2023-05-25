@@ -609,7 +609,7 @@ async def update_discord_guild(discord_guild: DiscordGuildDB) -> DiscordGuildDB:
             else:                
                 existing_guild.discord_guild_name = discord_guild.discord_guild_name
                 existing_guild.announcement_channel_id = discord_guild.announcement_channel_id
-                
+                existing_guild.players_per_run = discord_guild.players_per_run                
                 
                 if discord_guild.announcement_channel_id:
                     existing_guild.is_announcing = True

@@ -1,5 +1,5 @@
 import datetime
-from sqlalchemy import BigInteger, String, Boolean, Column, DateTime 
+from sqlalchemy import BigInteger, String, Boolean, Column, DateTime, Integer
 from sqlalchemy.orm import relationship
 from app.db.base import Base
 
@@ -9,7 +9,8 @@ class DiscordGuildDB(Base):
     
     id = Column(BigInteger, primary_key=True)
     discord_guild_name = Column(String)
-        
+
+    players_per_run = Column(Integer, default=4)    
     announcement_channel_id = Column(BigInteger)
     is_announcing = Column(Boolean, default=False)
     modified_by = Column(BigInteger)

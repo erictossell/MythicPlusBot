@@ -74,7 +74,32 @@ class Admin(commands.Cog):
         
         await db.update_discord_guild(discord_guild)
         
-        await ctx.respond('Announcements disabled.')    
+        await ctx.respond('Announcements disabled.')
+        
+    @admin.command(name='players_per_run')
+    async def set_players_per_run(self, ctx, players_per_run: int):
+        """Set the number of players per guild run for this Discord Server.
+        This value is 4 by default.
+
+        Args:
+            ctx (context): the current discord context
+            players_per_run (int): the number of players per run
+        """
+        discord_guild = await db.get_discord_guild_by_id(ctx.guild.id)
+        
+        if discord_guild is None:
+            await ctx.respond('This command can only be used by admins within a Discord Server.')
+            return
+        elif players_per_run < 1 or players_per_run > 5:
+            await ctx.respond('Players per run must be between 1 and 5.')
+            return
+        
+        else:
+            discord_guild.players_per_run = players_per_run
+            
+            await db.update_discord_guild(discord_guild)
+            
+            await ctx.respond(f'Players per run set to {players_per_run}.')
     
     @commands.Cog.listener()
     async def on_ready(self):
