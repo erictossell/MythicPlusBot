@@ -431,14 +431,14 @@ async def crawl_characters(discord_guild_id: int) -> str:
                     retries = 3
                     while retries > 0:
                         try:
-                            is_guild_run = await get_run_details(run_db, discord_guild_id, discord_guild.players_per_run)
+                            is_guild_run = await get_run_details(db_run, discord_guild_id, discord_guild.players_per_run)
                             break
                         except (httpx.ReadTimeout, ssl.SSLWantReadError):
                             await asyncio.sleep(2 ** (3 - retries))
                             retries -= 1
 
                     if is_guild_run is None:
-                        print(f"Could not fetch run details for {run_db.name}. Skipping.")
+                        print(f"Could not fetch run details for {db_run.name}. Skipping.")
                         continue
                     
                     runs_crawled += 1
@@ -446,17 +446,17 @@ async def crawl_characters(discord_guild_id: int) -> str:
                     if is_guild_run is True:
                         announcement = db.AnnouncementDB(discord_guild_id=discord_guild_id,
                                                         announcement_channel_id=discord_guild.announcement_channel_id,
-                                                        title=f'🧙‍♂️ New guild run: {run_db.mythic_level} - {run_db.name} on {run_db.completed_at}',
-                                                        content=f'**{run_db.name}** completed on {run_db.completed_at} by Take a Lap.\n\n**Dungeon:** {run_db.short_name}\n**Score:** {run_db.score}\n**URL:** {run_db.url}',
-                                                        dungeon_run_id=run_db.id)
+                                                        title=f'🧙‍♂️ New guild run: {db_run.mythic_level} - {db_run.name} on {db_run.completed_at}',
+                                                        content=f'**{db_run.name}** completed on {db_run.completed_at} by Take a Lap.\n\n**Dungeon:** {db_run.short_name}\n**Score:** {db_run.score}\n**URL:** {db_run.url}',
+                                                        dungeon_run_id=db_run.id)
                         print(f"Created announcement with dungeon_run_id: {announcement.dungeon_run_id}")
 
                         await db.add_announcement(announcement)
-                        run_db.is_crawled = True
-                        run_db.is_guild_run = True
-                        await db.update_dungeon_run(run_db)
+                        db_run.is_crawled = True
+                        db_run.is_guild_run = True
+                        await db.update_dungeon_run(db_run)
                         await db.add_discord_guild_run(discord_guild=discord_guild,
-                                                        dungeon_run=run_db)
+                                                        dungeon_run=db_run)
 
                         guild_run_counter += 1
                         
@@ -513,14 +513,14 @@ async def crawl_characters(discord_guild_id: int) -> str:
                     retries = 3
                     while retries > 0:
                         try:
-                            is_guild_run = await get_run_details(run_db, discord_guild_id, discord_guild.players_per_run)
+                            is_guild_run = await get_run_details(db_run, discord_guild_id, discord_guild.players_per_run)
                             break
                         except (httpx.ReadTimeout, ssl.SSLWantReadError):
                             await asyncio.sleep(2 ** (3 - retries))
                             retries -= 1
 
                     if is_guild_run is None:
-                        print(f"Could not fetch run details for {run_db.name}. Skipping.")
+                        print(f"Could not fetch run details for {db_run.name}. Skipping.")
                         continue
                     
                     runs_crawled += 1
@@ -528,17 +528,17 @@ async def crawl_characters(discord_guild_id: int) -> str:
                     if is_guild_run is True:
                         announcement = db.AnnouncementDB(discord_guild_id=discord_guild_id,
                                                         announcement_channel_id=discord_guild.announcement_channel_id,
-                                                        title=f'🧙‍♂️ New guild run: {run_db.mythic_level} - {run_db.name} on {run_db.completed_at}',
-                                                        content=f'**{run_db.name}** completed on {run_db.completed_at} by Take a Lap.\n\n**Dungeon:** {run_db.short_name}\n**Score:** {run_db.score}\n**URL:** {run_db.url}',
-                                                        dungeon_run_id=run_db.id)
+                                                        title=f'🧙‍♂️ New guild run: {db_run.mythic_level} - {db_run.name} on {db_run.completed_at}',
+                                                        content=f'**{db_run.name}** completed on {db_run.completed_at} by Take a Lap.\n\n**Dungeon:** {db_run.short_name}\n**Score:** {db_run.score}\n**URL:** {db_run.url}',
+                                                        dungeon_run_id=db_run.id)
                         print(f"Created announcement with dungeon_run_id: {announcement.dungeon_run_id}")
 
                         await db.add_announcement(announcement)
-                        run_db.is_crawled = True
-                        run_db.is_guild_run = True
-                        await db.update_dungeon_run(run_db)
+                        db_run.is_crawled = True
+                        db_run.is_guild_run = True
+                        await db.update_dungeon_run(db_run)
                         await db.add_discord_guild_run(discord_guild=discord_guild,
-                                                        dungeon_run=run_db)
+                                                        dungeon_run=db_run)
 
                         guild_run_counter += 1
 
