@@ -383,8 +383,9 @@ async def crawl_characters(discord_guild_id: int) -> str:
                 if run is None:
                     return f'Error: An error occurred while crawling {character.name} for new runs.'
 
-                if run is not None and await db.get_run_by_id(int(run.id),
-                                                              run.season) is None:
+                db_run = await db.get_run_by_id(int(run.id), run.season)
+                
+                if run is not None and db_run is None:
 
                     run.completed_at = datetime.strptime(run.completed_at,
                                                             '%Y-%m-%dT%H:%M:%S.%fZ')
@@ -423,19 +424,91 @@ async def crawl_characters(discord_guild_id: int) -> str:
                                                         dungeon_run=run_db)
 
                         guild_run_counter += 1
+                    
+                elif db_run:
+                    
+                    is_guild_run = None
+                    retries = 3
+                    while retries > 0:
+                        try:
+                            is_guild_run = await get_run_details(run_db, discord_guild_id, discord_guild.players_per_run)
+                            break
+                        except (httpx.ReadTimeout, ssl.SSLWantReadError):
+                            await asyncio.sleep(2 ** (3 - retries))
+                            retries -= 1
 
+                    if is_guild_run is None:
+                        print(f"Could not fetch run details for {run_db.name}. Skipping.")
+                        continue
+                    
+                    runs_crawled += 1
+                    
+                    if is_guild_run is True:
+                        announcement = db.AnnouncementDB(discord_guild_id=discord_guild_id,
+                                                        announcement_channel_id=discord_guild.announcement_channel_id,
+                                                        title=f'🧙‍♂️ New guild run: {run_db.mythic_level} - {run_db.name} on {run_db.completed_at}',
+                                                        content=f'**{run_db.name}** completed on {run_db.completed_at} by Take a Lap.\n\n**Dungeon:** {run_db.short_name}\n**Score:** {run_db.score}\n**URL:** {run_db.url}',
+                                                        dungeon_run_id=run_db.id)
+                        print(f"Created announcement with dungeon_run_id: {announcement.dungeon_run_id}")
+
+                        await db.add_announcement(announcement)
+                        run_db.is_crawled = True
+                        run_db.is_guild_run = True
+                        await db.update_dungeon_run(run_db)
+                        await db.add_discord_guild_run(discord_guild=discord_guild,
+                                                        dungeon_run=run_db)
+
+                        guild_run_counter += 1
+                        
             for run in character_io.recent_runs:
-
+                
                 if run is None:
                     return f'Error: An error occurred while crawling {character.name} for new runs.'
-
-                elif run is not None and await db.get_run_by_id(int(run.id), run.season) is None:
+                
+                db_run = await db.get_run_by_id(int(run.id), run.season)
+                
+                if run is not None and db_run is None:
 
                     run.completed_at = datetime.strptime(run.completed_at,
                                                             '%Y-%m-%dT%H:%M:%S.%fZ')
                     run_db = await db.add_dungeon_run(convert.dungeon_run_io(run))
                     run_counter += 1
 
+                    is_guild_run = None
+                    retries = 3
+                    while retries > 0:
+                        try:
+                            is_guild_run = await get_run_details(run_db, discord_guild_id, discord_guild.players_per_run)
+                            break
+                        except (httpx.ReadTimeout, ssl.SSLWantReadError):
+                            await asyncio.sleep(2 ** (3 - retries))
+                            retries -= 1
+
+                    if is_guild_run is None:
+                        print(f"Could not fetch run details for {run_db.name}. Skipping.")
+                        continue
+                    
+                    runs_crawled += 1
+                    
+                    if is_guild_run is True:
+                        announcement = db.AnnouncementDB(discord_guild_id=discord_guild_id,
+                                                        announcement_channel_id=discord_guild.announcement_channel_id,
+                                                        title=f'🧙‍♂️ New guild run: {run_db.mythic_level} - {run_db.name} on {run_db.completed_at}',
+                                                        content=f'**{run_db.name}** completed on {run_db.completed_at} by Take a Lap.\n\n**Dungeon:** {run_db.short_name}\n**Score:** {run_db.score}\n**URL:** {run_db.url}',
+                                                        dungeon_run_id=run_db.id)
+                        print(f"Created announcement with dungeon_run_id: {announcement.dungeon_run_id}")
+
+                        await db.add_announcement(announcement)
+                        run_db.is_crawled = True
+                        run_db.is_guild_run = True
+                        await db.update_dungeon_run(run_db)
+                        await db.add_discord_guild_run(discord_guild=discord_guild,
+                                                        dungeon_run=run_db)
+
+                        guild_run_counter += 1
+                        
+                elif db_run:
+                    
                     is_guild_run = None
                     retries = 3
                     while retries > 0:
