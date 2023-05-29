@@ -911,9 +911,7 @@ async def get_daily_guild_runs(discord_guild_id: int) -> Optional[DefaultDict[Li
         async with async_session_scope() as session:
             subquery = (
                 select(DungeonRunDB.id, DungeonRunDB.score)
-                .join(DiscordGuildRunDB.dungeon_run)
-                .join(CharacterRunDB, CharacterRunDB.dungeon_run_id == DungeonRunDB.id)
-                .join(CharacterDB, CharacterRunDB.character_id == CharacterDB.id)
+                .join(DiscordGuildRunDB.dungeon_run)                
                 .filter(DungeonRunDB.completed_at > datetime.utcnow() - timedelta(days=1), DiscordGuildRunDB.discord_guild_id == discord_guild_id)
                 .order_by(desc(DungeonRunDB.score))
                 .limit(5)

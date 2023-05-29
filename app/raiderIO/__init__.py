@@ -409,14 +409,7 @@ async def crawl_characters(discord_guild_id: int) -> str:
                     runs_crawled += 1
 
                     if is_guild_run is True:
-                        announcement = db.AnnouncementDB(discord_guild_id=discord_guild_id,
-                                                        announcement_channel_id=discord_guild.announcement_channel_id,
-                                                        title=f'🧙‍♂️ New guild run: {run_db.mythic_level} - {run_db.name} on {run_db.completed_at}',
-                                                        content=f'**{run_db.name}** completed on {run_db.completed_at} by Take a Lap.\n\n**Dungeon:** {run_db.short_name}\n**Score:** {run_db.score}\n**URL:** {run_db.url}',
-                                                        dungeon_run_id=run_db.id)
-                        print(f"Created announcement with dungeon_run_id: {announcement.dungeon_run_id}")
-
-                        await db.add_announcement(announcement)
+                        
                         run_db.is_crawled = True
                         run_db.is_guild_run = True
                         await db.update_dungeon_run(run_db)
@@ -444,14 +437,7 @@ async def crawl_characters(discord_guild_id: int) -> str:
                     runs_crawled += 1
                     
                     if is_guild_run is True:
-                        announcement = db.AnnouncementDB(discord_guild_id=discord_guild_id,
-                                                        announcement_channel_id=discord_guild.announcement_channel_id,
-                                                        title=f'🧙‍♂️ New guild run: {db_run.mythic_level} - {db_run.name} on {db_run.completed_at}',
-                                                        content=f'**{db_run.name}** completed on {db_run.completed_at} by Take a Lap.\n\n**Dungeon:** {db_run.short_name}\n**Score:** {db_run.score}\n**URL:** {db_run.url}',
-                                                        dungeon_run_id=db_run.id)
-                        print(f"Created announcement with dungeon_run_id: {announcement.dungeon_run_id}")
-
-                        await db.add_announcement(announcement)
+                        
                         db_run.is_crawled = True
                         db_run.is_guild_run = True
                         await db.update_dungeon_run(db_run)
@@ -491,14 +477,7 @@ async def crawl_characters(discord_guild_id: int) -> str:
                     runs_crawled += 1
                     
                     if is_guild_run is True:
-                        announcement = db.AnnouncementDB(discord_guild_id=discord_guild_id,
-                                                        announcement_channel_id=discord_guild.announcement_channel_id,
-                                                        title=f'🧙‍♂️ New guild run: {run_db.mythic_level} - {run_db.name} on {run_db.completed_at}',
-                                                        content=f'**{run_db.name}** completed on {run_db.completed_at} by Take a Lap.\n\n**Dungeon:** {run_db.short_name}\n**Score:** {run_db.score}\n**URL:** {run_db.url}',
-                                                        dungeon_run_id=run_db.id)
-                        print(f"Created announcement with dungeon_run_id: {announcement.dungeon_run_id}")
-
-                        await db.add_announcement(announcement)
+                        
                         run_db.is_crawled = True
                         run_db.is_guild_run = True
                         await db.update_dungeon_run(run_db)
@@ -526,14 +505,7 @@ async def crawl_characters(discord_guild_id: int) -> str:
                     runs_crawled += 1
                     
                     if is_guild_run is True:
-                        announcement = db.AnnouncementDB(discord_guild_id=discord_guild_id,
-                                                        announcement_channel_id=discord_guild.announcement_channel_id,
-                                                        title=f'🧙‍♂️ New guild run: {db_run.mythic_level} - {db_run.name} on {db_run.completed_at}',
-                                                        content=f'**{db_run.name}** completed on {db_run.completed_at} by Take a Lap.\n\n**Dungeon:** {db_run.short_name}\n**Score:** {db_run.score}\n**URL:** {db_run.url}',
-                                                        dungeon_run_id=db_run.id)
-                        print(f"Created announcement with dungeon_run_id: {announcement.dungeon_run_id}")
-
-                        await db.add_announcement(announcement)
+                        
                         db_run.is_crawled = True
                         db_run.is_guild_run = True
                         await db.update_dungeon_run(db_run)
@@ -542,7 +514,7 @@ async def crawl_characters(discord_guild_id: int) -> str:
 
                         guild_run_counter += 1
 
-        return f'{discord_guild.discord_guild_name} Characters crawled: {characters_crawled} |  Updated {update_character_counter} characters and added {run_counter} runs.'
+        return f'{discord_guild.discord_guild_name} Characters crawled: {characters_crawled} |  Updated {update_character_counter} characters and added {run_counter} runs and found {guild_run_counter} guild runs.'
 
     except Exception as exception:
         print(exception)
