@@ -6,7 +6,7 @@ import os
 from collections import defaultdict
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta
-from typing import Optional, List, DefaultDict
+from typing import Optional, List, DefaultDict, Set
 from psycopg2 import IntegrityError
 from sqlalchemy import desc, select
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
@@ -177,7 +177,12 @@ async def get_character_by_name_realm(name: str, realm: str) -> Optional[Charact
     """
     try:
         async with async_session_scope() as session:
-            existing_character_query = select(CharacterDB).filter(CharacterDB.name == name, CharacterDB.realm == realm)
+            existing_character_query = (
+                select(CharacterDB)
+                .options(joinedload(CharacterDB.discord_guild_characters))
+                .join(DiscordGuildCharacterDB)
+                .filter(CharacterDB.name == name, CharacterDB.realm == realm)
+                )
             result = await session.execute(existing_character_query)
             existing_character = result.scalar()
             if existing_character is None:
@@ -309,7 +314,11 @@ async def add_discord_guild_character(discord_guild: DiscordGuildDB, character: 
                 
                 if existing_character:
                     
-                    guild_character_query = select(DiscordGuildCharacterDB).filter(DiscordGuildCharacterDB.discord_guild_id == discord_guild.id, DiscordGuildCharacterDB.character_id == character.id)
+                    guild_character_query = (
+                        select(DiscordGuildCharacterDB)
+                        .filter(DiscordGuildCharacterDB.discord_guild_id == discord_guild.id, DiscordGuildCharacterDB.character_id == character.id)
+                        )
+                    
                     guild_character_result = await session.execute(guild_character_query)
                     existing_guild_character = guild_character_result.scalar()
                     
@@ -318,7 +327,7 @@ async def add_discord_guild_character(discord_guild: DiscordGuildDB, character: 
                     else:
                         new_guild_character = DiscordGuildCharacterDB(discord_guild_id = discord_guild.id, character_id = character.id)
                         session.add(new_guild_character)
-                        await session.commit()
+                        
                         return new_guild_character
             else:
                 return None
@@ -649,6 +658,7 @@ async def update_discord_guild_character(discord_guild_character = DiscordGuildC
                 return None
             else:
                 existing_discord_guild_character.guild_character_score = discord_guild_character.guild_character_score
+                existing_discord_guild_character.is_reporting = discord_guild_character.is_reporting
                 
                 return existing_discord_guild_character
     except SQLAlchemyError as error:
@@ -856,6 +866,10 @@ async def set_guild_run(run: DungeonRun) -> bool:
     except SQLAlchemyError as error:
         print(f'Error while querying the database: {error}')
         return False
+    
+#-------------------------Bulk Update Functions------------------------------#
+
+
 
 #-------------------------Delete Functions------------------------------#
 
@@ -985,22 +999,66 @@ async def get_daily_non_guild_runs(discord_guild_id: int, number_of_runs: int) -
         print(f'Error while querying the database: {error}')
         return None
 
+async def get_all_characters_by_game_guild(game_guild: GameGuildDB) -> Optional[List[CharacterDB]]:
+    try:
+        async with async_session_scope() as session:
+            query = (
+                select(CharacterDB)
+                .join(DiscordGuildCharacterDB)
+                .join(DiscordGuildDB)
+                .join(GameGuildDB)
+                .filter(GameGuildDB.id == game_guild.id)
+            )
+            result = await session.execute(query)
+            return result.scalars().unique().all()
+    except SQLAlchemyError as error:
+        print(f'Error while querying the database: {error}')
+        return None
+
 async def get_all_discord_guild_characters(discord_guild_id: int) -> Optional[List[CharacterDB]]:
     try:
         async with async_session_scope() as session:
             query = (
                 select(CharacterDB)
+                .options(joinedload(CharacterDB.discord_guild_characters))
                 .join(DiscordGuildCharacterDB)
                 .filter(DiscordGuildCharacterDB.discord_guild_id == discord_guild_id)
             )
             result = await session.execute(query)
             characters = result.scalars().unique().all()
             
+            for character in characters:
+                character.discord_guild_characters = [dgc for dgc in character.discord_guild_characters if dgc.discord_guild_id == discord_guild_id]
+                    
             return characters
         
     except SQLAlchemyError as error:
         print(f'Error while querying the database: {error}')
         return None
+    
+async def get_characters_by_names_realms_and_discord_guild(names: List[str], realms: List[str], discord_guild_id: int) -> Optional[List[CharacterDB]]:
+    try:
+        async with async_session_scope() as session:
+            query = (
+                select(CharacterDB)
+                .options(joinedload(CharacterDB.discord_guild_characters))
+                .join(DiscordGuildCharacterDB)
+                .filter(DiscordGuildCharacterDB.discord_guild_id == discord_guild_id,
+                        CharacterDB.name.in_(names),
+                        CharacterDB.realm.in_(realms))
+            )
+            result = await session.execute(query)
+            characters = result.scalars().unique().all()
+            
+            for character in characters:
+                character.discord_guild_characters = [dgc for dgc in character.discord_guild_characters if dgc.discord_guild_id == discord_guild_id]
+                    
+            return characters
+        
+    except SQLAlchemyError as error:
+        print(f'Error while querying the database: {error}')
+        return None
+
 
 async def get_all_game_guilds_by_discord_id(discord_guild_id: int) -> Optional[List[GameGuildDB]]:
     """Look up all game guilds associated with a specific discord guild in the database.

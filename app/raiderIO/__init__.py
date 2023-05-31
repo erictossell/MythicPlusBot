@@ -3,7 +3,7 @@ from tqdm import tqdm
 from datetime import datetime
 import re
 import asyncio
-from typing import List, Optional
+from typing import List, Optional, Set
 from ratelimit import limits, sleep_and_retry
 import httpx
 
@@ -172,6 +172,34 @@ async def get_character(name: str,
             print(exception)
             return None
 
+async def get_characters(names: List[str], realms: List[str], region='us') -> List[Optional[Character]]:
+    if len(names) != len(realms):
+        raise ValueError("names and realms lists must have the same length")
+
+    characters = []
+    score_colors = get_score_colors()
+
+    for name, realm in zip(names, realms):
+        retries = 3
+        character = None
+        while retries > 0:
+            try:
+                character = await get_character(name, realm, score_colors, region)
+                characters.append(character)
+                
+            except (httpx.ReadTimeout, ssl.SSLWantReadError):
+                    await asyncio.sleep(2 ** (3 - retries))
+                    retries -= 1
+        
+        if character is None:
+            print(f'Error: {name}-{realm} not found.')
+            continue           
+        
+        character = await get_character(name, realm, score_colors, region)
+        characters.append(character)
+
+    return characters
+
 @sleep_and_retry
 @limits(calls=CALLS, period=RATE_LIMIT)
 async def get_guild_members(name: str, realm: str, region: str ) -> Optional[List[Member]]:
@@ -264,17 +292,19 @@ async def get_run_details(dungeon_run : DungeonRunDB, discord_guild_id, players_
                     return None
 
                 elif request.status_code == 200:
-
-                    guild_member_counter = 0
-
                     if request.json()['roster'] is None:
                         return False
+
+                    # Retrieve all characters involved in the run at once and store them in a dictionary
+                    character_names = [str(roster['character']['name']).capitalize() for roster in request.json()['roster']]
+                    character_realms = [str(roster['character']['realm']['slug']).capitalize() for roster in request.json()['roster']]
+                    characters = await db.get_characters_by_names_realms_and_discord_guild(character_names, character_realms, discord_guild_id)
+                    characters_dict = {(character.name, character.realm): character for character in characters}
+
+                    guild_member_counter = 0
                     discord_guild_character_list = []
                     for roster in request.json()['roster']:
-
-                        character_db = await db.get_character_by_name_realm_and_discord_guild(str(roster['character']['name']).capitalize(),
-                                                            str(roster['character']['realm']['slug']).capitalize(),
-                                                            discord_guild_id)
+                        character_db = characters_dict.get((str(roster['character']['name']).capitalize(), str(roster['character']['realm']['slug']).capitalize()))
 
                         if character_db is not None:
                             guild_member_counter += 1
@@ -297,21 +327,10 @@ async def get_run_details(dungeon_run : DungeonRunDB, discord_guild_id, players_
                             
                             discord_guild_character_list.append(discord_guild_character)
                     if guild_member_counter >= players_per_run:
-                        for discord_guild_character in discord_guild_character_list:
-                            if discord_guild_character.guild_character_score is None:
-                                discord_guild_character.guild_character_score = 0 + 1
-                            else:
-                                discord_guild_character.guild_character_score = discord_guild_character.guild_character_score + 3
-                            await db.update_discord_guild_character(discord_guild_character)
+                        
                         return True
                     else:
-                        for discord_guild_character in discord_guild_character_list:
-                            if discord_guild_character.guild_character_score is None:
-                                discord_guild_character.guild_character_score = 0 + 1
-                            else:
-                                
-                                discord_guild_character.guild_character_score = discord_guild_character.guild_character_score + 1
-                            await db.update_discord_guild_character(discord_guild_character)
+                        
                         return False
         except httpx.ReadTimeout:
                 print("Timeout occurred while fetching character data.")
@@ -341,11 +360,11 @@ async def crawl_characters(discord_guild_id: int) -> str:
     try:
         
         discord_guild = await db.get_discord_guild_by_id(discord_guild_id)
-        characters_list = await db.get_all_discord_guild_characters(discord_guild_id)
+        db_characters_list = await db.get_all_discord_guild_characters(discord_guild_id)
 
-        print('RaiderIO Crawler: Crawling ' + str(len(characters_list)) + ' characters.')
+        print('RaiderIO Crawler: Crawling ' + str(len(db_characters_list)) + ' characters.')
 
-        for character in tqdm(characters_list):
+        for character in tqdm(db_characters_list):
             characters_crawled += 1
 
             character_io = None
@@ -363,7 +382,11 @@ async def crawl_characters(discord_guild_id: int) -> str:
             if character_io is None:
                 print(f"Could not fetch character {character.name}. Skipping.")
                 continue
-
+            elif character.discord_guild_characters[0].is_reporting is False:
+                print(f"Character {character.name} is not reporting. Skipping.")
+                continue
+            
+            
             character.last_crawled_at = datetime.strptime(character_io.last_crawled_at,
                                                                 '%Y-%m-%dT%H:%M:%S.%fZ')
             character.score = character_io.score
@@ -522,6 +545,7 @@ async def crawl_characters(discord_guild_id: int) -> str:
         print('Finished crawling characters.')  
 
 async def crawl_discord_guild_members(discord_guild_id) -> None:
+    
     print('Crawler: trying to crawl guild members')
     try:
         
@@ -534,38 +558,42 @@ async def crawl_discord_guild_members(discord_guild_id) -> None:
             except (httpx.ReadTimeout, ssl.SSLWantReadError):
                 await asyncio.sleep(2 ** (3 - retries))
                 retries -= 1
-        
-              
-        
+               
         discord_guild = await db.get_discord_guild_by_id(discord_guild_id)
         game_guild_list = await db.get_all_game_guilds_by_discord_id(discord_guild_id)
         return_string = ""
         
         for game_guild in game_guild_list:
-            counter = 0
+            
             discord_game_guild = await db.get_discord_game_guild_by_guild_ids(discord_guild_id, game_guild.id)
 
             if discord_game_guild is None or not discord_game_guild.is_crawlable:
                 continue
 
             member_list = await get_guild_members(game_guild.name, game_guild.realm, game_guild.region)
+
             if member_list is None:
                 continue
+            
+            db_member_list = await db.get_all_characters_by_game_guild(game_guild)
+            
+            # Convert member set and db_member_set to a set of tuples with name and realm
+            member_set = {(member.name, member.realm) for member in member_list}
+            db_member_set = {(character.name, character.realm) for character in db_member_list}
 
-            for member in tqdm(member_list):
+            # Find new members
+            new_members = member_set - db_member_set
+
+            counter = 0
+            for new_member_name, new_member_realm in tqdm(new_members):
+                new_member = next(member for member in member_set if (member.name, member.realm) == (new_member_name, new_member_realm))
                 
-                #check database for existing member
-                existing_member = await db.get_character_by_name_realm(member.name, member.realm)
-                
-                if existing_member is not None:                    
-                    continue  
-                    
                 character = None
                 retries = 5
                 while retries > 0:
                     try:
-                        character = await get_character(str(member.name),
-                                                        str(member.realm),
+                        character = await get_character(str(new_member.name),
+                                                        str(new_member.realm),
                                                         score_colors_list)
                         break
                     except (httpx.ReadTimeout, ssl.SSLWantReadError):
@@ -573,7 +601,7 @@ async def crawl_discord_guild_members(discord_guild_id) -> None:
                         retries -= 1
 
                 if character is None:
-                    print(f"Could not fetch character {member.name}. Skipping.")
+                    print(f"Could not fetch character {new_member.name}. Skipping.")
                     continue
                                     
                 new_character = db.CharacterDB(game_guild_id = game_guild.id,
@@ -597,9 +625,7 @@ async def crawl_discord_guild_members(discord_guild_id) -> None:
                 
                 if added_character is None:
                     character = await db.get_character_by_name_realm(character.name, character.realm)
-                    
                     await db.add_discord_guild_character(discord_guild=discord_guild, character=character)
-                
                 else:
                     await db.add_discord_guild_character(discord_guild=discord_guild,
                                                         character=added_character)
@@ -615,3 +641,4 @@ async def crawl_discord_guild_members(discord_guild_id) -> None:
         return False
     finally:
         print('Crawler: finished crawling guild members')
+
