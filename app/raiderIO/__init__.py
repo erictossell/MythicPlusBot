@@ -40,7 +40,7 @@ def get_score_colors() -> List[ScoreColor]:
                 response = client.get('https://raider.io/api/v1/mythic-plus/score-tiers')
             
                 for score in response.json():
-                    score_colors.append(ScoreColor(score['score'], score['rgbHex'])) 
+                    score_colors.append(ScoreColor(score['score'], score['rgbHex']))
                 return score_colors 
         except httpx.ReadTimeout:
                     print("Timeout occurred while fetching character data.")
@@ -615,48 +615,3 @@ async def crawl_discord_guild_members(discord_guild_id) -> None:
         return False
     finally:
         print('Crawler: finished crawling guild members')
-
-async def crawl_dungeon_runs(discord_guild_id: int) -> str:
-    """Crawl all runs in the database that have not been crawled.\n
-
-    Args:
-        discord_guild_id (int): The guild ID of the discord server.
-
-    Returns:
-        str: The result of the crawl.
-    """
-    runs_crawled = 0
-    guild_run_counter = 0
-    try:
-        
-        runs_list = await db.get_all_runs_not_crawled()
-        
-        if runs_list is None:
-            return 'No runs to crawl.'
-        
-        print('RaiderIO Crawler: Crawling runs.')
-        for run in tqdm(runs_list):
-            
-            is_guild = await get_run_details(run, discord_guild_id)
-            runs_crawled += 1
-            discord_guild = await db.get_discord_guild_by_id(discord_guild_id)
-            
-            if is_guild is True:
-                announcement = db.AnnouncementDB(discord_guild_id=discord_guild_id,
-                                                announcement_channel_id=discord_guild.announcement_channel_id,
-                                                title=f'🧙‍♂️ New guild run: {run.mythic_level} - {run.name} on {run.completed_at}',
-                                                content=f'**{run.name}** completed on {run.completed_at} by Take a Lap.\n\n**Dungeon:** {run.short_name}\n**Score:** {run.score}\n**URL:** {run.url}',
-                                                dungeon_run_id=run.id)
-                print(f"Created announcement with dungeon_run_id: {announcement.dungeon_run_id}")
-                
-                await db.add_announcement(announcement)
-                run.is_crawled = True
-                run.is_guild_run = True
-                await db.update_dungeon_run(run)
-                
-                guild_run_counter += 1            
-             
-        return f'Runs crawled: {runs_crawled}  | Identified {guild_run_counter} guild runs.'
-    except Exception as exception:
-        print(exception)
-        return 'Error: An error occurred while crawling runs.'

@@ -125,7 +125,7 @@ class Character(commands.Cog):
         """
         try:
             
-            await ctx.respond('Please check your DMs for the registration link.')
+            await ctx.respond('Please check your DMs for the registration button.')
             
             user = await ctx.bot.fetch_user(ctx.author.id)
             channel = await user.create_dm()
@@ -135,7 +135,7 @@ class Character(commands.Cog):
             
             else:                
                 view = RegisterView(ctx.guild.id)
-                await channel.send('Please click the button below to register your character. This message will self destruct in 60 seconds.', view=view, delete_after=60)
+                await channel.send('Please click the button below to register your character. This message will self destruct in 300 seconds.', view=view, delete_after=300)
         
         except Exception as exception:
             print(exception)

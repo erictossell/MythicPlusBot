@@ -16,13 +16,13 @@ class RegisterView(View):
         super().__init__(*args, **kwargs)
         self.discord_guild_id = discord_guild_id
         
-        self.add_item(UnregisterButton())
+        self.add_item(UnregisterButton(discord_guild_id=self.discord_guild_id))
         self.add_item(RegisterButton(discord_guild_id=self.discord_guild_id))
 
 class UnregisterButton(Button):
-    def __init__(self):
+    def __init__(self, discord_guild_id: int):
         super().__init__(label='Unregister', style=discord.ButtonStyle.red, emoji='🗑️')
-        
+        self.discord_guild_id = discord_guild_id
     async def callback(self, interaction: discord.Interaction):
         try:
             await interaction.response.send_modal(UnregisterModal(title="Unregister your character"))
@@ -102,24 +102,25 @@ class RegisterModal(Modal):
                 await db.add_discord_guild_character(discord_guild= discord_guild,
                                                         character= new_character)
                 
-                await interaction.response.send_message(f'You have registered the character {new_character.name} on realm {new_character.realm.capitalize()} for Tal-Bot reporting.', ephemeral=True)
+                await interaction.response.send_message(f'You have registered the character {new_character.name} on realm {new_character.realm.capitalize()} for Mythic+ Bot reporting on the Discord server: {discord_guild.discord_guild_name}.', ephemeral=True)
                 return
 
             elif existing_character:
                 await db.add_discord_guild_character(discord_guild= discord_guild,
                                                         character= existing_character)
-                await interaction.response.send_message(f'You have registered the character {existing_character.name} on realm {existing_character.realm.capitalize()} for Tal-Bot reporting.', ephemeral=True)
+                await interaction.response.send_message(f'You have registered the character {existing_character.name} on realm {existing_character.realm.capitalize()} for Mythic+ Bot reporting on the Discord server: {discord_guild.discord_guild_name}.', ephemeral=True)
             else:
-                await interaction.response.send_message(f'The character {existing_character.name} on realm {existing_character.realm.capitalize()} has already been registered for Tal-Bot reporting.', ephemeral=True)                   
+                await interaction.response.send_message(f'The character {existing_character.name} on realm {existing_character.realm.capitalize()} has already been registered for Mythic+ Bot reporting on the Discord server: {discord_guild.discord_guild_name}.', ephemeral=True)                   
         except Exception as e:
             print(e)
             
 class UnregisterModal(Modal):
     """The modal that is used to unregister a character."""
 
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, discord_guild_id:int, *args, **kwargs) -> None:
         """The constructor for the UnregisterModal class."""
         super().__init__(*args, **kwargs)
+        self.discord_guild_id = discord_guild_id
         self.add_item(InputText(label="Which character do you want to unregister?", required=True))
         self.add_item(InputText(label="Character Realm: (Defaults to Area-52)", required=False))
         
@@ -133,7 +134,7 @@ class UnregisterModal(Modal):
             name = self.children[0].value.capitalize()
             realm = self.children[1].value.capitalize() if self.children[1].value else 'Area-52'
             user_id = interaction.user.id           
-            
+            discord_guild = await db.get_discord_guild_by_id(self.discord_guild_id)
             character = await raiderIO.get_character(name, realm)
             
             if character is None:
@@ -153,7 +154,7 @@ class UnregisterModal(Modal):
             elif existing_character.discord_user_id == user_id and existing_character.is_reporting:
                 existing_character.is_reporting = False  
                 await db.update_character_reporting(existing_character)                
-                await interaction.response.send_message(f'You have unregistered the character {name} on realm {realm} for Tal-Bot reporting.', ephemeral=True)
+                await interaction.response.send_message(f'You have unregistered the character {name} on realm {realm} for Mythic+ Bot reporting on the Discord server: {discord_guild.discord_guild_name}.', ephemeral=True)
                 return
 
             elif existing_character.discord_user_id == user_id and not existing_character.is_reporting:
