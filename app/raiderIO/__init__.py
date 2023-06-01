@@ -179,7 +179,7 @@ async def get_characters(names: List[str], realms: List[str], region='us') -> Li
     characters = []
     score_colors = get_score_colors()
 
-    for name, realm in zip(names, realms):
+    for name, realm in tqdm(zip(names, realms)):
         retries = 3
         character = None
         while retries > 0:
@@ -189,6 +189,7 @@ async def get_characters(names: List[str], realms: List[str], region='us') -> Li
                 
             except (httpx.ReadTimeout, ssl.SSLWantReadError):
                     await asyncio.sleep(2 ** (3 - retries))
+                    print(f'Retrying {name}-{realm}...')
                     retries -= 1
         
         if character is None:
@@ -270,7 +271,7 @@ async def get_mythic_plus_affixes() -> Optional[List[Affix]]:
 
 @sleep_and_retry
 @limits(calls=CALLS, period=RATE_LIMIT)
-async def get_run_details(dungeon_run : DungeonRunDB, discord_guild_id, players_per_run: int) -> Optional[bool]:
+async def get_run_details(dungeon_run: DungeonRun , discord_guild_id, players_per_run: int) -> Optional[bool]:
     """Get a guild run from the Raider.IO API.
 
     Args:
@@ -286,15 +287,18 @@ async def get_run_details(dungeon_run : DungeonRunDB, discord_guild_id, players_
         try:
             async with httpx.AsyncClient() as client:
 
-                request = await client.get(API_URL +f'mythic-plus/run-details?season={dungeon_run.season}&id={dungeon_run.dungeon_id}', timeout=TIMEOUT)
+                request = await client.get(API_URL +f'mythic-plus/run-details?season={dungeon_run.season}&id={dungeon_run.id}', timeout=TIMEOUT)
 
                 if request.status_code != 200:
                     return None
 
                 elif request.status_code == 200:
                     if request.json()['roster'] is None:
-                        return False
-
+                        return False                    
+                    
+                    
+                    dungeon_db = await db.get_run_by_id(int(dungeon_run.id), dungeon_run.season)
+                                      
                     # Retrieve all characters involved in the run at once and store them in a dictionary
                     character_names = [str(roster['character']['name']).capitalize() for roster in request.json()['roster']]
                     character_realms = [str(roster['character']['realm']['slug']).capitalize() for roster in request.json()['roster']]
@@ -315,7 +319,7 @@ async def get_run_details(dungeon_run : DungeonRunDB, discord_guild_id, players_
                             rank_region = roster['ranks']['region']
                             rank_realm = roster['ranks']['realm']
                             character_run = convert.character_run_io(character_db= character_db,
-                                                            dungeon_run_db = dungeon_run,
+                                                            dungeon_run_db = dungeon_db,
                                                             rio_character_id = character_id,
                                                             spec_name = spec_name,
                                                             role = role,
@@ -361,14 +365,15 @@ async def crawl_characters(discord_guild_id: int) -> str:
         
         discord_guild = await db.get_discord_guild_by_id(discord_guild_id)
         db_characters_list = await db.get_all_discord_guild_characters(discord_guild_id)
-
+        runs = set()
         print('RaiderIO Crawler: Crawling ' + str(len(db_characters_list)) + ' characters.')
-
         for character in tqdm(db_characters_list):
             characters_crawled += 1
 
+            if character.discord_guild_characters[0].is_reporting is False:
+                continue
             character_io = None
-            retries = 5
+            retries = 3
             while retries > 0:
                 try:
                     character_io = await get_character(str(character.name),
@@ -405,124 +410,55 @@ async def crawl_characters(discord_guild_id: int) -> str:
 
                 if run is None:
                     return f'Error: An error occurred while crawling {character.name} for new runs.'
-
-                db_run = await db.get_run_by_id(int(run.id), run.season)
                 
-                if run is not None and db_run is None:
-
-                    run.completed_at = datetime.strptime(run.completed_at,
-                                                            '%Y-%m-%dT%H:%M:%S.%fZ')
-                    run_db = await db.add_dungeon_run(convert.dungeon_run_io(run))
-                    run_counter += 1
-
-                    is_guild_run = None
-                    retries = 3
-                    while retries > 0:
-                        try:
-                            is_guild_run = await get_run_details(run_db, discord_guild_id, discord_guild.players_per_run)
-                            break
-                        except (httpx.ReadTimeout, ssl.SSLWantReadError):
-                            await asyncio.sleep(2 ** (3 - retries))
-                            retries -= 1
-
-                    if is_guild_run is None:
-                        print(f"Could not fetch run details for {run_db.name}. Skipping.")
-                        continue
-
-                    runs_crawled += 1
-
-                    if is_guild_run is True:
-                        
-                        run_db.is_crawled = True
-                        run_db.is_guild_run = True
-                        await db.update_dungeon_run(run_db)
-                        await db.add_discord_guild_run(discord_guild=discord_guild,
-                                                        dungeon_run=run_db)
-
-                        guild_run_counter += 1
-                    
-                elif db_run:
-                    
-                    is_guild_run = None
-                    retries = 3
-                    while retries > 0:
-                        try:
-                            is_guild_run = await get_run_details(db_run, discord_guild_id, discord_guild.players_per_run)
-                            break
-                        except (httpx.ReadTimeout, ssl.SSLWantReadError):
-                            await asyncio.sleep(2 ** (3 - retries))
-                            retries -= 1
-
-                    if is_guild_run is None:
-                        print(f"Could not fetch run details for {db_run.name}. Skipping.")
-                        continue
-                    
-                    runs_crawled += 1
-                    
-                    if is_guild_run is True:
-                        
-                        db_run.is_crawled = True
-                        db_run.is_guild_run = True
-                        await db.update_dungeon_run(db_run)
-                        await db.add_discord_guild_run(discord_guild=discord_guild,
-                                                        dungeon_run=db_run)
-
-                        guild_run_counter += 1
-                        
+                if run not in runs:
+                    runs.add(run)                  
             for run in character_io.recent_runs:
                 
                 if run is None:
                     return f'Error: An error occurred while crawling {character.name} for new runs.'
                 
-                db_run = await db.get_run_by_id(int(run.id), run.season)
                 
-                if run is not None and db_run is None:
+                if run not in runs:
+                    runs.add(run)
+        
+        if len(runs) > 0:
 
+            season = runs.pop().season
+            db_run_ids = await db.get_all_run_ids_by_season(season)
+            
+            db_run_id_set = set(db_run for db_run in db_run_ids)
+            runs_id_set = set(int(run.id) for run in runs)
+            
+            new_run_ids = runs_id_set - db_run_id_set
+            
+            new_runs = [run for run in runs if int(run.id) in new_run_ids]
+            
+            for run in tqdm(new_runs):
+                
+                
+                    
+                if run is not None:               
+                    
+                    
                     run.completed_at = datetime.strptime(run.completed_at,
-                                                            '%Y-%m-%dT%H:%M:%S.%fZ')
-                    run_db = await db.add_dungeon_run(convert.dungeon_run_io(run))
+                                                            '%Y-%m-%dT%H:%M:%S.%fZ')                            
+                    db_run = await db.add_dungeon_run(convert.dungeon_run_io(run))
+                    
                     run_counter += 1
 
                     is_guild_run = None
                     retries = 3
                     while retries > 0:
                         try:
-                            is_guild_run = await get_run_details(run_db, discord_guild_id, discord_guild.players_per_run)
+                            is_guild_run = await get_run_details(run, discord_guild.id, discord_guild.players_per_run)
                             break
                         except (httpx.ReadTimeout, ssl.SSLWantReadError):
                             await asyncio.sleep(2 ** (3 - retries))
                             retries -= 1
 
                     if is_guild_run is None:
-                        print(f"Could not fetch run details for {run_db.name}. Skipping.")
-                        continue
-                    
-                    runs_crawled += 1
-                    
-                    if is_guild_run is True:
-                        
-                        run_db.is_crawled = True
-                        run_db.is_guild_run = True
-                        await db.update_dungeon_run(run_db)
-                        await db.add_discord_guild_run(discord_guild=discord_guild,
-                                                        dungeon_run=run_db)
-
-                        guild_run_counter += 1
-                        
-                elif db_run:
-                    
-                    is_guild_run = None
-                    retries = 3
-                    while retries > 0:
-                        try:
-                            is_guild_run = await get_run_details(db_run, discord_guild_id, discord_guild.players_per_run)
-                            break
-                        except (httpx.ReadTimeout, ssl.SSLWantReadError):
-                            await asyncio.sleep(2 ** (3 - retries))
-                            retries -= 1
-
-                    if is_guild_run is None:
-                        print(f"Could not fetch run details for {db_run.name}. Skipping.")
+                        print(f"Could not fetch run details for run ID:{run}. Skipping.")
                         continue
                     
                     runs_crawled += 1
@@ -531,7 +467,7 @@ async def crawl_characters(discord_guild_id: int) -> str:
                         
                         db_run.is_crawled = True
                         db_run.is_guild_run = True
-                        await db.update_dungeon_run(db_run)
+                        db_run = await db.update_dungeon_run(db_run)
                         await db.add_discord_guild_run(discord_guild=discord_guild,
                                                         dungeon_run=db_run)
 
@@ -641,4 +577,3 @@ async def crawl_discord_guild_members(discord_guild_id) -> None:
         return False
     finally:
         print('Crawler: finished crawling guild members')
-

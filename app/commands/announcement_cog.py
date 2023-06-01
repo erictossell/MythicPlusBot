@@ -143,10 +143,10 @@ class Announcement(commands.Cog):
                     
                     try:
                         
-                        guild_crawl = await asyncio.wait_for(raiderIO.crawl_discord_guild_members(discord_guild.id), timeout=600.0)
+                        guild_crawl = await asyncio.wait_for(raiderIO.crawl_discord_guild_members(discord_guild.id), timeout=1200)
                         await channel.send(guild_crawl)
                         
-                        character_crawl = await asyncio.wait_for(raiderIO.crawl_characters(discord_guild.id), timeout=600.0)
+                        character_crawl = await asyncio.wait_for(raiderIO.crawl_characters(discord_guild.id), timeout=1200)
                         await channel.send(character_crawl)
                     
                     except TimeoutError:

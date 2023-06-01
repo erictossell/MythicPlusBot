@@ -664,8 +664,7 @@ async def update_discord_guild_character(discord_guild_character = DiscordGuildC
     except SQLAlchemyError as error:
         print(f'Error while querying the database: {error}')
         return None
-    
-            
+ 
 async def update_character(character: Character) -> CharacterDB:
     """Update an existing character in the database.
 
@@ -998,6 +997,43 @@ async def get_daily_non_guild_runs(discord_guild_id: int, number_of_runs: int) -
     except SQLAlchemyError as error:
         print(f'Error while querying the database: {error}')
         return None
+    
+async def get_all_weekly_guild_runs(discord_guild_id: int) -> Optional[DefaultDict[List[DungeonRunDB], List[CharacterDB]]]:
+    try:
+        async with async_session_scope() as session:
+            subquery = (
+                select(DungeonRunDB.id, DungeonRunDB.score)
+                .join(DiscordGuildRunDB.dungeon_run)                
+                .filter(DungeonRunDB.completed_at > datetime.utcnow() - timedelta(weeks=1), DiscordGuildRunDB.discord_guild_id == discord_guild_id)
+                .order_by(desc(DungeonRunDB.score))
+                
+            )
+            subquery_alias = subquery.subquery().alias()
+            
+            query = (
+                select(DungeonRunDB, CharacterRunDB)
+                .options(joinedload(DungeonRunDB.character_runs))
+                .options(joinedload(CharacterRunDB.character))
+                .join(CharacterRunDB.dungeon_run)
+                .join(CharacterDB, CharacterDB.id == CharacterRunDB.character_id)
+                .join(DiscordGuildCharacterDB, DiscordGuildCharacterDB.character_id == CharacterDB.id)
+                .where(DungeonRunDB.id.in_(select(subquery_alias.c.id)))
+                .order_by(desc(DungeonRunDB.score))
+                .distinct()# Use a select() construct explicitly
+            )
+
+            result = await session.execute(query)
+            result = result.unique()
+            grouped_result = defaultdict(list)
+            for dungeon_run, character in result:
+                grouped_result[dungeon_run].append(character)
+
+            dungeon_runs_with_characters = list(grouped_result.items())
+            return dungeon_runs_with_characters
+        
+    except SQLAlchemyError as error:
+        print(f'Error while querying the database: {error}')
+        return None   
 
 async def get_all_characters_by_game_guild(game_guild: GameGuildDB) -> Optional[List[CharacterDB]]:
     try:
@@ -1058,7 +1094,6 @@ async def get_characters_by_names_realms_and_discord_guild(names: List[str], rea
     except SQLAlchemyError as error:
         print(f'Error while querying the database: {error}')
         return None
-
 
 async def get_all_game_guilds_by_discord_id(discord_guild_id: int) -> Optional[List[GameGuildDB]]:
     """Look up all game guilds associated with a specific discord guild in the database.
@@ -1169,6 +1204,38 @@ async def get_all_runs() -> List[DungeonRunDB]:
     try:
         async with async_session_scope() as session:
             runs_query = select(DungeonRunDB)
+            result = await session.execute(runs_query)
+            runs = result.scalars().unique().all()            
+            return runs
+    except SQLAlchemyError as error:
+        print(f'Error while querying the database: {error}')
+        return None
+
+async def get_all_run_ids() -> List[int]:
+    """Get all of the run ids from the database.
+
+    Returns:
+        List[int]: A list of all of the run ids in the database.
+    """
+    try:
+        async with async_session_scope() as session:
+            runs_query = select(DungeonRunDB.dungeon_id)
+            result = await session.execute(runs_query)
+            runs = result.scalars().unique().all()            
+            return runs
+    except SQLAlchemyError as error:
+        print(f'Error while querying the database: {error}')
+        return None
+    
+async def get_all_run_ids_by_season(season: str) -> List[int]:
+    """Get all of the run ids from the database.
+
+    Returns:
+        List[int]: A list of all of the run ids in the database.
+    """
+    try:
+        async with async_session_scope() as session:
+            runs_query = select(DungeonRunDB.dungeon_id).filter(DungeonRunDB.season == season)
             result = await session.execute(runs_query)
             runs = result.scalars().unique().all()            
             return runs

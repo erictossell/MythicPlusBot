@@ -8,33 +8,14 @@ from app.raiderIO.models.character import Character
 from app.raiderIO.models.dungeon_run import DungeonRun
 
 
-def character_io(character: Character, discord_user_id: int, discord_guild_id: int) -> Character:
-    character_db = CharacterDB(discord_user_id = discord_user_id,
-                          discord_guild_id = discord_guild_id,
-                          guild_name = character.guild_name,
-                          name = character.name,
-                          realm = character.realm,
-                          faction = character.faction,
-                          region = character.region,
-                          role = character.role,
-                          spec_name=  character.spec_name,
-                          class_name= character.class_name,
-                          achievement_points= character.achievement_points,
-                          item_level= character.item_level,
-                          score= character.score,
-                          rank= character.rank,
-                          thumbnail_url= character.thumbnail_url,
-                          url= character.url,
-                          last_crawled_at= character.last_crawled_at,
-                          is_reporting= True)
-    return character_db
+
 
 def dungeon_run_io(run: DungeonRun) -> DungeonRunDB:
     return DungeonRunDB(dungeon_id = run.id,
                            season = run.season,
                            name = run.name,
                            short_name = run.short_name,
-                           mythic_level =    run.mythic_level,
+                           mythic_level = run.mythic_level,
                            completed_at = run.completed_at,
                            clear_time_ms =run.clear_time_ms,
                            par_time_ms = run.par_time_ms,
