@@ -365,6 +365,10 @@ async def crawl_characters(discord_guild_id: int) -> str:
         
         discord_guild = await db.get_discord_guild_by_id(discord_guild_id)
         db_characters_list = await db.get_all_discord_guild_characters(discord_guild_id)
+        
+        for character in db_characters_list:
+                character.discord_guild_characters = [dgc for dgc in character.discord_guild_characters if dgc.discord_guild_id == discord_guild_id]
+                
         runs = set()
         print('RaiderIO Crawler: Crawling ' + str(len(db_characters_list)) + ' characters.')
         for character in tqdm(db_characters_list):
@@ -434,12 +438,9 @@ async def crawl_characters(discord_guild_id: int) -> str:
             
             new_runs = [run for run in runs if int(run.id) in new_run_ids]
             
-            for run in tqdm(new_runs):
+            for run in tqdm(new_runs):       
                 
-                
-                    
                 if run is not None:               
-                    
                     
                     run.completed_at = datetime.strptime(run.completed_at,
                                                             '%Y-%m-%dT%H:%M:%S.%fZ')                            
@@ -577,3 +578,4 @@ async def crawl_discord_guild_members(discord_guild_id) -> None:
         return False
     finally:
         print('Crawler: finished crawling guild members')
+        

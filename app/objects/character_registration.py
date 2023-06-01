@@ -71,8 +71,7 @@ class RegisterModal(Modal):
                         
             if not character:
                 await interaction.response.send_message(f'Character {name} on {realm} not found.', ephemeral=True)
-                return
-            
+                return            
             
             elif existing_character is None:
                 
@@ -111,6 +110,7 @@ class RegisterModal(Modal):
                 existing_guild_character.is_reporting = True
                 await db.update_discord_guild_character(existing_guild_character)
                 await interaction.response.send_message(f'You have registered the character {existing_character.name} on realm {existing_character.realm.capitalize()} for Mythic+ Bot reporting on the Discord server: {discord_guild.discord_guild_name}.', ephemeral=True)
+                return
             else:
                 await interaction.response.send_message(f'The character {existing_character.name} on realm {existing_character.realm.capitalize()} has already been registered for Mythic+ Bot reporting on the Discord server: {discord_guild.discord_guild_name}.', ephemeral=True)                   
         except Exception as e:
@@ -155,7 +155,7 @@ class UnregisterModal(Modal):
                     matching_character.is_reporting = False  # Use the new score you want to set
                     await db.update_discord_guild_character(matching_character)
                     await interaction.response.send_message(f'You have unregistered the character {name} on realm {realm} for Mythic+ Bot reporting on the Discord server: {discord_guild.discord_guild_name}.', ephemeral=True)
-
+                return
             
 
             elif existing_character.is_reporting:

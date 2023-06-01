@@ -40,8 +40,6 @@ load_dotenv('configurations/main.env')
 
 DEV_RAILWAY = os.getenv('DEV_RAILWAY')
 
-
-
 async_engine = create_async_engine(
     DEV_RAILWAY,
     echo=False,
@@ -299,14 +297,14 @@ async def get_next_announcement_by_guild_id(discord_guild_id: int) -> Announceme
 
 #-------------------------Create Functions------------------------------#
 
-async def add_discord_guild_character(discord_guild: DiscordGuildDB, character: CharacterDB) -> DiscordGuildCharacterDB:
+async def add_discord_guild_character(discord_guild: DiscordGuildDB, character: CharacterDB):
     try:
         async with async_session_scope() as session:
             guild_query = select(DiscordGuildDB).filter(DiscordGuildDB.id == discord_guild.id)
             guild_result = await session.execute(guild_query)
-            existing_discord_guild = guild_result.scalar()
+            existing_guild = guild_result.scalar()
             
-            if existing_discord_guild:
+            if existing_guild:
                 
                 character_query = select(CharacterDB).filter(CharacterDB.id == character.id)
                 character_result = await session.execute(character_query)
@@ -315,26 +313,27 @@ async def add_discord_guild_character(discord_guild: DiscordGuildDB, character: 
                 if existing_character:
                     
                     guild_character_query = (
-                        select(DiscordGuildCharacterDB)
-                        .filter(DiscordGuildCharacterDB.discord_guild_id == discord_guild.id, DiscordGuildCharacterDB.character_id == character.id)
-                        )
-                    
+                        select(DiscordGuildCharacterDB.id)
+                        .filter(DiscordGuildCharacterDB.discord_guild_id == existing_guild.id, DiscordGuildCharacterDB.character_id == existing_character.id)
+                        
+                    )
                     guild_character_result = await session.execute(guild_character_query)
                     existing_guild_character = guild_character_result.scalar()
-                    
                     if existing_guild_character:
                         return existing_guild_character
                     else:
-                        new_guild_character = DiscordGuildCharacterDB(discord_guild_id = discord_guild.id, character_id = character.id)
-                        session.add(new_guild_character)
-                        
-                        return new_guild_character
+                        discord_guild_character = DiscordGuildCharacterDB(discord_guild_id=existing_guild.id, character_id=existing_character.id)
+                        session.add(discord_guild_character)
+                        return discord_guild_character
+                    
+                else:
+                    return None
             else:
                 return None
     except SQLAlchemyError as error:
         print(f'Error while querying the database: {error}')
         return None
-
+    
 async def add_discord_guild_run(discord_guild: DiscordGuildDB, dungeon_run: DungeonRunDB) -> DiscordGuildRunDB:
     try:
         async with async_session_scope() as session:
@@ -1061,11 +1060,7 @@ async def get_all_discord_guild_characters(discord_guild_id: int) -> Optional[Li
                 .filter(DiscordGuildCharacterDB.discord_guild_id == discord_guild_id)
             )
             result = await session.execute(query)
-            characters = result.scalars().unique().all()
-            
-            for character in characters:
-                character.discord_guild_characters = [dgc for dgc in character.discord_guild_characters if dgc.discord_guild_id == discord_guild_id]
-                    
+            characters = result.scalars().unique().all()                   
             return characters
         
     except SQLAlchemyError as error:
