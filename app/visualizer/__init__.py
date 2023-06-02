@@ -50,7 +50,7 @@ async def daily_guild_runs_plot(df: pd.DataFrame, discord_guild_id: int):
         df['time_of_day'] = df['completed_at'].dt.hour
         
         # Calculate the time difference in hours and add 3 hours to account for the time difference between the server and the API
-        df['completed_at'] = df['completed_at'] + pd.Timedelta(hours=-3)
+        
         now = datetime.now()
         df['hours_passed'] = (now - df['completed_at']).dt.total_seconds() / 3600
          
