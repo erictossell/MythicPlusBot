@@ -1,8 +1,10 @@
 import os
 import discord
+import pandas as pd
 from discord.commands import SlashCommandGroup
 from discord.ext import commands
 from dotenv import load_dotenv
+from app import visualizer
 import app.db as db
 from app.objects.embed_builder import daily_guild_report_embed
 from app.util import hex_to_rgb
@@ -27,21 +29,34 @@ class Guild(commands.Cog):
             ctx (discord.ctx): The current discord context.
         """
         try:
+            async with ctx.typing():
+                
+                await ctx.respond('Generating report...')
             
-            bot_user = await ctx.bot.fetch_user(1073958413488369794)
+                bot_user = await ctx.bot.fetch_user(1073958413488369794)
 
-            guild_run_list = await db.get_daily_guild_runs(discord_guild_id=ctx.guild.id)
-            
-            discord_guild_db = await db.get_discord_guild_by_id(ctx.guild.id)
-            
-            run_list = await db.get_daily_non_guild_runs(discord_guild_id=ctx.guild.id, number_of_runs= (8-len(guild_run_list)))
-            embed = daily_guild_report_embed(bot=self.bot,
-                                                    discord_guild_db=discord_guild_db,
-                                                    guild_run_list=guild_run_list,
-                                                    non_guild_run_list=run_list,
-                                                    bot_user=bot_user)
-            
-            await ctx.respond(embed=embed)
+                guild_run_list = await db.get_daily_guild_runs(discord_guild_id=ctx.guild.id)
+                
+                discord_guild_db = await db.get_discord_guild_by_id(ctx.guild.id)
+                
+                run_list = await db.get_daily_non_guild_runs(discord_guild_id=ctx.guild.id, number_of_runs= (8-len(guild_run_list)))
+                
+                all_runs = await db.get_all_daily_runs(discord_guild_id=ctx.guild.id)
+                
+                all_runs_dict = [{'completed_at': run.completed_at, 'score': run.score, 'mythic_level': run.mythic_level, 'short_name': run.short_name} for run in all_runs]
+                df = pd.DataFrame(all_runs_dict)
+                
+                graph = await visualizer.daily_guild_runs_plot(df, discord_guild_id=ctx.guild.id)
+                
+                embed = daily_guild_report_embed(bot=self.bot,
+                                                        discord_guild_db=discord_guild_db,
+                                                        guild_run_list=guild_run_list,
+                                                        non_guild_run_list=run_list,
+                                                        bot_user=bot_user)
+                embed.set_image(url=f'attachment://{graph.filename}')
+                
+                await ctx.respond(file= graph, embed=embed)
+                
             
         except Exception as exception:
             print(exception)

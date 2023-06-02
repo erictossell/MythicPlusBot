@@ -6,6 +6,8 @@ from discord.ext import commands, tasks
 from datetime import time
 
 from dotenv import load_dotenv
+import pandas as pd
+from app import visualizer
 import app.db as db
 from app.objects.embed_builder import announce_guild_run_embed, daily_guild_report_embed
 import app.raiderIO as raiderIO
@@ -67,12 +69,21 @@ class Announcement(commands.Cog):
                     previous_run_count = len(guild_run_list)
                     run_list = await db.get_daily_non_guild_runs(discord_guild_id=discord_guild_db.id, number_of_runs= (8-previous_run_count))
                     
+                    all_runs = await db.get_all_daily_runs(discord_guild_id=discord_guild_db.id)
+                
+                    all_runs_dict = [{'completed_at': run.completed_at, 'score': run.score, 'mythic_level': run.mythic_level, 'short_name': run.short_name} for run in all_runs]
+                    df = pd.DataFrame(all_runs_dict)
+                    
+                    graph = await visualizer.daily_guild_runs_plot(df, discord_guild_id=discord_guild_db.id)
+                    
                     embed = daily_guild_report_embed(bot=self.bot,
-                                                         discord_guild_db=discord_guild_db,
-                                                         guild_run_list=guild_run_list,
-                                                         non_guild_run_list=run_list,
-                                                         bot_user=bot_user)
-                    await channel.send(embed=embed)
+                                                            discord_guild_db=discord_guild_db,
+                                                            guild_run_list=guild_run_list,
+                                                            non_guild_run_list=run_list,
+                                                            bot_user=bot_user)
+                    embed.set_image(url=f'attachment://{graph.filename}')
+                    
+                    await channel.send(file=graph, embed=embed)
 
     
     @tasks.loop(time=time(hour=22, minute=5, second=0))

@@ -918,6 +918,37 @@ async def remove_discord_user_character(discord_user_character: DiscordUserChara
 
 #-------------------------Bulk Read Functions------------------------------#
 
+async def get_all_daily_runs(discord_guild_id: int) -> Optional[DefaultDict[List[DungeonRunDB], List[CharacterDB]]]:
+    try:
+        async with async_session_scope() as session:
+            #get all runs from the last 24 hours for a particular guild
+            subquery = (
+                select(DungeonRunDB.id, DungeonRunDB.score)  # Select only the id column
+                .join(CharacterRunDB.dungeon_run)
+                .join(CharacterDB, CharacterDB.id == CharacterRunDB.character_id)
+                .join(DiscordGuildCharacterDB, DiscordGuildCharacterDB.character_id == CharacterDB.id)
+                .filter(DungeonRunDB.completed_at > datetime.utcnow() - timedelta(days=1), DiscordGuildCharacterDB.discord_guild_id == discord_guild_id)
+                .order_by(desc(DungeonRunDB.score))                
+                .distinct()
+            )
+            
+            subquery_alias = subquery.subquery().alias()  # Add this line to create the alias
+           
+            query = (
+                select(DungeonRunDB)                
+                .where(DungeonRunDB.id.in_(select(subquery_alias.c.id)))
+                .order_by(desc(DungeonRunDB.score))
+                .distinct()# Use a select() construct explicitly
+            )
+            result = await session.execute(query)
+            result = result.scalars().all()
+            
+            return result
+            
+    except SQLAlchemyError as error:
+        print(f'Error while querying the database: {error}')
+        return None
+    
 async def get_daily_guild_runs(discord_guild_id: int) -> Optional[DefaultDict[List[DungeonRunDB], List[CharacterDB]]]:
     try:
         async with async_session_scope() as session:
