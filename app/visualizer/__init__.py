@@ -20,6 +20,10 @@ import matplotlib.pyplot as plt
 
 async def daily_guild_runs_plot(runs: list, discord_guild_id: int):
     
+    if len(runs) == 0:
+        return None
+    
+    
     all_runs_dict = [{'completed_at': run.completed_at, 'score': run.score, 'mythic_level': run.mythic_level, 'short_name': run.short_name} for run in runs]
     df = pd.DataFrame(all_runs_dict)
     plt.close('all')
@@ -94,6 +98,10 @@ async def daily_guild_runs_plot(runs: list, discord_guild_id: int):
     return File(f'images/{discord_guild_id}_dgr_plot.png')
 
 async def weekly_guild_runs_plot(runs: list, guild_runs: list, discord_guild_id: int):
+    
+    if len(runs) == 0:
+        return None
+    
     try:
         all_runs_dict = [{'completed_at': run.completed_at, 'score': run.score, 'mythic_level': run.mythic_level, 'short_name': run.short_name} for run in runs]
         df = pd.DataFrame(all_runs_dict)

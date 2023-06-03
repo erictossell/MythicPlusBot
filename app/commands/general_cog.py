@@ -93,5 +93,5 @@ def setup(bot):
         bot (discord.bot): The current discord bot class.
     """
     bot.add_cog(GeneralCog(bot))
-    print("General cog is loaded successfully.")
+    print("General cog has loaded successfully.")
     

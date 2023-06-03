@@ -291,5 +291,5 @@ class Character(commands.Cog):
 
 def setup(bot):
     bot.add_cog(Character(bot))
-    print('Character cog loaded successfully.')
+    print('Character cog has loaded successfully.')
     

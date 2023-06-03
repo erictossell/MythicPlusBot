@@ -1,11 +1,8 @@
 import os
 from dotenv import load_dotenv
-import time
 from discord.ext import commands
 from discord.commands import SlashCommandGroup
 from app.objects.guild_registration import RegisterGuildView
-
-import app.raiderIO as raiderIO
 import app.db as db
 
 load_dotenv('configurations/main.env')
@@ -130,5 +127,5 @@ class Admin(commands.Cog):
             
 def setup(bot):
     bot.add_cog(Admin(bot))    
-    print("Admin cog is loaded successfully.")
+    print("Admin cog has loaded successfully.")
     

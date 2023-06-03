@@ -12,7 +12,7 @@ class MembersCog(commands.Cog):
     """
     def __init__(self, bot):
         self.bot = bot
-        print("Member events are initializing....")
+        print("Member events cog is initializing....")
     
     @commands.Cog.listener()
     async def on_member_join(self, member):
@@ -33,5 +33,5 @@ def setup(bot):
         bot (bot): The current discord bot.
     """
     bot.add_cog(MembersCog(bot))
-    print("Member events loaded successfully.")
+    print("Member events cog has loaded successfully.")
     

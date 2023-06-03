@@ -49,9 +49,14 @@ class Guild(commands.Cog):
                                                         guild_run_list=guild_run_list,
                                                         non_guild_run_list=run_list,
                                                         bot_user=bot_user)
-                embed.set_image(url=f'attachment://{graph.filename}')
                 
-                await ctx.respond(file= graph, embed=embed)
+                if graph is not None:
+                    embed.set_image(url=f'attachment://{graph.filename}')
+                    await ctx.respond(file= graph, embed=embed)
+                else:
+                    await ctx.respond(embed=embed)
+                                
+                
                 
             
         except Exception as exception:
@@ -88,9 +93,11 @@ class Guild(commands.Cog):
                                                         guild_run_list=guild_run_list,
                                                         non_guild_run_list=run_list,
                                                         bot_user=bot_user)
-                embed.set_image(url=f'attachment://{graph.filename}')
-                
-                await ctx.respond(file= graph, embed=embed)
+                if graph is not None:
+                    embed.set_image(url=f'attachment://{graph.filename}')
+                    await ctx.respond(file= graph, embed=embed)
+                else:
+                    await ctx.respond(embed=embed)
             
         except Exception as exception:
             print(exception)
@@ -267,5 +274,5 @@ class Guild(commands.Cog):
             
 def setup(bot):
     bot.add_cog(Guild(bot))
-    print('Guild Cog loaded successfully.')
+    print('Guild Cog has loaded successfully.')
         

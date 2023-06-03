@@ -1,5 +1,3 @@
-
-
 import asyncio
 import os
 from discord.ext import commands, tasks
@@ -16,8 +14,6 @@ load_dotenv('configurations/main.env')
 SUPPORT_SERVER_ID = os.getenv('SUPPORT_SERVER_ID')
 SUPPORT_CHANNEL_ID = os.getenv('SUPPORT_CHANNEL_ID')
 
-
-
 class Announcement(commands.Cog):
     """This cog contains commands for announcements.
 
@@ -33,8 +29,7 @@ class Announcement(commands.Cog):
         self.daily_report_task = self.bot.loop.create_task(self.send_daily_report())
         self.is_closed = bot.is_closed
         self.time_until_daily_report = util.time_until_target(hour=20, minute=0)
-         
-        
+          
     @tasks.loop()
     async def send_daily_report(self):
         await self.bot.wait_until_ready()
@@ -79,9 +74,11 @@ class Announcement(commands.Cog):
                                                             guild_run_list=guild_run_list,
                                                             non_guild_run_list=run_list,
                                                             bot_user=bot_user)
-                    embed.set_image(url=f'attachment://{graph.filename}')
-                    
-                    await channel.send(file=graph, embed=embed)
+                    if graph is not None:
+                        embed.set_image(url=f'attachment://{graph.filename}')
+                        await channel.send(file=graph, embed=embed)
+                    else:
+                        await channel.send(embed=embed)
 
     
     @tasks.loop(time=time(hour=22, minute=5, second=0))
@@ -174,5 +171,5 @@ class Announcement(commands.Cog):
 
 def setup(bot):
     bot.add_cog(Announcement(bot))
-    print("Admin cog is loaded successfully.")
+    print("Announcement cog has loaded successfully.")
     
