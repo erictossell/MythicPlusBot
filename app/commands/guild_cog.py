@@ -34,11 +34,9 @@ class Guild(commands.Cog):
                 await ctx.respond('Generating report...')
             
                 bot_user = await ctx.bot.fetch_user(1073958413488369794)
-
-                guild_run_list = await db.get_daily_guild_runs(discord_guild_id=ctx.guild.id)
-                
                 discord_guild_db = await db.get_discord_guild_by_id(ctx.guild.id)
-                
+            
+                guild_run_list = await db.get_daily_guild_runs(discord_guild_id=ctx.guild.id)            
                 run_list = await db.get_daily_non_guild_runs(discord_guild_id=ctx.guild.id, number_of_runs= (8-len(guild_run_list)))
                 
                 all_runs = await db.get_all_daily_runs(discord_guild_id=ctx.guild.id)

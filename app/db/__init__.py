@@ -1,12 +1,12 @@
 ##---------------Take a Lap Discord Bot-----------------
 #Description: This file is used to create the database and tables for the bot. It is also used to query the database for information.
 #Author: Eriim\
-import logging
+
 import os
 from collections import defaultdict
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta
-from typing import Optional, List, DefaultDict, Set
+from typing import Optional, List, DefaultDict
 from psycopg2 import IntegrityError
 from sqlalchemy import desc, select, func
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
