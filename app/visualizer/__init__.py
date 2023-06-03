@@ -1,12 +1,11 @@
-from datetime import datetime
-
+import datetime
 import os
 
 from matplotlib import colors
 from adjustText import adjust_text
 import pandas as pd
 
-import app.db as db
+
 import app.raiderIO as raiderIO
 from discord import File
 import matplotlib
@@ -44,7 +43,7 @@ async def daily_guild_runs_plot(runs: list, discord_guild_id: int):
         
         # Calculate the time difference in hours and add 3 hours to account for the time difference between the server and the API
         
-        now = datetime.now()
+        now = datetime.datetime.now()
         df['hours_passed'] = (now - df['completed_at']).dt.total_seconds() / 3600
          
 
@@ -84,17 +83,8 @@ async def daily_guild_runs_plot(runs: list, discord_guild_id: int):
 
     return File(f'images/{discord_guild_id}_dgr_plot.png')
 
-async def weekly_guild_runs_plot(runs: list, guild_runs: list, discord_guild_id: int):
-        
-    days_to_numbers = {
-    'Monday': 1,
-    'Tuesday': 2,
-    'Wednesday': 3,
-    'Thursday': 4,
-    'Friday': 5,
-    'Saturday': 6,
-    'Sunday': 7
-    }
+async def weekly_guild_runs_plot(runs: list, guild_runs: list, discord_guild_id: int):       
+    
     
     all_runs_dict = [{'completed_at': run.completed_at, 'score': run.score, 'mythic_level': run.mythic_level, 'short_name': run.short_name} for run in runs]
     df = pd.DataFrame(all_runs_dict)
@@ -120,13 +110,19 @@ async def weekly_guild_runs_plot(runs: list, guild_runs: list, discord_guild_id:
         
         cmap = colors.LinearSegmentedColormap.from_list('mycmap', colors_list)
         
+        today_day_of_week = datetime.datetime.now().strftime('%A')
+        
+        days_of_week_ordered = rotate_weekdays(today_day_of_week)
+        
+        days_to_numbers = {day: index for index, day in enumerate(days_of_week_ordered, start=1)}
+        
         df['completed_at'] = pd.to_datetime(df['completed_at'])
         
         # Get the day of week of the run completion
         df['day_of_week'] = df['completed_at'].dt.day_name()
 
         # Order by day of the week
-        df['day_of_week'] = pd.Categorical(df['day_of_week'], categories=['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday', 'Sunday'], ordered=True)
+        df['day_of_week'] = pd.Categorical(df['day_of_week'], categories=days_of_week_ordered, ordered=True)
         
         df['day_of_week_num'] = df['day_of_week'].map(days_to_numbers)
 
@@ -135,7 +131,7 @@ async def weekly_guild_runs_plot(runs: list, guild_runs: list, discord_guild_id:
         # Plot the data with color based on 'score'
         plt.scatter(x=df['day_of_week_num'], y=df['mythic_level'], c=df['score'], cmap=cmap)
     
-        plt.xticks(ticks=range(1, 8), labels=['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'])
+        plt.xticks(ticks=range(1, 8), labels=days_of_week_ordered)
     
         # Label axes
         plt.xlabel('Day of the Week')
@@ -164,6 +160,12 @@ async def weekly_guild_runs_plot(runs: list, guild_runs: list, discord_guild_id:
         
 
     return File(f'images/{discord_guild_id}_wgr_plot.png')
+
+def rotate_weekdays(current_day):
+    days_of_week = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+    while days_of_week[-1] != current_day:
+        days_of_week = days_of_week[1:] + days_of_week[:1]
+    return days_of_week
 
 
     
