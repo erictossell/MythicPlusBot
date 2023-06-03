@@ -1,12 +1,12 @@
 import os
 import discord
-import pandas as pd
+
 from discord.commands import SlashCommandGroup
 from discord.ext import commands
 from dotenv import load_dotenv
 from app import visualizer
 import app.db as db
-from app.objects.embed_builder import daily_guild_report_embed
+from app.objects.embed_builder import daily_guild_report_embed, weekly_guild_report_embed
 from app.util import hex_to_rgb
 
 load_dotenv('configurations/main.env')
@@ -42,14 +42,10 @@ class Guild(commands.Cog):
                 run_list = await db.get_daily_non_guild_runs(discord_guild_id=ctx.guild.id, number_of_runs= (8-len(guild_run_list)))
                 
                 all_runs = await db.get_all_daily_runs(discord_guild_id=ctx.guild.id)
+
+                graph = await visualizer.daily_guild_runs_plot(all_runs, discord_guild_id=ctx.guild.id)
                 
-                all_runs_dict = [{'completed_at': run.completed_at, 'score': run.score, 'mythic_level': run.mythic_level, 'short_name': run.short_name} for run in all_runs]
-                df = pd.DataFrame(all_runs_dict)
-                
-                graph = await visualizer.daily_guild_runs_plot(df, discord_guild_id=ctx.guild.id)
-                
-                embed = daily_guild_report_embed(bot=self.bot,
-                                                        discord_guild_db=discord_guild_db,
+                embed = daily_guild_report_embed(discord_guild_db=discord_guild_db,
                                                         guild_run_list=guild_run_list,
                                                         non_guild_run_list=run_list,
                                                         bot_user=bot_user)
@@ -61,7 +57,45 @@ class Guild(commands.Cog):
         except Exception as exception:
             print(exception)
             await ctx.respond('Something went wrong :( Talk to the bot developer for help.')
-            error_channel = await ctx.bot.fetch_guild(int(SUPPORT_SERVER_ID)).fetch_channel(int(SUPPORT_CHANNEL_ID))           
+            error_channel = await ctx.bot.fetch_guild(int(SUPPORT_SERVER_ID)).fetch_channel(int(SUPPORT_CHANNEL_ID))
+           
+            await error_channel.send(f'Error in !register command: {exception}')
+            
+    @guild.command(name='weekly', help='Gets the daily guild report.')
+    async def weekly_report(self, ctx):
+        """Display the guilds best runs in the last 24 hours.
+
+        Args:
+            ctx (discord.ctx): The current discord context.
+        """
+        try:
+            async with ctx.typing():
+                
+                await ctx.respond('Generating report...')
+            
+                bot_user = await ctx.bot.fetch_user(1073958413488369794)
+                discord_guild_db = await db.get_discord_guild_by_id(ctx.guild.id)
+
+                guild_run_list = await db.get_top10_guild_runs_this_week(discord_guild_id=ctx.guild.id)
+                                
+                run_list = await db.get_weekly_non_guild_runs(discord_guild_id=ctx.guild.id, number_of_runs= (8-len(guild_run_list)))
+                
+                all_runs = await db.get_all_weekly_runs(discord_guild_id=ctx.guild.id)
+                                
+                graph = await visualizer.weekly_guild_runs_plot(all_runs, guild_run_list, discord_guild_id=ctx.guild.id)
+                
+                embed = weekly_guild_report_embed(discord_guild_db=discord_guild_db,
+                                                        guild_run_list=guild_run_list,
+                                                        non_guild_run_list=run_list,
+                                                        bot_user=bot_user)
+                embed.set_image(url=f'attachment://{graph.filename}')
+                
+                await ctx.respond(file= graph, embed=embed)
+            
+        except Exception as exception:
+            print(exception)
+            await ctx.respond('Something went wrong :( Talk to the bot developer for help.')
+            error_channel = await ctx.bot.fetch_guild(int(SUPPORT_SERVER_ID)).fetch_channel(int(SUPPORT_CHANNEL_ID))
            
             await error_channel.send(f'Error in !register command: {exception}')
                 

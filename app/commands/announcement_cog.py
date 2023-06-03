@@ -6,7 +6,6 @@ from discord.ext import commands, tasks
 from datetime import time
 
 from dotenv import load_dotenv
-import pandas as pd
 from app import visualizer
 import app.db as db
 from app.objects.embed_builder import announce_guild_run_embed, daily_guild_report_embed
@@ -71,10 +70,9 @@ class Announcement(commands.Cog):
                     
                     all_runs = await db.get_all_daily_runs(discord_guild_id=discord_guild_db.id)
                 
-                    all_runs_dict = [{'completed_at': run.completed_at, 'score': run.score, 'mythic_level': run.mythic_level, 'short_name': run.short_name} for run in all_runs]
-                    df = pd.DataFrame(all_runs_dict)
                     
-                    graph = await visualizer.daily_guild_runs_plot(df, discord_guild_id=discord_guild_db.id)
+                    
+                    graph = await visualizer.daily_guild_runs_plot(all_runs, discord_guild_id=discord_guild_db.id)
                     
                     embed = daily_guild_report_embed(bot=self.bot,
                                                             discord_guild_db=discord_guild_db,

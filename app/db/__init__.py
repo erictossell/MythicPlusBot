@@ -753,7 +753,7 @@ async def update_character_reporting(character: Character) -> bool:
         print(f'Error while querying the database: {error}')
         return False
 
-async def update_dungeon_run(dungeon_run : DungeonRunDB) -> bool:
+async def update_dungeon_run(dungeon_run : DungeonRunDB) -> Optional[DungeonRunDB]:
     """Update an existing dungeon run.
 
     Args:
@@ -767,12 +767,12 @@ async def update_dungeon_run(dungeon_run : DungeonRunDB) -> bool:
             if existing_dungeon_run is not None:
                 existing_dungeon_run.is_guild_run = dungeon_run.is_guild_run
                 existing_dungeon_run.is_crawled = True
-                return True
+                return existing_dungeon_run
             else:
-                return False          
+                return None          
     except SQLAlchemyError as error:
         print(f'Error while querying the database: {error}')
-        return False  
+        return None  
 
 async def update_discord_user_character(discord_user_id:int, character: CharacterDB) -> DiscordUserCharacterDB:
     """Update a default character in the database or create a new one if not exists.
@@ -918,7 +918,7 @@ async def remove_discord_user_character(discord_user_character: DiscordUserChara
 
 #-------------------------Bulk Read Functions------------------------------#
 
-async def get_all_daily_runs(discord_guild_id: int) -> Optional[DefaultDict[List[DungeonRunDB], List[CharacterDB]]]:
+async def get_all_daily_runs(discord_guild_id: int) -> Optional[List[DungeonRunDB]]:
     try:
         async with async_session_scope() as session:
             #get all runs from the last 24 hours for a particular guild
@@ -928,6 +928,37 @@ async def get_all_daily_runs(discord_guild_id: int) -> Optional[DefaultDict[List
                 .join(CharacterDB, CharacterDB.id == CharacterRunDB.character_id)
                 .join(DiscordGuildCharacterDB, DiscordGuildCharacterDB.character_id == CharacterDB.id)
                 .filter(DungeonRunDB.completed_at > datetime.utcnow() - timedelta(days=1), DiscordGuildCharacterDB.discord_guild_id == discord_guild_id)
+                .order_by(desc(DungeonRunDB.score))                
+                .distinct()
+            )
+            
+            subquery_alias = subquery.subquery().alias()  # Add this line to create the alias
+           
+            query = (
+                select(DungeonRunDB)                
+                .where(DungeonRunDB.id.in_(select(subquery_alias.c.id)))
+                .order_by(desc(DungeonRunDB.score))
+                .distinct()# Use a select() construct explicitly
+            )
+            result = await session.execute(query)
+            result = result.scalars().all()
+            
+            return result
+            
+    except SQLAlchemyError as error:
+        print(f'Error while querying the database: {error}')
+        return None
+    
+async def get_all_weekly_runs(discord_guild_id: int) -> Optional[List[DungeonRunDB]]:
+    try:
+        async with async_session_scope() as session:
+            #get all runs from the last 24 hours for a particular guild
+            subquery = (
+                select(DungeonRunDB.id, DungeonRunDB.score)  # Select only the id column
+                .join(CharacterRunDB.dungeon_run)
+                .join(CharacterDB, CharacterDB.id == CharacterRunDB.character_id)
+                .join(DiscordGuildCharacterDB, DiscordGuildCharacterDB.character_id == CharacterDB.id)
+                .filter(DungeonRunDB.completed_at > datetime.utcnow() - timedelta(weeks=1), DiscordGuildCharacterDB.discord_guild_id == discord_guild_id)
                 .order_by(desc(DungeonRunDB.score))                
                 .distinct()
             )
@@ -995,6 +1026,48 @@ async def get_daily_non_guild_runs(discord_guild_id: int, number_of_runs: int) -
                 .join(CharacterDB, CharacterDB.id == CharacterRunDB.character_id)
                 .join(DiscordGuildCharacterDB, DiscordGuildCharacterDB.character_id == CharacterDB.id)
                 .filter(DungeonRunDB.completed_at > datetime.utcnow() - timedelta(days=1), DiscordGuildCharacterDB.discord_guild_id == discord_guild_id)
+                .order_by(desc(DungeonRunDB.score))
+                .limit(number_of_runs)
+                .distinct()
+            )
+
+            subquery_alias = subquery.subquery().alias()  # Add this line to create the alias
+
+            query = (
+                select(DungeonRunDB, CharacterRunDB)
+                .options(joinedload(DungeonRunDB.character_runs))
+                .options(joinedload(CharacterRunDB.character))
+                
+                .join(CharacterRunDB.dungeon_run)
+                .join(CharacterDB, CharacterDB.id == CharacterRunDB.character_id)
+                .join(DiscordGuildCharacterDB, DiscordGuildCharacterDB.character_id == CharacterDB.id)
+                .where(DungeonRunDB.id.in_(select(subquery_alias.c.id)))
+                .order_by(desc(DungeonRunDB.score))
+                .distinct()# Use a select() construct explicitly
+            )
+
+            result = await session.execute(query)
+            result = result.unique()
+
+            grouped_result = defaultdict(list)
+            for dungeon_run, character in result:
+                grouped_result[dungeon_run].append(character)
+
+            dungeon_runs_with_characters = list(grouped_result.items())
+            return dungeon_runs_with_characters
+    except SQLAlchemyError as error:
+        print(f'Error while querying the database: {error}')
+        return None
+    
+async def get_weekly_non_guild_runs(discord_guild_id: int, number_of_runs: int) -> Optional[DefaultDict[List[DungeonRunDB], List[CharacterDB]]]:
+    try:
+        async with async_session_scope() as session:
+            subquery = (
+                select(DungeonRunDB.id, DungeonRunDB.score)  # Select only the id column
+                .join(CharacterRunDB.dungeon_run)
+                .join(CharacterDB, CharacterDB.id == CharacterRunDB.character_id)
+                .join(DiscordGuildCharacterDB, DiscordGuildCharacterDB.character_id == CharacterDB.id)
+                .filter(DungeonRunDB.completed_at > datetime.utcnow() - timedelta(weeks=1), DiscordGuildCharacterDB.discord_guild_id == discord_guild_id)
                 .order_by(desc(DungeonRunDB.score))
                 .limit(number_of_runs)
                 .distinct()
@@ -1461,18 +1534,24 @@ async def get_top10_guild_runs_this_week(discord_guild_id: int, season: str = 's
                         DungeonRunDB.completed_at >= one_week_ago,
                         DungeonRunDB.season == season)
                 .order_by(DungeonRunDB.score.desc()).limit(7)
-            ).alias("top_runs")
+            )
             
-            
+            subquery_alias = top_runs_subquery.subquery().alias()
             
             query = (
-                select(DungeonRunDB, CharacterDB)
-                .join(top_runs_subquery, top_runs_subquery.c.id == DungeonRunDB.id)
-                .join(CharacterRunDB, CharacterRunDB.dungeon_run_id == DungeonRunDB.id)
-                .join(CharacterDB, CharacterRunDB.character_id == CharacterDB.id)
-                .order_by(DungeonRunDB.score.desc())
-)
+                select(DungeonRunDB, CharacterRunDB)
+                .options(joinedload(DungeonRunDB.character_runs))
+                .options(joinedload(CharacterRunDB.character))
+                .join(CharacterRunDB.dungeon_run)
+                .join(CharacterDB, CharacterDB.id == CharacterRunDB.character_id)
+                .join(DiscordGuildCharacterDB, DiscordGuildCharacterDB.character_id == CharacterDB.id)
+                .where(DungeonRunDB.id.in_(select(subquery_alias.c.id)))
+                .order_by(desc(DungeonRunDB.score))
+                .distinct()# Use a select() construct explicitly
+            )
+
             result = await session.execute(query)
+            result = result.unique()
             
             grouped_result = defaultdict(list)
             for dungeon_run, character in result:
