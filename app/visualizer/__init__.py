@@ -8,8 +8,8 @@ from matplotlib import colors
 from adjustText import adjust_text
 from matplotlib import dates
 from matplotlib.dates import DateFormatter
+import numpy as np
 import pandas as pd
-
 
 import app.raiderIO as raiderIO
 from discord import File
@@ -18,9 +18,6 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 
-
-    
-    
 async def daily_guild_runs_plot(runs: list, discord_guild_id: int):
     
     all_runs_dict = [{'completed_at': run.completed_at, 'score': run.score, 'mythic_level': run.mythic_level, 'short_name': run.short_name} for run in runs]
@@ -60,9 +57,9 @@ async def daily_guild_runs_plot(runs: list, discord_guild_id: int):
         now = datetime.datetime.now()
         df['hours_passed'] = (now - df['completed_at']).dt.total_seconds() / 3600
          
-
+        max_score = df['score'].max()
         # Plot the data with color based on 'score'
-        plt.scatter(x=df['hours_passed'], y=df['mythic_level'], c=df['score'], cmap=cmap)
+        plt.scatter(x=df['hours_passed'], y=df['mythic_level'], c=df['score'], cmap=cmap, vmin=0, vmax=max_score)
         
         annotations = []
         for i, txt in enumerate(df['short_name']):
@@ -73,7 +70,10 @@ async def daily_guild_runs_plot(runs: list, discord_guild_id: int):
 
         adjust_text(annotations, expand_points=(1.2, 1.2), expand_text=(1.2, 1.2), force_text=0.5)
            
-
+        # set yticks to start at 0 and increment by 2
+        max_mythic_level = df['mythic_level'].max()
+        plt.yticks(np.arange(0, max_mythic_level+1, 2))
+        
         # Label axes
         plt.xlabel('Hours Since Completion')
         plt.ylabel('Mythic Level')
@@ -86,22 +86,18 @@ async def daily_guild_runs_plot(runs: list, discord_guild_id: int):
         if not os.path.exists(directory):
             os.makedirs(directory)
             
-        
-        
         if os.path.isfile(f'images/{discord_guild_id}_dgr_plot.png'):
             os.remove(f'images/{discord_guild_id}_dgr_plot.png')
         
         plt.savefig(f'images/{discord_guild_id}_dgr_plot.png')
         
-        
-
     return File(f'images/{discord_guild_id}_dgr_plot.png')
 
 async def weekly_guild_runs_plot(runs: list, guild_runs: list, discord_guild_id: int):
     try:
         all_runs_dict = [{'completed_at': run.completed_at, 'score': run.score, 'mythic_level': run.mythic_level, 'short_name': run.short_name} for run in runs]
         df = pd.DataFrame(all_runs_dict)
-        
+
         # Convert the guild_runs list into a DataFrame
         guild_runs_df = pd.DataFrame([{'completed_at': run[0].completed_at} for run in guild_runs])
 
@@ -116,7 +112,7 @@ async def weekly_guild_runs_plot(runs: list, guild_runs: list, discord_guild_id:
                             'axes.labelcolor': 'white', 'xtick.color': 'white', 
                             'ytick.color': 'white', 'text.color': 'white', 
                             'lines.color': 'white'}):
-            
+
             score_colors = None
             retries = 3
             while retries > 0:
@@ -126,53 +122,58 @@ async def weekly_guild_runs_plot(runs: list, guild_runs: list, discord_guild_id:
                 except (httpx.ReadTimeout, ssl.SSLWantReadError):
                     await asyncio.sleep(2 ** (3 - retries))
                     retries -= 1
-                    
+
             colors_list = []
             for color in reversed(score_colors):
                 color_value = color.color
                 colors_list.append(color_value)
-                
+
             cmap = colors.LinearSegmentedColormap.from_list('mycmap', colors_list)
-            
+
             df['completed_at'] = pd.to_datetime(df['completed_at'])
             df.sort_values('completed_at', inplace=True)
-            
+
             # Get the day of week of the run completion
             df['day_of_week'] = df['completed_at'].dt.day_name()
-            
+
+            max_score = df['score'].max()
             # Plot the data with color based on 'score'
-            plt.scatter(x=df['completed_at'], y=df['mythic_level'], c=df['score'], cmap=cmap)
-            
+            plt.scatter(x=df['completed_at'], y=df['mythic_level'], c=df['score'], cmap=cmap, vmin=0, vmax=max_score)
+
 
             # Set x-tick labels
             ax = plt.gca()
             ax.xaxis.set_major_locator(dates.DayLocator())
             ax.xaxis.set_major_formatter(dates.DateFormatter('%a'))
+            
+            # set yticks to start at 0 and increment by 2
+            max_mythic_level = df['mythic_level'].max()
+            plt.yticks(np.arange(0, max_mythic_level+1, 2))
 
             # Label axes
             plt.xlabel('Day of the Week')
             plt.ylabel('Mythic Level')
             plt.title('Weekly Guild Runs')
-            plt.style.use('dark_background')      
+            plt.style.use('dark_background')
 
-            plt.colorbar(label='Score') 
-            
+            plt.colorbar(label='Score')
+
             annotations = []
             for i, txt in enumerate(df['short_name']):
                 if df['is_guild_run'].iat[i]:
                     annotation = plt.annotate(txt, (df['completed_at'].iat[i], df['mythic_level'].iat[i]), fontsize=8, color='white')
                     annotations.append(annotation)
             adjust_text(annotations, expand_points=(1.2, 1.2), expand_text=(1.2, 1.2), force_text=0.5)
-                        
+
             directory = 'images'
             if not os.path.exists(directory):
                 os.makedirs(directory)
-            
+
             if os.path.isfile(f'images/{discord_guild_id}_wgr_plot.png'):
                 os.remove(f'images/{discord_guild_id}_wgr_plot.png')
-            
+
             plt.savefig(f'images/{discord_guild_id}_wgr_plot.png')
-                      
+
         return File(f'images/{discord_guild_id}_wgr_plot.png')
     except Exception as e:
         print(e)
@@ -183,7 +184,3 @@ def rotate_weekdays(current_day):
     while days_of_week[-1] != current_day:
         days_of_week = days_of_week[1:] + days_of_week[:1]
     return days_of_week
-
-
-
-    

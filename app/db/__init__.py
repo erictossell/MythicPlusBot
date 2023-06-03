@@ -8,7 +8,7 @@ from contextlib import asynccontextmanager
 from datetime import datetime, timedelta
 from typing import Optional, List, DefaultDict, Set
 from psycopg2 import IntegrityError
-from sqlalchemy import desc, select
+from sqlalchemy import desc, select, func
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import sessionmaker, joinedload
@@ -494,6 +494,8 @@ async def add_dungeon_run(dungeon_run: DungeonRunDB) -> DungeonRunDB:
         bool: Returns True if the dungeon run was added to the database, otherwise returns False.
     """
     try:
+        if type(dungeon_run.dungeon_id) == str:
+            dungeon_run.dungeon_id = int(dungeon_run.dungeon_id)
         async with async_session_scope() as session:
             query = (
                 select(DungeonRunDB)
@@ -508,10 +510,10 @@ async def add_dungeon_run(dungeon_run: DungeonRunDB) -> DungeonRunDB:
             elif existing_dungeon_run.dungeon_id == dungeon_run.dungeon_id:
                 return existing_dungeon_run
             else:
-                return False
+                return None
     except SQLAlchemyError as error:
         print(f'Error while querying the database: {error}')
-        return False
+        return None
 
 async def add_character_run(character_run: CharacterRunDB) -> Optional[CharacterRunDB]:
     try:
@@ -1616,3 +1618,60 @@ def has_any_character_field_changed(existing_character: CharacterDB, character: 
             existing_character.url != character.url or
             existing_character.last_crawled_at != character.last_crawled_at or
             existing_character.is_reporting != character.is_reporting)
+
+async def check_run_for_guild_run(discord_guild_id: int, dungeon_run_id: int) -> Optional[DiscordGuildRunDB]:
+    try: 
+        async with async_session_scope() as session:
+            
+            dungeon_query = (
+                select(DungeonRunDB.id)
+                .filter(DungeonRunDB.dungeon_id == dungeon_run_id)
+            )
+            dungeon_run_result = await session.execute(dungeon_query)
+            dungeon_run_id = dungeon_run_result.scalar()
+
+            subquery = (
+                select(CharacterRunDB.character_id)
+                .filter(CharacterRunDB.dungeon_run_id == dungeon_run_id)
+            )
+
+            query = (
+                select(func.count(DiscordGuildCharacterDB.character_id))
+                .filter(
+                    DiscordGuildCharacterDB.character_id.in_(subquery),
+                    DiscordGuildCharacterDB.discord_guild_id == discord_guild_id)
+            )
+            guild_character_count = await session.execute(query)
+            guild_character_count_value = guild_character_count.scalar()
+            print("Subquery result: ", guild_character_count_value)
+
+            players_per_run = await session.execute(
+                select(DiscordGuildDB.players_per_run)
+                .filter(DiscordGuildDB.id == discord_guild_id)
+            )
+
+            players_per_run_value = players_per_run.scalar()
+
+            if guild_character_count_value >= players_per_run_value:
+                guild_run_exists = await session.execute(
+                    select(DiscordGuildRunDB.id)
+                    .filter(
+                        DiscordGuildRunDB.discord_guild_id == discord_guild_id,
+                        DiscordGuildRunDB.dungeon_run_id == dungeon_run_id)
+                )
+                guild_run_exists = guild_run_exists.scalars().first()
+                if not guild_run_exists:
+                    new_guild_run = DiscordGuildRunDB(discord_guild_id=discord_guild_id, dungeon_run_id=dungeon_run_id)
+                    session.add(new_guild_run)
+                    
+                    print(f'New GuildRun created for guild ID {discord_guild_id} and run ID {dungeon_run_id}.')
+                    return new_guild_run
+                else:
+                    print(f'GuildRun already exists for guild ID {discord_guild_id} and run ID {dungeon_run_id}.')
+                    return guild_run_exists
+            else:
+                print(f'Not enough characters ({guild_character_count_value}/{players_per_run_value}) for guild ID {discord_guild_id} and run ID {dungeon_run_id}.')
+                return None
+    except SQLAlchemyError as error:
+        print(f'Error while querying the database: {error}')
+        return None

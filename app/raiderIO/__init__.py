@@ -52,7 +52,7 @@ def get_score_colors() -> List[ScoreColor]:
         except Exception as exception:
             print(exception)
             return None
-    
+
 @sleep_and_retry
 @limits(calls=CALLS, period=RATE_LIMIT)
 async def get_character(name: str,
@@ -435,17 +435,17 @@ async def crawl_characters(discord_guild_id: int) -> str:
             runs_id_set = set(int(run.id) for run in runs)
             
             new_run_ids = runs_id_set - db_run_id_set
-            
+
             new_runs = [run for run in runs if int(run.id) in new_run_ids]
-            
-            for run in tqdm(new_runs):       
-                
-                if run is not None:               
-                    
+
+            for run in tqdm(new_runs):
+
+                if run is not None:
+
                     run.completed_at = datetime.strptime(run.completed_at,
                                                             '%Y-%m-%dT%H:%M:%S.%fZ')                            
                     db_run = await db.add_dungeon_run(convert.dungeon_run_io(run))
-                    
+
                     run_counter += 1
 
                     is_guild_run = None
@@ -461,25 +461,24 @@ async def crawl_characters(discord_guild_id: int) -> str:
                     if is_guild_run is None:
                         print(f"Could not fetch run details for run ID:{run}. Skipping.")
                         continue
-                    
-                    runs_crawled += 1
-                    
-                    if is_guild_run is True:
-                        
-                        db_run.is_crawled = True
-                        db_run.is_guild_run = True
-                        db_run = await db.update_dungeon_run(db_run)
-                        await db.add_discord_guild_run(discord_guild=discord_guild,
-                                                        dungeon_run=db_run)
 
+                    runs_crawled += 1
+            
+            for run in tqdm(runs_id_set):
+                if run is not None:
+                    check_run = await db.check_run_for_guild_run(discord_guild_id=discord_guild.id, dungeon_run_id=run)
+                    if check_run is not None:
                         guild_run_counter += 1
+
+                       
+                    
 
         return f'{discord_guild.discord_guild_name} Characters crawled: {characters_crawled} |  Updated {update_character_counter} characters and added {run_counter} runs and found {guild_run_counter} guild runs.'
 
     except Exception as exception:
         print(exception)
     finally:
-        print('Finished crawling characters.')  
+        print('Finished crawling characters.')
 
 async def crawl_discord_guild_members(discord_guild_id) -> None:
     

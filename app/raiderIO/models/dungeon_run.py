@@ -16,3 +16,6 @@ class DungeonRun:
         start_index = url.find("/mythic-plus-runs/") + len("/mythic-plus-runs/")
         self.season = url[start_index:].split("/")[0]
         
+        if type(self.id) == str:
+            self.id = int(self.id)
+        
