@@ -69,8 +69,7 @@ class Announcement(commands.Cog):
                     
                     graph = await visualizer.daily_guild_runs_plot(all_runs, discord_guild_id=discord_guild_db.id)
                     
-                    embed = daily_guild_report_embed(bot=self.bot,
-                                                            discord_guild_db=discord_guild_db,
+                    embed = daily_guild_report_embed(discord_guild_db=discord_guild_db,
                                                             guild_run_list=guild_run_list,
                                                             non_guild_run_list=run_list,
                                                             bot_user=bot_user)

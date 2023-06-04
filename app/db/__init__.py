@@ -1643,7 +1643,7 @@ async def check_run_for_guild_run(discord_guild_id: int, dungeon_run_id: int) ->
             )
             guild_character_count = await session.execute(query)
             guild_character_count_value = guild_character_count.scalar()
-            print("Subquery result: ", guild_character_count_value)
+            #print("Subquery result: ", guild_character_count_value)
 
             players_per_run = await session.execute(
                 select(DiscordGuildDB.players_per_run)
@@ -1667,10 +1667,10 @@ async def check_run_for_guild_run(discord_guild_id: int, dungeon_run_id: int) ->
                     print(f'New GuildRun created for guild ID {discord_guild_id} and run ID {dungeon_run_id}.')
                     return new_guild_run
                 else:
-                    print(f'GuildRun already exists for guild ID {discord_guild_id} and run ID {dungeon_run_id}.')
+                    #print(f'GuildRun already exists for guild ID {discord_guild_id} and run ID {dungeon_run_id}.')
                     return guild_run_exists
             else:
-                print(f'Not enough characters ({guild_character_count_value}/{players_per_run_value}) for guild ID {discord_guild_id} and run ID {dungeon_run_id}.')
+                #print(f'Not enough characters ({guild_character_count_value}/{players_per_run_value}) for guild ID {discord_guild_id} and run ID {dungeon_run_id}.')
                 return None
     except SQLAlchemyError as error:
         print(f'Error while querying the database: {error}')

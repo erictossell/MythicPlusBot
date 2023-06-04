@@ -294,14 +294,14 @@ async def get_run_details(dungeon_run: DungeonRun , discord_guild_id, players_pe
 
                 elif request.status_code == 200:
                     if request.json()['roster'] is None:
-                        return False                    
-                    
-                    
+                        return False
+                 
                     dungeon_db = await db.get_run_by_id(int(dungeon_run.id), dungeon_run.season)
                                       
                     # Retrieve all characters involved in the run at once and store them in a dictionary
                     character_names = [str(roster['character']['name']).capitalize() for roster in request.json()['roster']]
                     character_realms = [str(roster['character']['realm']['slug']).capitalize() for roster in request.json()['roster']]
+                    
                     characters = await db.get_characters_by_names_realms_and_discord_guild(character_names, character_realms, discord_guild_id)
                     characters_dict = {(character.name, character.realm): character for character in characters}
 
@@ -331,7 +331,6 @@ async def get_run_details(dungeon_run: DungeonRun , discord_guild_id, players_pe
                             
                             discord_guild_character_list.append(discord_guild_character)
                     if guild_member_counter >= players_per_run:
-                        
                         return True
                     else:
                         
@@ -365,8 +364,7 @@ async def crawl_characters(discord_guild_id: int) -> str:
         
         discord_guild = await db.get_discord_guild_by_id(discord_guild_id)
         db_characters_list = await db.get_all_discord_guild_characters(discord_guild_id)
-        
-         
+
         runs = set()
         print('RaiderIO Crawler: Crawling ' + str(len(db_characters_list)) + ' characters.')
         for character in tqdm(db_characters_list):
@@ -395,7 +393,7 @@ async def crawl_characters(discord_guild_id: int) -> str:
                 print(f"Could not fetch character {character.name}. Skipping.")
                 continue          
             
-            
+
             character.last_crawled_at = datetime.strptime(character_io.last_crawled_at,
                                                                 '%Y-%m-%dT%H:%M:%S.%fZ')
             character.score = character_io.score
@@ -416,13 +414,12 @@ async def crawl_characters(discord_guild_id: int) -> str:
                     return f'Error: An error occurred while crawling {character.name} for new runs.'
                 
                 if run not in runs:
-                    runs.add(run)                  
+                    runs.add(run)
             for run in character_io.recent_runs:
                 
                 if run is None:
                     return f'Error: An error occurred while crawling {character.name} for new runs.'
-                
-                
+
                 if run not in runs:
                     runs.add(run)
         
@@ -469,9 +466,6 @@ async def crawl_characters(discord_guild_id: int) -> str:
                     check_run = await db.check_run_for_guild_run(discord_guild_id=discord_guild.id, dungeon_run_id=run)
                     if check_run is not None:
                         guild_run_counter += 1
-
-                       
-                    
 
         return f'{discord_guild.discord_guild_name} Characters crawled: {characters_crawled} |  Updated {update_character_counter} characters and added {run_counter} runs and found {guild_run_counter} guild runs.'
 
@@ -521,15 +515,15 @@ async def crawl_discord_guild_members(discord_guild_id) -> None:
             new_members = member_set - db_member_set
 
             counter = 0
-            for new_member_name, new_member_realm in tqdm(new_members):
-                new_member = next(member for member in member_set if (member.name, member.realm) == (new_member_name, new_member_realm))
-                
+            for new_member in tqdm(new_members):
+                # process new_member
+
                 character = None
                 retries = 5
                 while retries > 0:
                     try:
-                        character = await get_character(str(new_member.name),
-                                                        str(new_member.realm),
+                        character = await get_character(str(new_member[0]),
+                                                        str(new_member[1]),
                                                         score_colors_list)
                         break
                     except (httpx.ReadTimeout, ssl.SSLWantReadError):
