@@ -34,7 +34,9 @@ class Announcement(commands.Cog):
     async def send_daily_report(self):
         await self.bot.wait_until_ready()
         
-        while not self.is_closed(): 
+        
+        
+        while not self.is_closed():
             
             self.time_until_daily_report = util.time_until_target(hour=0, minute=0)
             await asyncio.sleep(self.time_until_daily_report)
@@ -125,6 +127,8 @@ class Announcement(commands.Cog):
     async def crawl_for_data(self):        
         
         await self.bot.wait_until_ready()
+        
+        await asyncio.sleep(60)
         
         while not self.is_closed():
             
