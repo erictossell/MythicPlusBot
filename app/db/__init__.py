@@ -1186,10 +1186,7 @@ async def get_characters_by_names_realms_and_discord_guild(names: List[str], rea
             )
             result = await session.execute(query)
             characters = result.scalars().unique().all()
-            
-            for character in characters:
-                character.discord_guild_characters = [dgc for dgc in character.discord_guild_characters if dgc.discord_guild_id == discord_guild_id]
-                    
+   
             return characters
         
     except SQLAlchemyError as error:

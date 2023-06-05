@@ -79,9 +79,9 @@ async def get_character(name: str,
                 response = await client.get(API_URL + f'characters/profile?region={region}&realm={realm}&name={name}&fields=guild,gear,mythic_plus_scores_by_season:current,mythic_plus_ranks,mythic_plus_best_runs,mythic_plus_recent_runs', timeout=TIMEOUT) 
                 
                 if response.status_code == 404:
-                    return 
+                    return None
                 elif response.status_code == 429:
-                    return None 
+                    return None
                 elif response.status_code == 500:
                     return None
                 elif response.status_code == 200:
@@ -391,7 +391,7 @@ async def crawl_characters(discord_guild_id: int) -> str:
 
             if character_io is None:
                 print(f"Could not fetch character {character.name}. Skipping.")
-                continue          
+                continue
             
 
             character.last_crawled_at = datetime.strptime(character_io.last_crawled_at,
@@ -441,7 +441,7 @@ async def crawl_characters(discord_guild_id: int) -> str:
 
                     run.completed_at = datetime.strptime(run.completed_at,
                                                             '%Y-%m-%dT%H:%M:%S.%fZ')                            
-                    db_run = await db.add_dungeon_run(convert.dungeon_run_io(run))
+                    await db.add_dungeon_run(convert.dungeon_run_io(run))
 
                     run_counter += 1
 
