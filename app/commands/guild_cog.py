@@ -104,39 +104,7 @@ class Guild(commands.Cog):
            
             await error_channel.send(f'Error in !register command: {exception}')
                 
-    @guild.command(name='runs', help='Gets the best Mythic+ runs for the guild for the week.')
-    async def runs(self,ctx):
-        """Display the best Mythic+ runs in the last 7 days completed as a guild.
-
-        Args:
-            ctx (discord.ctx): The current discord context.
-        """
-        try:
-            title= '🏆 Top Guild Runs for the Week'
-            description = f'📄 This leaderboard is based on the top runs from registered characters in the {ctx.guild.name} Guild.\n\n  ⚠️ If you have not registered your off-realm or out-of-guild character, please do so with /character register.'
-            dungeon_list = await db.get_top10_guild_runs_this_week(discord_guild_id = ctx.guild.id)
-            footer = 'Data from raider.io'
-            bot_user = await ctx.bot.fetch_user(1073958413488369794)
-
-            embed = discord.Embed(title=title, description=description, color=discord.Color.from_rgb(*hex_to_rgb('#c300ff')))
-            
-            embed.set_author(name='Mythic+ Bot', icon_url=bot_user.avatar, url='https://www.mythicplusbot.dev/')
-            counter = 1
-            for run, characters in dungeon_list:
-                run_characters = '| '
-                for character in characters:
-                    run_characters += '['+character.name + f']({character.url})  | '
-                embed.add_field(name=str(counter)+ '.  '+ run.name + '  |  ' + str(run.mythic_level)+'  |  +'+str(run.num_keystone_upgrades), value=run_characters+f'\n[Link to run]({run.url})', inline=False)
-                counter+=1
-            embed.set_footer(text=footer)
-            await ctx.respond(embed=embed)
-        except Exception as exception:
-            print(exception)
-            await ctx.respond('Something went wrong :( Talk to the bot developer for help.')
-            error_channel = await ctx.bot.fetch_guild(int(SUPPORT_SERVER_ID)).fetch_channel(int(SUPPORT_CHANNEL_ID))           
-           
-            await error_channel.send(f'Error in !register command: {exception}')
-    
+    #Change to all time report    
     @guild.command(name='top_runs', help='Gets the top 5 Mythic+ runs for the guild.')
     async def top_runs(self, ctx):
         """Display the top 5 runs of all time completed as a guild.

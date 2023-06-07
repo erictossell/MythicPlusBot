@@ -23,45 +23,6 @@ class Character(commands.Cog):
 
     character = SlashCommandGroup(name='character', description='All commands related to characters')
 
-    @character.command(name='runs', help='Gets the best Mythic+ runs for a character.')
-    async def runs(self,ctx, name: str = None, realm: str = 'Area-52'):
-        """Get the best mythic plus runs captured by the bot for a given character."""
-        try:
-            
-            if name is None:
-                
-                character_relationship = await db.get_discord_user_character_by_guild_user(ctx.author.id)
-                if character_relationship is None:
-                    await ctx.respond('You have not registered a character.  Please register a character with /set_main.')
-                    return
-                
-            name = character_relationship.character.name if name is None else name  
-            character_title = await db.get_character_by_name_realm(name.capitalize(), realm.capitalize())
-            
-            dungeon_list = await db.get_top10_runs_for_character_by_score(character_title)
-            bot_user = await ctx.bot.fetch_user(1073958413488369794)
-            embed = discord.Embed(title=f'Best Mythic+ Runs for {character_title.name}-{character_title.realm.capitalize()}', color=discord.Color.from_rgb(*hex_to_rgb('#c300ff')))
-            embed.set_author(name='Mythic+ Bot', icon_url=bot_user.avatar, url='https://www.mythicplusbot.dev/')
-            counter = 1
-            for run, characters in dungeon_list:
-                run_characters = '| '
-                for character in characters:
-                    run_characters += '['+character.name + f']({character.url})  | '
-                embed.add_field(name=str(counter)+ '.  '+ run.name + '  |  ' + str(run.mythic_level)+'  |  +'+str(run.num_keystone_upgrades), value=run_characters+f'\n[Link to run]({run.url})', inline=False)
-                counter+=1
-                
-            embed.set_footer(text='Data from Raider.IO(https://raider.io/)')
-            embed.set_thumbnail(url=character_title.thumbnail_url)
-            
-            await ctx.respond(embed=embed)
-            
-        except Exception as exception:
-            print(exception)
-            await ctx.respond('Something went wrong :( Talk to the bot developer for help.')
-            error_channel = await ctx.bot.fetch_guild(SUPPORT_SERVER_ID).fetch_channel(SUPPORT_CHANNEL_ID)
-           
-            await error_channel.send(f'Error in !register command: {exception}')
-
     @character.command(name='set_main', help='Sets the default character for a user.')
     async def set_main(self, ctx, name: str, realm: Optional[str] = 'Area-52'):
         """Set your default character for all character commands.
@@ -72,8 +33,7 @@ class Character(commands.Cog):
             character_realm (str, optional): The character realm. Defaults to 'Area-52'.
         """
         try:
-            discord_user_id = ctx.author.id
-            discord_guild_id = ctx.guild.id
+            discord_user_id = ctx.author.id            
             character_io = await raiderIO.get_character(name, realm)
             
             if character_io is None:
@@ -143,55 +103,7 @@ class Character(commands.Cog):
             error_channel = await ctx.bot.fetch_guild(int(SUPPORT_SERVER_ID)).fetch_channel(int(SUPPORT_CHANNEL_ID))
            
             await error_channel.send(f'Error in !register command: {exception}')
-
-    @character.command(name='profile', help='View a character\'s profile.')
-    async def profile(self, ctx, name: str = None, realm: str = 'Area-52'):
-        """Display a character profile from raider IO.
-
-        Args:
-            ctx (context): The current discord context.
-            character_name (str): Character name.
-            realm (str): Realm of the character.
-        """
-        try:
-            async with ctx.typing():
-                if not name:
-                    
-                    if ctx.guild:
-                        
-                        main_char = await db.get_discord_user_character_by_guild_user(ctx.author.id)
-                        char = await db.get_character_by_name_realm(main_char.character.name, main_char.character.realm)
-                        
-                        if char:
-                            name, realm = char.name, char.realm
-                            
-                        else:
-                            await ctx.respond('Please provide a character name and realm or set a main character.')
-                            return                    
-                    else:
-                        await ctx.respond('Please provide a character name and realm.')
-                        return
-
-                character = await raiderIO.get_character(name, realm)
-                
-                await ctx.respond(embed=character.get_character_embed())
-                
-                character_db = await db.get_character_by_name_realm(name.capitalize(), realm.capitalize())
-                
-                if character_db is not None:
-                    character.last_crawled_at = datetime.strptime(character.last_crawled_at,
-                                                                '%Y-%m-%dT%H:%M:%S.%fZ')
-                    character_db = await db.update_character(character)
-                    
-                
-
-        except Exception as exception:
-            print(exception)
-            await ctx.respond('Something went wrong :( Talk to the bot developer for help.')
-            error_channel = await ctx.bot.fetch_guild(int(SUPPORT_SERVER_ID)).fetch_channel(int(SUPPORT_CHANNEL_ID))
-           
-            await error_channel.send(f'Error in !register command: {exception}')
-
+    
     @character.command(name='recent_runs', help='View a character\'s recent runs directly from RaiderIO.')
     async def recent_runs(self, ctx, name: str = None, realm: str = None):
         """Display the most recent runs for a character.
@@ -286,8 +198,6 @@ class Character(commands.Cog):
             error_channel = await ctx.bot.fetch_guild(int(SUPPORT_SERVER_ID)).fetch_channel(int(SUPPORT_CHANNEL_ID))
            
             await error_channel.send(f'Error in !register command: {exception}')
-
-    
 
 def setup(bot):
     bot.add_cog(Character(bot))
