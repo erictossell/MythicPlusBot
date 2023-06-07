@@ -1,5 +1,4 @@
 import os
-import discord
 from dotenv import load_dotenv
 from discord.ext import commands
 from discord.commands import SlashCommandGroup
@@ -26,8 +25,11 @@ class Admin(commands.Cog):
         """
         try:
             if ctx.author.guild_permissions.administrator:
-                print('register command called')
-                await ctx.respond(view=RegisterGuildView(discord_guild_id=ctx.guild.id))
+                await ctx.respond('Please check your DMs for the registration button.')
+            
+                user = await ctx.bot.fetch_user(ctx.author.id)
+                channel = await user.create_dm()
+                await channel.send(view=RegisterGuildView(discord_guild_id=ctx.guild.id))
             else:
                 await ctx.respond('You are not an administrator, please contact your admin to run this command..')
             
@@ -39,8 +41,7 @@ class Admin(commands.Cog):
             await error_channel.send(f'Error in !register command: {e}')
     
        
-    @admin.command(name='set_announcement_channel')
-    
+    @admin.command(name='set_announcement_channel')    
     async def set_announcement_channel(self, ctx):
         """Set the channel you call this command in to be the announcement channel for your server.
 

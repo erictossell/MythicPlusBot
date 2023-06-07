@@ -33,9 +33,6 @@ class Announcement(commands.Cog):
     @tasks.loop()
     async def send_daily_report(self):
         await self.bot.wait_until_ready()
-        
-        
-        
         while not self.is_closed():
             
             self.time_until_daily_report = util.time_until_target(hour=0, minute=0)
@@ -66,9 +63,8 @@ class Announcement(commands.Cog):
                     run_list = await db.get_daily_non_guild_runs(discord_guild_id=discord_guild_db.id, number_of_runs= (8-previous_run_count))
                     
                     all_runs = await db.get_all_daily_runs(discord_guild_id=discord_guild_db.id)
-                
-                    
-                    
+
+
                     graph = await visualizer.daily_guild_runs_plot(all_runs, discord_guild_id=discord_guild_db.id)
                     
                     embed = daily_guild_report_embed(discord_guild_db=discord_guild_db,
@@ -81,7 +77,6 @@ class Announcement(commands.Cog):
                     else:
                         await channel.send(embed=embed)
 
-    
     @tasks.loop(time=time(hour=22, minute=5, second=0))
     async def send_announcements(self):
         await self.bot.wait_until_ready()
@@ -131,7 +126,6 @@ class Announcement(commands.Cog):
         await asyncio.sleep(60)
         
         while not self.is_closed():
-            
             
             for guild in self.bot.guilds:            
                 discord_guild = await db.get_discord_guild_by_id(guild.id)
