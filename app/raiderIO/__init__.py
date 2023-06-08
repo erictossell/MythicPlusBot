@@ -475,10 +475,10 @@ async def crawl_characters(discord_guild_id: int) -> str:
         print('Finished crawling characters.')
 
 async def crawl_discord_guild_members(discord_guild_id) -> None:
-    
+
     print('Crawler: trying to crawl guild members')
     try:
-        
+
         score_colors_list = None
         retries = 3
         while retries > 0:
@@ -488,13 +488,13 @@ async def crawl_discord_guild_members(discord_guild_id) -> None:
             except (httpx.ReadTimeout, ssl.SSLWantReadError):
                 await asyncio.sleep(2 ** (3 - retries))
                 retries -= 1
-               
+
         discord_guild = await db.get_discord_guild_by_id(discord_guild_id)
         game_guild_list = await db.get_all_game_guilds_by_discord_id(discord_guild_id)
         return_string = ""
-        
+
         for game_guild in game_guild_list:
-            
+
             discord_game_guild = await db.get_discord_game_guild_by_guild_ids(discord_guild_id, game_guild.id)
 
             if discord_game_guild is None or not discord_game_guild.is_crawlable:
@@ -504,9 +504,9 @@ async def crawl_discord_guild_members(discord_guild_id) -> None:
 
             if member_list is None:
                 continue
-            
+
             db_member_list = await db.get_all_characters_by_game_guild(game_guild)
-            
+
             # Convert member set and db_member_set to a set of tuples with name and realm
             member_set = {(member.name, member.realm) for member in member_list}
             db_member_set = {(character.name, character.realm) for character in db_member_list}
@@ -533,7 +533,7 @@ async def crawl_discord_guild_members(discord_guild_id) -> None:
                 if character is None:
                     print(f"Could not fetch character {new_member.name}. Skipping.")
                     continue
-                                    
+
                 new_character = db.CharacterDB(game_guild_id = game_guild.id,
                                                 name = character.name,
                                                 realm = character.realm,
@@ -550,19 +550,19 @@ async def crawl_discord_guild_members(discord_guild_id) -> None:
                                                 url = character.url,
                                                 last_crawled_at = datetime.strptime(character.last_crawled_at,
                                                                     '%Y-%m-%dT%H:%M:%S.%fZ'))
-                
+
                 added_character = await db.add_character(new_character)
-                
+
                 if added_character is None:
                     character = await db.get_character_by_name_realm(character.name, character.realm)
                     await db.add_discord_guild_character(discord_guild=discord_guild, character=character)
                 else:
                     await db.add_discord_guild_character(discord_guild=discord_guild,
                                                         character=added_character)
-                    
+
                 counter += 1
             return_string += f'Crawler: verified {counter}  characters to the database for the guild {game_guild.name}.\n'
-        
+
         if return_string == "":
             return_string = "Crawler: no new characters were added to the database."
         return return_string

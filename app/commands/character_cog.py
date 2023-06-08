@@ -8,6 +8,7 @@ from discord.ext import commands
 from dotenv import load_dotenv
 import app.db as db
 from app.objects.character_registration import RegisterView
+import app.objects.embed_builder as embed_builder
 import app.raiderIO as raiderIO
 from app.util import hex_to_rgb
 
@@ -133,9 +134,11 @@ class Character(commands.Cog):
                 if not realm:
                     realm = 'Area-52'
                     
+                bot_user = await ctx.bot.fetch_user(1073958413488369794)
                 character = await raiderIO.get_character(name, realm)
-                
-                await ctx.respond(embed=character.get_recent_runs_embed())
+                embed = embed_builder.character_recent_runs(character,
+                                                            bot_user)
+                await ctx.respond(embed=embed)
                 
                 character_db = await db.get_character_by_name_realm(name.capitalize(), realm.capitalize())
                 
@@ -181,9 +184,11 @@ class Character(commands.Cog):
                     
                 if not realm:
                     realm = 'Area-52'
-
+                bot_user = await ctx.bot.fetch_user(1073958413488369794)
                 character = await raiderIO.get_character(name, realm)
-                await ctx.respond(embed=character.get_best_runs_embed())
+                embed = embed_builder.character_best_runs(character,
+                                                            bot_user)
+                await ctx.respond(embed=embed)
                 
                 character_db = await db.get_character_by_name_realm(name.capitalize(), realm.capitalize())
                 
