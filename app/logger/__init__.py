@@ -7,7 +7,7 @@ load_dotenv('configurations/main.env')
 
 class Logger:
     
-    uri = os.getenv('MONGO_URI')
+    uri = os.getenv('MONGO_URL')
     db_name = 'logger'
     client = motor.motor_asyncio.AsyncIOMotorClient(uri)
     db = client[db_name]
