@@ -1,8 +1,8 @@
 
-# Tal-Bot
+# Mythic+ Bot
 
-This repository hosts the Discord bot written in Python for the Take-a-Lap guild on Area-52.
+This repository hosts the Discord bot written in Python to compile and generate reports on Mythic+ data for Discord Guilds. 
 
-This bot currently interacts with the RaiderIO Api to pull character data and caches it in a local database.
+[DevBlog](https://erictossell.notion.site/Mythic-Bot-Dev-Blog-17a3e10f98bd498b83c3068601b91101)
 
-More coming soon ~~~
+[Website - Work in Progress](https://www.mythicplusbot.dev)
