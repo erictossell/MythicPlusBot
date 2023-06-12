@@ -7,7 +7,7 @@ from collections import defaultdict
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta
 from typing import Optional, List, DefaultDict
-from psycopg2 import IntegrityError
+from aiopg import IntegrityError
 from sqlalchemy import desc, select, func
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.exc import SQLAlchemyError
@@ -38,7 +38,7 @@ from app.raiderIO.models.dungeon_run import DungeonRun
 
 load_dotenv('configurations/main.env')
 
-DATABASE_URL = os.getenv('DATABASE_URL')
+DATABASE_URL = os.getenv('DEV_RAILWAY')
 
 async_engine = create_async_engine(
     DATABASE_URL,
