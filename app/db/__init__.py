@@ -38,10 +38,10 @@ from app.raiderIO.models.dungeon_run import DungeonRun
 
 load_dotenv('configurations/main.env')
 
-DEV_RAILWAY = os.getenv('DEV_RAILWAY')
+DATABASE_URL = os.getenv('DATABASE_URL')
 
 async_engine = create_async_engine(
-    DEV_RAILWAY,
+    DATABASE_URL,
     echo=False,
     logging_name='sqlalchemy.engine',
     echo_pool=True,
