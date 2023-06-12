@@ -12,6 +12,8 @@ TANK_SPECS = ['Blood', 'Vengeance', 'Guardian', 'Brewmaster', 'Protection', 'Pro
 HEALER_SPECS = ['Restoration', 'Holy', 'Discipline', 'Mistweaver', 'Restoration', 'Holy']
 
 footer = 'Data from Raider.IO'
+description = 'This board only includes registered characters. If you have not registered your off-realm or out-of-guild character, please do so with /character register.'
+
 
 def announce_guild_run_embed(announcement : db.AnnouncementDB = None,
                              color : discord.Color = discord.Color.green(),
@@ -40,7 +42,6 @@ def daily_guild_report_embed(discord_guild_db : DiscordGuildDB,
                              bot_user = None) -> discord.Embed:
     
     title = f'🏆 Daily Mythic+ Report for {discord_guild_db.discord_guild_name}'
-    description = f'This board only includes registered characters. If you have not registered your off-realm or out-of-guild character, please do so with /character register.'
 
     embed = discord.Embed(title=title, description=description, color=discord.Color.from_rgb(*util.hex_to_rgb('#c300ff')))
 
@@ -65,7 +66,7 @@ def daily_guild_report_embed(discord_guild_db : DiscordGuildDB,
                 dps +=  f'⚔️ [{character_run.character.name}]({character_run.character.url})  | '
 
         guild_run_characters += tank + healer + dps
-        
+
         plus = '+' * run.num_keystone_upgrades
         over_under = run.par_time_ms - run.clear_time_ms
         if over_under > 0:
@@ -114,7 +115,6 @@ def weekly_guild_report_embed( discord_guild_db : DiscordGuildDB,
                              bot_user = None) -> discord.Embed:
     
     title = f'🏆 Weekly Mythic+ Report for {discord_guild_db.discord_guild_name}'
-    description = f'This board only includes registered characters. If you have not registered your off-realm or out-of-guild character, please do so with /character register.'
 
     embed = discord.Embed(title=title, description=description, color=discord.Color.from_rgb(*util.hex_to_rgb('#c300ff')))
 

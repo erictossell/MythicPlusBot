@@ -1,11 +1,8 @@
 from datetime import datetime
 from typing import List
-import discord
 from app.raiderIO.models.dungeon_run import DungeonRun
 from app.raiderIO.models.score_color import ScoreColor
 
-
-from app.util import convert_millis, hex_to_rgb
 
 class Character:
     """The character class represents a character from the Raider.IO API."""

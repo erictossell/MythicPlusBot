@@ -24,7 +24,7 @@ class MembersCog(commands.Cog):
         
     @commands.Cog.listener()
     async def on_member_update(self, before, after):
-        print(f'{before} has updated their profile.')        
+        print(f'{before} has updated their profile.')
 
 def setup(bot):
     """Set up the member events cog.

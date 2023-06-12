@@ -3,10 +3,11 @@ from tqdm import tqdm
 from datetime import datetime
 import re
 import asyncio
-from typing import List, Optional, Set
+from typing import List, Optional
 from ratelimit import limits, sleep_and_retry
 import httpx
 
+from app.logger import Logger as logger
 import app.db as db
 from app.db.models.dungeon_run_db import DungeonRunDB
 from app.raiderIO.models.affix import Affix
@@ -78,13 +79,8 @@ async def get_character(name: str,
                 
                 response = await client.get(API_URL + f'characters/profile?region={region}&realm={realm}&name={name}&fields=guild,gear,mythic_plus_scores_by_season:current,mythic_plus_ranks,mythic_plus_best_runs,mythic_plus_recent_runs', timeout=TIMEOUT) 
                 
-                if response.status_code == 404:
-                    return None
-                elif response.status_code == 429:
-                    return None
-                elif response.status_code == 500:
-                    return None
-                elif response.status_code == 200:
+                
+                if response.status_code == 200:
                     if response.json()['guild'] is None:
                         guild_name = None
                     else:
@@ -159,7 +155,9 @@ async def get_character(name: str,
                                           last_crawled_at= last_crawled_at)
                     return character
                 else:
-                    print('Error: Character not found.')
+                    print(response.status_code)
+                    print(f'Error: API Error. {response.status_code}')
+                    #await logger.log('error', f'Error: API Error: Character is not found. {response.status_code}')
                     return None       
             
         except (httpx.TimeoutException, httpx.ReadTimeout, ssl.SSLWantReadError):
@@ -169,6 +167,8 @@ async def get_character(name: str,
                 await asyncio.sleep(BACKOFF_FACTOR * (2 ** retry))
 
         except Exception as exception:
+            
+            #await logger.log('error', f'Error: {exception}')
             print(exception)
             return None
 
