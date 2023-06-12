@@ -7,7 +7,7 @@ from collections import defaultdict
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta
 from typing import Optional, List, DefaultDict
-from aiopg import IntegrityError
+from psycopg2 import IntegrityError
 from sqlalchemy import desc, select, func
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.exc import SQLAlchemyError
