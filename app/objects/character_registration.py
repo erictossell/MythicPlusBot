@@ -4,6 +4,7 @@ import discord
 from discord.ui import Button, View, Modal, InputText
 
 import app.db as db
+from app.logger import Logger as logger
 import app.raiderIO as raiderIO
 
 class RegisterView(View):
@@ -32,6 +33,7 @@ class UnregisterButton(Button):
             print('Error occurred:', exception)
             await interaction.message.delete()
             await interaction.response.send_message("Error occurred while processing your request. Please try again later.", ephemeral=True)
+            await logger.build_manual_log(logger, 'character_registration', 'UnregisterButton', f'Error occurred while processing your request. Please try again later. Error: {exception}')
 
 class RegisterButton(Button):
     def __init__(self, discord_guild_id: int):
@@ -45,6 +47,7 @@ class RegisterButton(Button):
             print('Error occurred:', exception)
             await interaction.message.delete()
             await interaction.response.send_message("Error occurred while processing your request. Please try again later.", ephemeral=True)
+            await logger.build_manual_log(logger, 'character_registration', 'RegisterButton', f'Error occurred while processing your request. Please try again later. Error: {exception}')
 
 class RegisterModal(Modal):
     """The modal that is used to register a character."""
@@ -104,19 +107,30 @@ class RegisterModal(Modal):
                                                         character= new_character)
                 
                 await interaction.response.send_message(f'You have registered the character {new_character.name} on realm {new_character.realm.capitalize()} for Mythic+ Bot reporting on the Discord server: {discord_guild.discord_guild_name}.', ephemeral=True)
+                await logger.build_item_log(logger, 'character_registration', new_character, f'Character {new_character.name} on realm {new_character.realm.capitalize()} has been registered for Mythic+ Bot reporting on the Discord server: {discord_guild.discord_guild_name}.')
                 return
 
             elif existing_character:
+                
                 existing_guild_character = await db.add_discord_guild_character(discord_guild= discord_guild,
                                                         character= existing_character)
                 existing_guild_character.is_reporting = True
+                
                 await db.update_discord_guild_character(existing_guild_character)
                 await interaction.response.send_message(f'You have registered the character {existing_character.name} on realm {existing_character.realm.capitalize()} for Mythic+ Bot reporting on the Discord server: {discord_guild.discord_guild_name}.', ephemeral=True)
+                await logger.build_item_log(logger, 'character_registration', existing_character, f'Character {existing_character.name} on realm {existing_character.realm.capitalize()} has been registered for Mythic+ Bot reporting on the Discord server: {discord_guild.discord_guild_name}.')
+                
                 return
+            
             else:
+                
                 await interaction.response.send_message(f'The character {existing_character.name} on realm {existing_character.realm.capitalize()} has already been registered for Mythic+ Bot reporting on the Discord server: {discord_guild.discord_guild_name}.', ephemeral=True)                   
+                await logger.build_item_log(logger, 'character_registration', existing_character, f'Character {existing_character.name} on realm {existing_character.realm.capitalize()} has already been registered for Mythic+ Bot reporting on the Discord server: {discord_guild.discord_guild_name}.')       
+        
         except Exception as e:
             print(e)
+            await interaction.response.send_message(f'Error occurred while processing your request. Please try again later.', ephemeral=True)
+            await logger.build_manual_log(logger, 'character_registration', 'RegisterModal', f'Error occurred while processing your request. Please try again later. Error: {e}')
             
 class UnregisterModal(Modal):
     """The modal that is used to unregister a character."""
@@ -157,14 +171,20 @@ class UnregisterModal(Modal):
                     matching_character.is_reporting = False  # Use the new score you want to set
                     await db.update_discord_guild_character(matching_character)
                     await interaction.response.send_message(f'You have unregistered the character {name} on realm {realm} for Mythic+ Bot reporting on the Discord server: {discord_guild.discord_guild_name}.', ephemeral=True)
+                    await logger.build_item_log(logger, 'character_unregistration', existing_character, f'Character {name} on realm {realm} has been unregistered for Mythic+ Bot reporting on the Discord server: {discord_guild.discord_guild_name}.')
                 return
             
 
             elif existing_character.is_reporting:
                 await interaction.response.send_message('This character is not registered.', ephemeral=True)
+                await logger.build_item_log(logger, 'character_unregistration', existing_character, f'Character {name} on realm {realm} has not been unregistered for Mythic+ Bot reporting on the Discord server: {discord_guild.discord_guild_name}.')
                 return
             else:
                 await interaction.response.send_message('An unexpected error has occurred, contact Eriim with a timestamp.', ephemeral=True)
+                await logger.build_manual_log(logger, 'character_unregistration', 'UnregisterModal', f'An unexpected error has occurred, contact Eriim with a timestamp.')
                          
         except Exception as e:
             print(e)
+            await interaction.response.send_message(f'Error occurred while processing your request. Please try again later.', ephemeral=True)
+            await logger.build_manual_log(logger, 'character_unregistration', 'UnregisterModal', f'Error occurred while processing your request. Please try again later. Error: {e}')
+            

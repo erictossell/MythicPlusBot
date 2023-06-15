@@ -52,6 +52,7 @@ def get_score_colors() -> List[ScoreColor]:
                         raise 
         except Exception as exception:
             print(exception)
+            logger.build_manual_log(logger, 'error', 'score_color api call', f'{exception} : {response.json()}')
             return None
 
 @sleep_and_retry
@@ -90,7 +91,7 @@ async def get_character(name: str,
                     spec_name = response.json()['active_spec_name']
                     player_class = response.json()['class']
                     achievement_points = response.json()['achievement_points']
-                    item_level = response.json()['gear']['item_level_equipped']    
+                    item_level = response.json()['gear']['item_level_equipped']
                     score = response.json()['mythic_plus_scores_by_season'][0]['scores']['all']
                     rank = response.json()['mythic_plus_ranks']['class']['realm']
                     best_runs = []
@@ -157,18 +158,19 @@ async def get_character(name: str,
                 else:
                     print(response.status_code)
                     print(f'Error: API Error. {response.status_code}')
-                    #await logger.log('error', f'Error: API Error: Character is not found. {response.status_code}')
-                    return None       
+                    await logger.build_item_log(logger, 'error', await db.get_character_by_name_realm(name, realm), f'RadierIO API Error: Character is not found. {name} : {response.status_code}')
+
+                    return None
             
         except (httpx.TimeoutException, httpx.ReadTimeout, ssl.SSLWantReadError):
             if retry == RETRIES - 1:
+                await logger.build_item_log(logger, 'error', await db.get_character_by_name_realm(name, realm), f'RadierIO API Error: Request timeout. : {response.status_code}')
                 raise
             else:
                 await asyncio.sleep(BACKOFF_FACTOR * (2 ** retry))
 
         except Exception as exception:
-            
-            #await logger.log('error', f'Error: {exception}')
+            await logger.build_item_log(logger, 'error', await db.get_character_by_name_realm(name, realm), f'RadierIO API Error: Character is not found. {exception} : {response.status_code}')
             print(exception)
             return None
 
@@ -194,7 +196,7 @@ async def get_characters(names: List[str], realms: List[str], region='us') -> Li
         
         if character is None:
             print(f'Error: {name}-{realm} not found.')
-            continue           
+            continue
         
         character = await get_character(name, realm, score_colors, region)
         characters.append(character)
@@ -224,6 +226,7 @@ async def get_guild_members(name: str, realm: str, region: str ) -> Optional[Lis
                 if len(members) > 0:
                     return members
                 elif len(members) == 0:
+                    await logger.build_item_log(logger, 'api_guild_error', await db.get_guild_by_name_realm(name, realm), f'RadierIO API Error: Guild is not found. {name} : {request.status_code}')
                     return None
         except httpx.ReadTimeout:
                     print("Timeout occurred while fetching character data.")
@@ -231,10 +234,11 @@ async def get_guild_members(name: str, realm: str, region: str ) -> Optional[Lis
                     if retry == RETRIES - 1:
                         await asyncio.sleep(BACKOFF_FACTOR ** retry)
                     else:
-                        raise 
+                        await logger.build_item_log(logger, 'api_guild_error', await db.get_guild_by_name_realm(name, realm), f'RadierIO API Error: Timeout occured while fetching {name} : {request.status_code}')
+                        raise
         except Exception as e:
             print(e)
-            print('Error: Guild not found.')
+            await logger.build_manual_log(logger, 'api_guild_error', f'RadierIO API Error: {e} : {request.status_code}')
             return None
 
 @sleep_and_retry
@@ -257,6 +261,7 @@ async def get_mythic_plus_affixes() -> Optional[List[Affix]]:
                 if len(affixes) > 0:
                     return affixes
                 else:
+                    await logger.build_manual_log(logger, 'error', 'affix', f'RadierIO API Error: Affixes are not found. {request.status_code}')
                     return None
         except httpx.ReadTimeout:
                 print("Timeout occurred while fetching character data.")
@@ -264,9 +269,11 @@ async def get_mythic_plus_affixes() -> Optional[List[Affix]]:
                 if retry == RETRIES - 1:
                     await asyncio.sleep(BACKOFF_FACTOR ** retry)
                 else:
+                    await logger.build_manual_log(logger, 'error', 'affix', f'RadierIO API Error: Timeout occured while fetching affixes. {request.status_code}')
                     raise 
         except Exception as exception:
             print(exception)
+            await logger.build_manual_log(logger, 'error', 'affix', f'RadierIO API Error: {exception} : {request.status_code}')
             return None    
 
 @sleep_and_retry
@@ -290,6 +297,7 @@ async def get_run_details(dungeon_run: DungeonRun , discord_guild_id, players_pe
                 request = await client.get(API_URL +f'mythic-plus/run-details?season={dungeon_run.season}&id={dungeon_run.id}', timeout=TIMEOUT)
 
                 if request.status_code != 200:
+                    await logger.build_item_log(logger, 'error', dungeon_run, f'RadierIO API Error: {request.status_code}')
                     return None
 
                 elif request.status_code == 200:
@@ -332,18 +340,20 @@ async def get_run_details(dungeon_run: DungeonRun , discord_guild_id, players_pe
                             discord_guild_character_list.append(discord_guild_character)
                     if guild_member_counter >= players_per_run:
                         return True
-                    else:
-                        
+                    else:                        
                         return False
+                    
         except httpx.ReadTimeout:
                 print("Timeout occurred while fetching character data.")
 
                 if retry == RETRIES - 1:
                     await asyncio.sleep(BACKOFF_FACTOR ** retry)
                 else:
+                    await logger.build_manual_log(logger, 'error', 'dungeon_run', f'RadierIO API Error: Timeout occured while fetching run details. {request.status_code}')
                     raise
         except Exception as exception:
             print('RaiderIO : Error: ' + exception)
+            await logger.build_manual_log(logger, 'error', 'dungeon_run', f'RadierIO API Error: {exception} : {request.status_code}')
             return None
 
 async def crawl_characters(discord_guild_id: int) -> str:
@@ -470,10 +480,12 @@ async def crawl_characters(discord_guild_id: int) -> str:
                     check_run = await db.check_run_for_guild_run(discord_guild_id=discord_guild.id, dungeon_run_id=run)
                     if check_run is not None:
                         guild_run_counter += 1
-
+                        
+        await logger.build_manual_log(logger, 'success', 'character_crawl', f'RaiderIO API: {discord_guild.discord_guild_name} Characters crawled: {characters_crawled} |  Updated {update_character_counter} characters and added {run_counter} runs and found {guild_run_counter} guild runs.')
         return f'{discord_guild.discord_guild_name} Characters crawled: {characters_crawled} |  Updated {update_character_counter} characters and added {run_counter} runs and found {guild_run_counter} guild runs.'
 
     except Exception as exception:
+        await logger.build_manual_log(logger, 'error', 'character_crawl', f'RaiderIO API: {discord_guild.discord_guild_name} Characters crawled: {characters_crawled} |  Updated {update_character_counter} characters and added {run_counter} runs and found {guild_run_counter} guild runs. Error: {exception}')
         print(exception)
     finally:
         print('Finished crawling characters.')
@@ -569,9 +581,12 @@ async def crawl_discord_guild_members(discord_guild_id) -> None:
 
         if return_string == "":
             return_string = "Crawler: no new characters were added to the database."
+            
+        await logger.build_manual_log(logger, 'success', 'guild_member_crawl', return_string)
         return return_string
     except Exception as exception:
         print(exception)
+        await logger.build_manual_log(logger, 'error,' 'guild_member_crawl', f'Error: {exception}')
         return False
     finally:
         print('Crawler: finished crawling guild members')

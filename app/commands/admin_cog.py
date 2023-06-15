@@ -4,6 +4,7 @@ import os
 from dotenv import load_dotenv
 from discord.ext import commands
 from discord.commands import SlashCommandGroup
+from app.logger import Logger as logger
 
 import app.db as db
 from app.objects.guild_registration import RegisterGuildView
@@ -35,14 +36,18 @@ class Admin(commands.Cog):
                 channel = await user.create_dm()
                 await channel.send(view=RegisterGuildView(discord_guild_id=ctx.guild.id))
             else:
+                await logger.build_manual_log(logger, 'admin_cog', 'register', f'User {ctx.author.name} attempted to run !register command but is not an admin of {ctx.guild.name}.')
                 await ctx.respond('You are not an administrator, please contact your admin to run this command..')
+                
             
         except Exception as e:
             print(e)
             await ctx.respond('Something went wrong :( Talk to Eriim about this error. ')
-            error_channel = await ctx.bot.fetch_guild(int(SUPPORT_SERVER_ID)).fetch_channel(int(SUPPORT_CHANNEL_ID))           
-           
+            
+            error_channel = await ctx.bot.fetch_guild(int(SUPPORT_SERVER_ID)).fetch_channel(int(SUPPORT_CHANNEL_ID))            
             await error_channel.send(f'Error in !register command: {e}')
+            
+            await logger.build_manual_log(logger, 'admin_cog', 'register', f'Error in !register command: {e}')
     
        
     @admin.command(name='set_announcement_channel')    
@@ -62,11 +67,13 @@ class Admin(commands.Cog):
 
             discord_guild.announcement_channel_id = ctx.channel.id
             
-            await db.update_discord_guild(discord_guild)
-            
+            await db.update_discord_guild(discord_guild)            
             await ctx.respond(f'Announcement channel set to {ctx.channel.name}.')
+            await logger.build_manual_log(logger, 'admin_cog', 'set_announcement_channel', f'User {ctx.author.name} set announcement channel to {ctx.channel.name}.')
         else:
             await ctx.respond('You are not an administrator, please contact your admin to run this command..')
+            await logger.build_manual_log(logger, 'admin_cog', 'set_announcement_channel', f'User {ctx.author.name} attempted to run !register command but is not an admin of {ctx.guild.name}.')
+
             
     @admin.command(name='disable_announcements')
     async def disable_announcements(self, ctx):
@@ -88,8 +95,10 @@ class Admin(commands.Cog):
             await db.update_discord_guild(discord_guild)
             
             await ctx.respond('Announcements disabled.')
+            await logger.build_manual_log(logger, 'admin_cog', 'disable_announcements', f'User {ctx.author.name} disabled announcements.')
         else:
             await ctx.respond('You are not an administrator, please contact your admin to run this command..')
+            await logger.build_manual_log(logger, 'admin_cog', 'disable_announcements', f'User {ctx.author.name} attempted to run !register command but is not an admin of {ctx.guild.name}.')
            
         
     @admin.command(name='players_per_run')
@@ -116,17 +125,21 @@ class Admin(commands.Cog):
                 await db.update_discord_guild(discord_guild)
                 
                 await ctx.respond(f'Players per run set to {players_per_run}.')
+                await logger.build_manual_log(logger, 'admin_cog', 'set_players_per_run', f'User {ctx.author.name} set players per run to {players_per_run} for {ctx.guild.name}.')
         else:
             await ctx.respond('You are not an administrator, please contact your admin to run this command..')
+            await logger.build_manual_log(logger, 'admin_cog', 'set_players_per_run', f'User {ctx.author.name} attempted to run !register command but is not an admin of {ctx.guild.name}.')
         
     
     @commands.Cog.listener()
     async def on_ready(self):
         print('Connected to Discord as {0.user}'.format(self.bot))
+        await logger.build_manual_log(logger, 'admin_cog', 'on_ready', f'Connected to Discord as {self.bot.user}.')
         await db.create_schema()
         for guild in self.bot.guilds:
             
             await db.add_discord_guild(db.DiscordGuildDB(id = guild.id, discord_guild_name=guild.name))
+            await logger.build_manual_log(logger, 'admin_cog', 'on_ready', f'Validated guild: {guild.name} to database.')
             print(f'{self.bot.user} is connected to the following guild:\n'
                   f'{guild.name}(id: {guild.id})')
             
@@ -135,19 +148,18 @@ class Admin(commands.Cog):
         print(f'{self.bot.user} has joined the following guild:\n'
               f'{guild.name}(id: {guild.id})')
         await db.add_discord_guild(db.DiscordGuildDB(id = guild.id, discord_guild_name=guild.name))
-        await guild.system_channel.send('Hello! I am Mythic+ Bot. I provide advanced Discord reporting for Mythic+ data.\nPlease go to https://www.mythicplusbot.dev/ if you would like guidance setting some of my features up 😊.') 
+        await guild.system_channel.send('Hello! I am Mythic+ Bot. I provide advanced Discord reporting for Mythic+ data.\nPlease go to https://www.mythicplusbot.dev/ if you would like guidance setting some of my features up 😊.')
+        await logger.build_manual_log(logger, 'admin_cog', 'on_guild_join', f'Joined guild: {guild.name} to database.')
      
     @commands.Cog.listener()
     async def on_application_command_error(self, ctx, error):
-        if isinstance(error, commands.errors.CommandNotFound):
-            
+        if isinstance(error, commands.errors.CommandNotFound):            
             print(error)
             await ctx.respond('Something went wrong :( Talk to Eriim about this error. ')
-            error_channel = await ctx.bot.fetch_guild(int(SUPPORT_SERVER_ID)).fetch_channel(int(SUPPORT_CHANNEL_ID))           
-           
+            error_channel = await ctx.bot.fetch_guild(int(SUPPORT_SERVER_ID)).fetch_channel(int(SUPPORT_CHANNEL_ID))
             await error_channel.send(f'Error in !register command: {error}')
             
 def setup(bot):
-    bot.add_cog(Admin(bot))    
+    bot.add_cog(Admin(bot))
     print("Admin cog has loaded successfully.")
     

@@ -1,5 +1,6 @@
 import discord
 from app.objects.poll.createPollModal import CreatePollModal
+from app.logger import Logger as logger
 
 class CreatePollButton(discord.ui.View):
     """Generate the create poll button.
@@ -15,13 +16,15 @@ class CreatePollButton(discord.ui.View):
             button (discord.ui.Button): Provides the parent class for the button.
             interaction (discord.Interaction): Provides the parent class for the interaction.
         """
-        try:            
+        try:        
             print('button clicked')   
             await interaction.message.delete()
-        except Exception as e:
-            print('Error occured:', e)
+        except Exception as exception:
+            print('Error occured:', exception)
             await interaction.message.delete()
             await interaction.response.send_message("Error occured while processing your request. Please try again later.", ephemeral=True)
+            await logger.build_manual_log(logger, 'error', 'create_poll_button', f'Error occurred while processing your request. Please try again later. Error: {exception}')
+            
     @discord.ui.button(label='Create Poll', style=discord.ButtonStyle.green, emoji='📄')
     async def createPoll_callback(self, button: discord.ui.Button, interaction: discord.Interaction):
         """When the create poll button is clicked, open the create poll modal.
@@ -35,9 +38,11 @@ class CreatePollButton(discord.ui.View):
             
             await interaction.response.send_modal(CreatePollModal(title="Create a Poll"))
             await interaction.message.delete()
+            await logger.build_manual_log(logger, 'poll', 'create_poll_button', f'Poll created successfully.')
 
         except Exception as e:
             print('Error occured:', e)
             await interaction.message.delete()
             await interaction.response.send_message("Error occured while processing your request. Please try again later.", ephemeral=True)
+            await logger.build_manual_log(logger, 'error', 'create_poll_button', f'Error occurred while processing your request. Please try again later. Error: {e}')
             

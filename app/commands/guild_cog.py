@@ -19,10 +19,10 @@ class Guild(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         print('Guild cog is initializing....')
-        
+
     guild = SlashCommandGroup('guild', description='Guild information commands.')
 
-    
+
     @guild.command(name='daily', help='Gets the daily guild report.')
     async def daily_report(self, ctx):
         """Display the guilds best runs in the last 24 hours.
@@ -32,15 +32,15 @@ class Guild(commands.Cog):
         """
         try:
             async with ctx.typing():
-                
+
                 await ctx.respond('Generating report...')
-            
+
                 bot_user = await ctx.bot.fetch_user(1073958413488369794)
                 discord_guild_db = await db.get_discord_guild_by_id(ctx.guild.id)
-            
+
                 guild_run_list = await db.get_daily_guild_runs(discord_guild_id=ctx.guild.id)            
                 run_list = await db.get_daily_non_guild_runs(discord_guild_id=ctx.guild.id, number_of_runs= (8-len(guild_run_list)))
-                
+
                 all_runs = await db.get_all_daily_runs(discord_guild_id=ctx.guild.id)
 
                 graph = await visualizer.daily_guild_runs_plot(all_runs, discord_guild_id=ctx.guild.id)
@@ -75,20 +75,20 @@ class Guild(commands.Cog):
         """
         try:
             async with ctx.typing():
-                
+
                 await ctx.respond('Generating report...')
-            
+
                 bot_user = await ctx.bot.fetch_user(1073958413488369794)
                 discord_guild_db = await db.get_discord_guild_by_id(ctx.guild.id)
 
                 guild_run_list = await db.get_top10_guild_runs_this_week(discord_guild_id=ctx.guild.id)
-                                
+
                 run_list = await db.get_weekly_non_guild_runs(discord_guild_id=ctx.guild.id, number_of_runs= (8-len(guild_run_list)))
-                
+
                 all_runs = await db.get_all_weekly_runs(discord_guild_id=ctx.guild.id)
-                                
+
                 graph = await visualizer.weekly_guild_runs_plot(all_runs, guild_run_list, discord_guild_id=ctx.guild.id)
-                
+
                 embed = weekly_guild_report_embed(discord_guild_db=discord_guild_db,
                                                         guild_run_list=guild_run_list,
                                                         non_guild_run_list=run_list,
@@ -98,15 +98,15 @@ class Guild(commands.Cog):
                     await ctx.respond(file= graph, embed=embed)
                 else:
                     await ctx.respond(embed=embed)
-            
+
         except Exception as exception:
             print(exception)
             await ctx.respond('Something went wrong :( Talk to the bot developer for help.')
             error_channel = await ctx.bot.fetch_guild(int(SUPPORT_SERVER_ID)).fetch_channel(int(SUPPORT_CHANNEL_ID))
-           
+
             await error_channel.send(f'Error in !register command: {exception}')
-                
-    #Change to all time report    
+
+    #Change to all time report
     @guild.command(name='top_runs', help='Gets the top 5 Mythic+ runs for the guild.')
     async def top_runs(self, ctx):
         """Display the top 5 runs of all time completed as a guild.
@@ -122,7 +122,7 @@ class Guild(commands.Cog):
             bot_user = await ctx.bot.fetch_user(1073958413488369794)
 
             embed = discord.Embed(title=title, description=description, color=discord.Color.from_rgb(*hex_to_rgb('#c300ff')))
-            
+
             embed.set_author(name='Mythic+ Bot', icon_url=bot_user.avatar, url='https://www.mythicplusbot.dev/')
             counter = 1
             for run, characters in dungeon_list:
@@ -137,9 +137,9 @@ class Guild(commands.Cog):
             print(exception)
             await ctx.respond('Something went wrong :( Talk to the bot developer for help.')
             error_channel = await ctx.bot.fetch_guild(int(SUPPORT_SERVER_ID)).fetch_channel(int(SUPPORT_CHANNEL_ID))           
-           
+
             await error_channel.send(f'Error in !register command: {exception}')
-    
+
     @guild.command(name='achievements')
     async def achievements(self, ctx):
         """Display the top 10 achievement earners in your guild.
@@ -153,9 +153,9 @@ class Guild(commands.Cog):
             print(exception)
             await ctx.respond('Something went wrong :( Talk to the bot developer for help.')
             error_channel = await ctx.bot.fetch_guild(int(SUPPORT_SERVER_ID)).fetch_channel(int(SUPPORT_CHANNEL_ID))           
-           
+
             await error_channel.send(f'Error in !register command: {exception}')
-            
+
     @guild.command(name='item_level')
     async def item_level(self, ctx):
         """Display the top 10 players by item level.
@@ -169,9 +169,9 @@ class Guild(commands.Cog):
             print(exception)
             await ctx.respond('Something went wrong :( Talk to the bot developer for help.')
             error_channel = await ctx.bot.fetch_guild(int(SUPPORT_SERVER_ID)).fetch_channel(int(SUPPORT_CHANNEL_ID))           
-           
+
             await error_channel.send(f'Error in !register command: {exception}')
-            
+
     @guild.command(name='mythic_plus', help='Gets the current Mythic+ leaderboard.')
     async def mythic_plus(self, ctx):
         """Display the top 10 players by M+ score.
@@ -185,9 +185,9 @@ class Guild(commands.Cog):
             print(exception)
             await ctx.respond('Something went wrong :( Talk to the bot developer for help.')
             error_channel = await ctx.bot.fetch_guild(int(SUPPORT_SERVER_ID)).fetch_channel(int(SUPPORT_CHANNEL_ID))           
-           
+
             await error_channel.send(f'Error in !register command: {exception}')
-            
+
     async def mythic_plus_leaderboard(self, ctx):
         """Display the top 10 players by M+ score.
 

@@ -17,7 +17,7 @@ class CreatePollModal(discord.ui.Modal):
 
     async def callback(self, interaction: discord.Interaction) -> None:  
         """This is the callback function that is called when the modal is submitted."""
-        embed = discord.Embed(title=self.children[0].value, color=discord.Color.green(), description='Poll created by ' + interaction.user.mention)     
+        embed = discord.Embed(title=self.children[0].value, color=discord.Color.green(), description='Poll created by ' + interaction.user.mention)
         
         for i, child in enumerate(self.children[1:]):           
             if child.value:

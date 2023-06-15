@@ -2,6 +2,7 @@ import discord
 from discord.ui import Button, View, Modal, InputText
 
 import app.db as db
+from app.logger import Logger as logger
 
 class RegisterGuildView(View):
     """Creates the register and unregister buttons."""
@@ -30,6 +31,7 @@ class RegisterGuildButton(Button):
             print('Error occurred:', exception)
             await interaction.message.delete()
             await interaction.response.send_message("Error occurred while processing your request. Please try again later.", ephemeral=True)
+            await logger.build_manual_log(logger, 'guild_registration', 'RegisterGuildButton', f'Error occurred while processing your request. Please try again later. Error: {exception}')
 
 class RegisterGuildModal(Modal):
     def __init__(self, discord_guild_id:int, *args, **kwargs) -> None:
@@ -78,6 +80,7 @@ class RegisterGuildModal(Modal):
                                             description=f"Your have added the guild {existing_game_guild.name} - {existing_game_guild.realm} in the {existing_game_guild.region.upper()} region to your Discord Server.",
                                             color=0x00ff00)
                         await interaction.response.send_message(embed=embed, ephemeral=True)
+                        await logger.build_item_log(logger, 'success', existing_game_guild, f'Guild {existing_game_guild.name} - {existing_game_guild.realm} in the {existing_game_guild.region.upper()} region has been added to the Discord Server {existing_guild.name}')
                         
                     else:
                         game_guild = db.GameGuildDB(name =wow_guild_name,
@@ -94,8 +97,10 @@ class RegisterGuildModal(Modal):
                                             description=f"Your have added the guild {game_guild.name} - {game_guild.realm} in the {game_guild.region.upper()} region to your Discord Server.",
                                             color=0x00ff00)
                         await interaction.response.send_message(embed=embed, ephemeral=True)
+                        await logger.build_item_log(logger, 'success', game_guild, f'Guild {game_guild.name} - {game_guild.realm} in the {game_guild.region.upper()} region has been added to the Discord Server {existing_guild.name}')
                         
         except Exception as exception:
             print('Error occurred:', exception)
             await interaction.message.delete()
             await interaction.response.send_message("Error occurred while processing your request. Please try again later.", ephemeral=True)
+            await logger.build_manual_log(logger, 'guild_registration', 'RegisterGuildModal', f'Error occurred while processing your request. Please try again later. Error: {exception}')
