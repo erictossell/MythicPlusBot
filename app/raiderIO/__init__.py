@@ -567,14 +567,14 @@ async def crawl_discord_guild_members(discord_guild_id) -> None:
                                                 last_crawled_at = datetime.strptime(character.last_crawled_at,
                                                                     '%Y-%m-%dT%H:%M:%S.%fZ'))
 
-                added_character = await db.add_character(new_character)
+                await db.add_character(new_character)
 
-                if added_character is None:
+                if new_character is None:
                     existing_character = await db.get_character_by_name_realm(character.name, character.realm)
                     await db.add_discord_guild_character(discord_guild=discord_guild, character=existing_character)
                 else:
                     await db.add_discord_guild_character(discord_guild=discord_guild,
-                                                        character=added_character)
+                                                        character=new_character)
 
                 counter += 1
             return_string += f'Crawler: verified {counter}  characters to the database for the guild {game_guild.name}.\n'

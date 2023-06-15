@@ -55,10 +55,7 @@ class Guild(commands.Cog):
                     await ctx.respond(file= graph, embed=embed)
                 else:
                     await ctx.respond(embed=embed)
-                                
-                
-                
-            
+                    
         except Exception as exception:
             print(exception)
             await ctx.respond('Something went wrong :( Talk to the bot developer for help.')

@@ -50,7 +50,7 @@ class GeneralCog(commands.Cog):
         except Exception as exception:
             print(exception)
             await ctx.respond('Something went wrong :( Talk to the bot developer for help.')
-            error_channel = await ctx.bot.fetch_guild(int(SUPPORT_SERVER_ID)).fetch_channel(int(SUPPORT_CHANNEL_ID))           
+            error_channel = await ctx.bot.fetch_guild(int(SUPPORT_SERVER_ID)).fetch_channel(int(SUPPORT_CHANNEL_ID))
             await error_channel.send(f'Error in !register command: {exception}')
     @commands.slash_command(name='affixes', help='Gets the current Mythic+ affixes.')
     async def affixes(self, ctx):
@@ -72,7 +72,7 @@ class GeneralCog(commands.Cog):
         except Exception as exception:
             print(exception)
             await ctx.respond('Something went wrong :( Talk to the bot developer for help.')
-            error_channel = await ctx.bot.fetch_guild(int(SUPPORT_SERVER_ID)).fetch_channel(int(SUPPORT_CHANNEL_ID))           
+            error_channel = await ctx.bot.fetch_guild(int(SUPPORT_SERVER_ID)).fetch_channel(int(SUPPORT_CHANNEL_ID))
            
             await error_channel.send(f'Error in !register command: {exception}')
     @commands.slash_command(name='poll', description='Sends a poll to the channel.')

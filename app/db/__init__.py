@@ -1485,7 +1485,7 @@ async def get_top10_character_by_mythic_plus(discord_guild_id: int) -> List[Char
             query = (
                     select(CharacterDB)
                     .join(DiscordGuildCharacterDB)
-                    .filter(DiscordGuildCharacterDB.discord_guild_id == discord_guild_id)
+                    .filter(DiscordGuildCharacterDB.discord_guild_id == discord_guild_id, DiscordGuildCharacterDB.is_reporting == True)
                     .order_by(CharacterDB.score.desc())
                     .limit(10)
                     )
@@ -1509,7 +1509,7 @@ async def get_top10_character_by_highest_item_level(discord_guild_id: int) -> Li
             query = (
                     select(CharacterDB)
                     .join(DiscordGuildCharacterDB)
-                    .filter(DiscordGuildCharacterDB.discord_guild_id == discord_guild_id)
+                    .filter(DiscordGuildCharacterDB.discord_guild_id == discord_guild_id, DiscordGuildCharacterDB.is_reporting == True)
                     .order_by(CharacterDB.item_level.desc())
                     .limit(10)
                     )
@@ -1575,9 +1575,7 @@ async def get_top5_guild_runs_all_time(discord_guild_id: int, season: str = 'sea
                         DungeonRunDB.season == season)
                 .order_by(DungeonRunDB.score.desc()).limit(7)
             ).alias("top_runs")
-            
-            
-            
+                        
             query = (
                 select(DungeonRunDB, CharacterDB)
                 .join(top_runs_subquery, top_runs_subquery.c.id == DungeonRunDB.id)
