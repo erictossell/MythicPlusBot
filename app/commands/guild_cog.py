@@ -68,7 +68,7 @@ class Guild(commands.Cog):
             
     @guild.command(name='weekly', help='Gets the daily guild report.')
     async def weekly_report(self, ctx):
-        """Display the guilds best runs in the last 24 hours.
+        """Display the guilds best runs in the last 7 days.
 
         Args:
             ctx (discord.ctx): The current discord context.
