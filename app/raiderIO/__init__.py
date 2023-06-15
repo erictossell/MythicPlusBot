@@ -364,18 +364,19 @@ async def crawl_characters(discord_guild_id: int) -> str:
         
         discord_guild = await db.get_discord_guild_by_id(discord_guild_id)
         db_characters_list = await db.get_all_discord_guild_characters(discord_guild_id)
-        skip_character = False
+        
         runs = set()
         print('RaiderIO Crawler: Crawling ' + str(len(db_characters_list)) + ' characters.')
         for character in tqdm(db_characters_list):
             characters_crawled += 1
-            
+            skip_character = False
             for guild_character in character.discord_guild_characters:
                 if guild_character.discord_guild_id == discord_guild.id:
                     if guild_character.is_reporting is False:
                         print(f"Character {character.name} is not reporting. Skipping.")
                         skip_character = True
                         break
+                        
 
             if skip_character:
                 continue
@@ -557,8 +558,8 @@ async def crawl_discord_guild_members(discord_guild_id) -> None:
                 added_character = await db.add_character(new_character)
 
                 if added_character is None:
-                    character = await db.get_character_by_name_realm(character.name, character.realm)
-                    await db.add_discord_guild_character(discord_guild=discord_guild, character=character)
+                    existing_character = await db.get_character_by_name_realm(character.name, character.realm)
+                    await db.add_discord_guild_character(discord_guild=discord_guild, character=existing_character)
                 else:
                     await db.add_discord_guild_character(discord_guild=discord_guild,
                                                         character=added_character)
