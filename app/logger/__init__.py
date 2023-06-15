@@ -42,7 +42,8 @@ class Logger:
         query = {
             'log_type': 'error',
             'item_id': item.id,
-            'item_type': item.__class__.__name__
+            'item_type': item.__class__.__name__,
+            'message': f'RadierIO API Error: Character is not found. {item.name} : 400'
         }
         count = await self.db['python_logs'].count_documents(query)
         return count >= threshold
