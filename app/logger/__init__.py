@@ -37,3 +37,12 @@ class Logger:
             'timestamp': datetime.datetime.utcnow()
         }
         await self.log(self, log)
+        
+    async def check_previous_errors(self, item, threshold=5):
+        query = {
+            'log_type': 'error',
+            'item_id': item.id,
+            'item_type': item.__class__.__name__
+        }
+        count = await self.db['python_logs'].count_documents(query)
+        return count >= threshold

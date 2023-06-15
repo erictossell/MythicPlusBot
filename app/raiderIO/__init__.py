@@ -158,8 +158,11 @@ async def get_character(name: str,
                 else:
                     print(response.status_code)
                     print(f'Error: API Error. {response.status_code}')
-                    await logger.build_item_log(logger, 'error', await db.get_character_by_name_realm(name, realm), f'RadierIO API Error: Character is not found. {name} : {response.status_code}')
-
+                    character = await db.get_character_by_name_realm(name, realm)
+                    await logger.build_item_log(logger, 'error', character, f'RadierIO API Error: Character is not found. {name} : {response.status_code}')
+                    disable_character = await logger.check_previous_errors(logger, character)
+                    if disable_character:
+                        await db.update_character_reporting(character)
                     return None
             
         except (httpx.TimeoutException, httpx.ReadTimeout, ssl.SSLWantReadError):
