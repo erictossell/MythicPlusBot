@@ -1,6 +1,7 @@
 
 from typing import List, Tuple
 import discord
+
 from app import util
 import app.db as db
 from app.db.models.character_db import CharacterDB

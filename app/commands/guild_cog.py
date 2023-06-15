@@ -4,8 +4,10 @@ import discord
 from discord.commands import SlashCommandGroup
 from discord.ext import commands
 from dotenv import load_dotenv
-from app import visualizer
+
 import app.db as db
+
+from app import visualizer
 from app.objects.embed_builder import daily_guild_report_embed, weekly_guild_report_embed
 from app.util import hex_to_rgb
 

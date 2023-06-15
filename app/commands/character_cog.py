@@ -1,21 +1,22 @@
 
 import os
+
 from typing import Optional
 from datetime import datetime
+from dotenv import load_dotenv
+
 import discord
 from discord.commands import SlashCommandGroup
 from discord.ext import commands
-from dotenv import load_dotenv
+
 import app.db as db
-from app.objects.character_registration import RegisterView
 import app.objects.embed_builder as embed_builder
 import app.raiderIO as raiderIO
-from app.util import hex_to_rgb
+from app.objects.character_registration import RegisterView
 
 load_dotenv('configurations/main.env')
 SUPPORT_SERVER_ID = os.getenv('SUPPORT_SERVER_ID')
 SUPPORT_CHANNEL_ID = os.getenv('SUPPORT_CHANNEL_ID')
-
 
 class Character(commands.Cog):
     def __init__(self, bot):

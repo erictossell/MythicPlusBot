@@ -1,21 +1,23 @@
+
 import asyncio
 import datetime
 import os
 import ssl
 import httpx
 
-from matplotlib import colors
-from adjustText import adjust_text
-from matplotlib import dates
-from matplotlib.dates import DateFormatter
-import numpy as np
-import pandas as pd
-
-import app.raiderIO as raiderIO
-from discord import File
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+from matplotlib import colors
+from matplotlib import dates
+
+import numpy as np
+import pandas as pd
+
+from adjustText import adjust_text
+from discord import File
+
+import app.raiderIO as raiderIO
 
 
 async def daily_guild_runs_plot(runs: list, discord_guild_id: int):

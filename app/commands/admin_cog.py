@@ -1,11 +1,15 @@
+
 import os
+
 from dotenv import load_dotenv
 from discord.ext import commands
 from discord.commands import SlashCommandGroup
-from app.objects.guild_registration import RegisterGuildView
+
 import app.db as db
+from app.objects.guild_registration import RegisterGuildView
 
 load_dotenv('configurations/main.env')
+
 SUPPORT_SERVER_ID = os.getenv('SUPPORT_SERVER_ID')
 SUPPORT_CHANNEL_ID = os.getenv('SUPPORT_CHANNEL_ID')
 

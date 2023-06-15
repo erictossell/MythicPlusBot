@@ -1,16 +1,20 @@
+
 import asyncio
 import os
+
 from discord.ext import commands, tasks
 from datetime import time
-
 from dotenv import load_dotenv
-from app import visualizer
+
 import app.db as db
-from app.objects.embed_builder import announce_guild_run_embed, daily_guild_report_embed
 import app.raiderIO as raiderIO
 import app.util as util
 
+from app.objects.embed_builder import daily_guild_report_embed
+from app import visualizer
+
 load_dotenv('configurations/main.env')
+
 SUPPORT_SERVER_ID = os.getenv('SUPPORT_SERVER_ID')
 SUPPORT_CHANNEL_ID = os.getenv('SUPPORT_CHANNEL_ID')
 

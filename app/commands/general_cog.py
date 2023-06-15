@@ -1,11 +1,15 @@
 # Description: General commands for the bot.
 import os
 import discord
-from discord.ext import commands
+
 from dotenv import load_dotenv
+from discord.ext import commands
+
+import app.raiderIO as raiderIO
+
 from app.objects.dice import Dice
 from app.objects.poll.createPollButton import CreatePollButton
-import app.raiderIO as raiderIO
+
 
 load_dotenv('configurations/main.env')
 SUPPORT_SERVER_ID = os.getenv('SUPPORT_SERVER_ID')

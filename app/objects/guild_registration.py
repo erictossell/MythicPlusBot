@@ -1,7 +1,7 @@
 import discord
 from discord.ui import Button, View, Modal, InputText
-import app.db as db
 
+import app.db as db
 
 class RegisterGuildView(View):
     """Creates the register and unregister buttons."""

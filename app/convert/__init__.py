@@ -1,14 +1,9 @@
 
-
-
 from app.db.models.character_db import CharacterDB
 from app.db.models.character_run_db import CharacterRunDB
 from app.db.models.dungeon_run_db import DungeonRunDB
 from app.raiderIO.models.character import Character
 from app.raiderIO.models.dungeon_run import DungeonRun
-
-
-
 
 def dungeon_run_io(run: DungeonRun) -> DungeonRunDB:
     return DungeonRunDB(dungeon_id = run.id,
@@ -22,8 +17,7 @@ def dungeon_run_io(run: DungeonRun) -> DungeonRunDB:
                            num_keystone_upgrades = run.num_keystone_upgrades,
                            score = run.score,
                            url = run.url)
-    
-    
+        
 def character_run_io(character_db: Character,
                              dungeon_run_db: DungeonRun,
                              rio_character_id: int = None,
