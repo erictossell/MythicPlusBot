@@ -724,33 +724,25 @@ async def update_character_reporting(character: Character) -> bool:
     print(f'Tal_DB : updating character reporting status: {character.name} on realm: {character.realm}')
     try:
         async with async_session_scope() as session:
-            ec_query = select(CharacterDB).filter(CharacterDB.name == character.name, CharacterDB.realm == character.realm.lower())
+            ec_query = (
+                select(CharacterDB, DiscordGuildCharacterDB)
+                .options(joinedload(CharacterDB.discord_guild_characters))
+                .join(DiscordGuildCharacterDB, CharacterDB.id == DiscordGuildCharacterDB.character_id)
+                .filter(CharacterDB.name == character.name, CharacterDB.realm == character.realm)
+            )
             ec_result = await session.execute(ec_query)
             existing_character = ec_result.scalar()
             if existing_character is not None:
-                if existing_character.is_reporting is True:
-                    existing_character.is_reporting = False
-                else:
-                    existing_character.is_reporting = True
-                    character_history = CharacterHistoryDB(name = existing_character.name,
-                                                        realm = existing_character.realm,
-                                                        faction = existing_character.faction,
-                                                        region = existing_character.region,
-                                                        role = existing_character.role,
-                                                        spec_name = existing_character.spec_name,
-                                                        class_name = existing_character.class_name,
-                                                        achievement_points = existing_character.achievement_points,
-                                                        item_level = existing_character.item_level,
-                                                        score = existing_character.score,
-                                                        rank = existing_character.rank,
-                                                        thumbnail_url = existing_character.thumbnail_url,
-                                                        url = existing_character.url,
-                                                        last_crawled_at= existing_character.last_crawled_at)
-                    character_history.character = existing_character
-                    session.add(character_history)
+                
+                for discord_guild_character in existing_character.discord_guild_characters:
+                    if discord_guild_character.is_reporting is True:
+                        discord_guild_character.is_reporting = False
+                    else:
+                        discord_guild_character.is_reporting = True           
+                    
                 return True
             else:
-                #print('Tal_DB : character not found: ' + character.name + ' on realm: ' + character.realm)
+                
                 return False
     except SQLAlchemyError as error:
         print(f'Error while querying the database: {error}')
