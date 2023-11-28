@@ -1,6 +1,19 @@
 class DungeonRun:
     """The DungeonRun class represents a single dungeon run."""
-    def __init__(self, name, short_name, mythic_level, completed_at, clear_time_ms, par_time_ms, num_keystone_upgrades, score, affixes, url):
+
+    def __init__(
+        self,
+        name,
+        short_name,
+        mythic_level,
+        completed_at,
+        clear_time_ms,
+        par_time_ms,
+        num_keystone_upgrades,
+        score,
+        affixes,
+        url,
+    ):
         self.name = name
         self.short_name = short_name
         self.mythic_level = mythic_level
@@ -11,11 +24,10 @@ class DungeonRun:
         self.score = score
         self.affixes = affixes
         self.url = url
-        start_index = url.find("/season-df-2/") + len("/season-df-2/")    
+        start_index = url.find("/season-df-3/") + len("/season-df-3/")
         self.id = url[start_index:].split("-")[0]
         start_index = url.find("/mythic-plus-runs/") + len("/mythic-plus-runs/")
         self.season = url[start_index:].split("/")[0]
-        
+
         if type(self.id) == str:
             self.id = int(self.id)
-        
