@@ -16,3 +16,4 @@ Mythic+ Bot allows discord server owners to define their own roster of players f
 [Check out the devblog here!](https://docs.eriim.dev/Projects/Mythic+Plus+Bot/Mythic+Plus+Bot)
 
 [Try out the bot or invite it to your server!](https://www.mythicplusbot.dev)
+
