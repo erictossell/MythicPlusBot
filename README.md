@@ -1,4 +1,6 @@
-# Mythic+ Bot - A Discord bot that brings your guilds Mythic+ data directly to your discord server.
+## Mythic+ Bot 
+
+#### A Discord bot that brings your guilds Mythic+ data directly to your discord server.
 
 Mythic+ Bot allows discord server owners to define their own roster of players from accross a region and compile daily and weekly reports on the Mythic+ dungeon runs completed directly in discord.
 
