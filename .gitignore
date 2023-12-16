@@ -6,4 +6,4 @@
 *.db-journal
 /.pytest_cache/
 /.vscode/
-venv/
+/.venv/
