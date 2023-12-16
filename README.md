@@ -18,4 +18,6 @@ Mythic+ Bot allows discord server owners to define their own roster of players f
 [Try out the bot or invite it to your server!](https://www.mythicplusbot.dev)
 
 
-![docs/
+### Code Structure
+
+![docs/23_12_16_structure.png]
