@@ -24,15 +24,21 @@ async def daily_guild_runs_plot(runs: list, discord_guild_id: int):
     if len(runs) == 0:
         return None
 
-    all_runs_dict = [
-        {
-            "completed_at": run.completed_at,
-            "score": run.score,
-            "mythic_level": run.mythic_level,
-            "short_name": run.short_name,
-        }
-        for run in runs
-    ]
+    all_runs_dict = []
+    for run in runs:
+        if not hasattr(run, "completed_at") or not isinstance(
+            run.completed_at, (str, datetime.datetime)
+        ):
+            # Log error or handle the unexpected format
+            continue
+        all_runs_dict.append(
+            {
+                "completed_at": run.completed_at,
+                "score": run.score,
+                "mythic_level": run.mythic_level,
+                "short_name": run.short_name,
+            }
+        )
     df = pd.DataFrame(all_runs_dict)
     plt.close("all")
     plt.ioff()

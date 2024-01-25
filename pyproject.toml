@@ -27,7 +27,7 @@ adjusttext = "^1.0.4"
 asyncio = "^3.4.3"
 datetime = "^5.4"
 numpy = "1.24.2"
-
+ssl = "^1.1.0"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"

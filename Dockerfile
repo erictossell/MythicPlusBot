@@ -12,6 +12,7 @@ WORKDIR /usr/src/app
 COPY --from=builder /usr/src/app/wheels /wheels
 COPY --from=builder /usr/src/app/requirements.txt .
 RUN pip install --no-cache /wheels/*
+RUN pip install ssl
 COPY . .
 CMD ["python", "-m", "bot"]
 
