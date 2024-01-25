@@ -1,5 +1,4 @@
 *.env
-*.png
 *.pyc
 *.log
 *.csv
@@ -7,4 +6,7 @@
 *.db-journal
 /.pytest_cache/
 /.vscode/
-venv/
+/.venv/
+result
+lib
+dist
