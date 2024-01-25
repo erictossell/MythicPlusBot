@@ -15,6 +15,8 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import sessionmaker, joinedload
 
 from bot.db.base import Base
+
+from bot.db.models.game_db import GameDB
 from bot.db.models.game_guild_db import GameGuildDB
 from bot.db.models.discord_guild_db import DiscordGuildDB
 from bot.db.models.discord_game_guilds_db import DiscordGameGuildDB
