@@ -1,29 +1,49 @@
 {
-  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
-  inputs.poetry2nix.url = "github:nix-community/poetry2nix";
+  description = "Application packaged using poetry2nix";
 
-  outputs = { self, nixpkgs, poetry2nix }:
-    let
-      supportedSystems = [ "x86_64-linux" "x86_64-darwin" "aarch64-linux" "aarch64-darwin" ];
-      forAllSystems = nixpkgs.lib.genAttrs supportedSystems;
-      pkgs = forAllSystems (system: nixpkgs.legacyPackages.${system});
-    in
-    {
-      packages = forAllSystems (system: let
-        inherit (poetry2nix.lib.mkPoetry2Nix { pkgs = pkgs.${system}; }) mkPoetryApplication;
-      in {
-        default = mkPoetryApplication { projectDir = self; };
-      });
+  inputs = {
+    flake-utils.url = "github:numtide/flake-utils";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    poetry2nix = {
+      url = "github:nix-community/poetry2nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+  };
 
-      devShells = forAllSystems (system: let
-        inherit (poetry2nix.lib.mkPoetry2Nix { pkgs = pkgs.${system}; }) mkPoetryEnv;
-      in {
-        default = pkgs.${system}.mkShellNoCC {
-          packages = with pkgs.${system}; [
-            (mkPoetryEnv { projectDir = self; })
-            poetry
-          ];
+  outputs = { self, nixpkgs, flake-utils, poetry2nix }:
+    flake-utils.lib.eachDefaultSystem (system:
+      let
+        # see https://github.com/nix-community/poetry2nix/tree/master#api for more functions and examples.
+        pkgs = nixpkgs.legacyPackages.${system};
+        inherit (poetry2nix.lib.mkPoetry2Nix { inherit pkgs; }) mkPoetryApplication overrides;
+      in
+      {
+        packages = {
+          myapp = mkPoetryApplication { 
+	    projectDir = self;
+ 	    overrides = overrides.withDefaults (self: super: {
+	      dnspython = super.dnspython.overridePythonAttrs (
+	        old: {
+		  nativeBuildInputs = (old.nativeBuildInputs or []) ++ [
+		    self.hatchling
+		    ];
+		}
+	      );
+	      asyncio = super.asyncio.overridePythonAttrs (
+	        old: {
+		  nativeBuildInputs = (old.nativeBuildInputs or []) ++ [
+		    self.setuptools
+		    ];
+		}
+	      );
+	   });
+	  };
+          default = self.packages.${system}.myapp;
+        };
+
+        devShells.default = pkgs.mkShell {
+          inputsFrom = [ self.packages.${system}.myapp ];
+          packages = [ pkgs.poetry pkgs.libgcc ];
         };
       });
-    };
 }

@@ -3,7 +3,7 @@
 # Author: Eriim\
 
 import os
-
+from dotenv import load_dotenv
 from collections import defaultdict
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta
@@ -13,7 +13,6 @@ from sqlalchemy import desc, select, func
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import sessionmaker, joinedload
-from dotenv import load_dotenv
 
 from app.db.base import Base
 from app.db.models.game_guild_db import GameGuildDB
@@ -35,9 +34,7 @@ from app.db.models.announcement_db import AnnouncementDB
 from app.raiderIO.models.character import Character
 from app.raiderIO.models.dungeon_run import DungeonRun
 
-
-load_dotenv("configurations/main.env")
-
+load_dotenv()
 DATABASE_URL = os.getenv("DEV_RAILWAY")
 
 async_engine = create_async_engine(
@@ -294,7 +291,7 @@ async def get_character_run_by_character_run(
 
 
 async def get_discord_user_character_by_guild_user(
-    discord_user_id
+    discord_user_id,
 ) -> DiscordUserCharacterDB:
     """Lookup a default character from the database.
 
@@ -493,7 +490,7 @@ async def add_game_guild(game_guild: GameGuildDB) -> GameGuildDB:
 
 
 async def add_discord_game_guild(
-    discord_game_guild: DiscordGameGuildDB
+    discord_game_guild: DiscordGameGuildDB,
 ) -> DiscordGameGuildDB:
     try:
         async with async_session_scope() as session:
@@ -648,7 +645,7 @@ async def add_character_run(character_run: CharacterRunDB) -> Optional[Character
 
 
 async def add_discord_user_character(
-    discord_user_character: DiscordUserCharacterDB
+    discord_user_character: DiscordUserCharacterDB,
 ) -> DiscordUserCharacterDB:
     """Add a default character to the database.
 
@@ -756,7 +753,7 @@ async def update_discord_guild(discord_guild: DiscordGuildDB) -> DiscordGuildDB:
 
 
 async def update_discord_guild_character(
-    discord_guild_character=DiscordGuildCharacterDB
+    discord_guild_character=DiscordGuildCharacterDB,
 ) -> DiscordGuildCharacterDB:
     """Update an existing discord guild character in the database.
 
@@ -1042,7 +1039,7 @@ async def remove_character(name, realm) -> bool:
 
 
 async def remove_discord_user_character(
-    discord_user_character: DiscordUserCharacterDB
+    discord_user_character: DiscordUserCharacterDB,
 ) -> bool:
     """Remove a default character from the database.
 
@@ -1153,7 +1150,7 @@ async def get_all_weekly_runs(discord_guild_id: int) -> Optional[List[DungeonRun
 
 
 async def get_daily_guild_runs(
-    discord_guild_id: int
+    discord_guild_id: int,
 ) -> Optional[DefaultDict[List[DungeonRunDB], List[CharacterDB]]]:
     try:
         async with async_session_scope() as session:
@@ -1309,7 +1306,7 @@ async def get_weekly_non_guild_runs(
 
 
 async def get_all_weekly_guild_runs(
-    discord_guild_id: int
+    discord_guild_id: int,
 ) -> Optional[DefaultDict[List[DungeonRunDB], List[CharacterDB]]]:
     try:
         async with async_session_scope() as session:
@@ -1354,7 +1351,7 @@ async def get_all_weekly_guild_runs(
 
 
 async def get_all_characters_by_game_guild(
-    game_guild: GameGuildDB
+    game_guild: GameGuildDB,
 ) -> Optional[List[CharacterDB]]:
     try:
         async with async_session_scope() as session:
@@ -1373,7 +1370,7 @@ async def get_all_characters_by_game_guild(
 
 
 async def get_all_discord_guild_characters(
-    discord_guild_id: int
+    discord_guild_id: int,
 ) -> Optional[List[CharacterDB]]:
     try:
         async with async_session_scope() as session:
@@ -1418,7 +1415,7 @@ async def get_characters_by_names_realms_and_discord_guild(
 
 
 async def get_all_game_guilds_by_discord_id(
-    discord_guild_id: int
+    discord_guild_id: int,
 ) -> Optional[List[GameGuildDB]]:
     """Look up all game guilds associated with a specific discord guild in the database.
 
@@ -1649,7 +1646,7 @@ async def get_all_characters_for_run(run_id: int, season: str) -> List[Character
 
 
 async def get_top10_runs_for_character_by_score(
-    character: CharacterDB
+    character: CharacterDB,
 ) -> Optional[DefaultDict[List[DungeonRunDB], List[CharacterDB]]]:
     """Get all runs for a character.
 
@@ -1718,7 +1715,7 @@ async def get_top10_runs_for_character_by_score(
 
 
 async def get_top10_character_by_achievement(
-    discord_guild_id: int
+    discord_guild_id: int,
 ) -> List[CharacterDB]:
     """Get the top 10 characters by achievement points.
 
@@ -1744,7 +1741,7 @@ async def get_top10_character_by_achievement(
 
 
 async def get_top10_character_by_mythic_plus(
-    discord_guild_id: int
+    discord_guild_id: int,
 ) -> List[CharacterDB]:
     """Get the top 10 characters by mythic plus score.
 
@@ -1773,7 +1770,7 @@ async def get_top10_character_by_mythic_plus(
 
 
 async def get_top10_character_by_highest_item_level(
-    discord_guild_id: int
+    discord_guild_id: int,
 ) -> List[CharacterDB]:
     """Get the top 10 characters by highest item level.
 

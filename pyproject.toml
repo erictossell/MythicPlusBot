@@ -11,15 +11,24 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = "^3.11"
 py-cord = "^2.4.1"
-python-dotenv = "^1.0.1"
 tqdm = "^4.66.1"
 ratelimit = "^2.2.1"
 httpx = "^0.26.0"
 motor = "^3.3.2"
 psycopg2-binary = "^2.9.9"
 sqlalchemy = "^2.0.25"
+matplotlib = "^3.8.2"
+dnspython = "^2.4.0"
+python-dotenv = "^1.0.1"
+asyncpg = "^0.29.0"
+pandas = "2.0.2"
+adjusttext = "^1.0.4"
+asyncio = "^3.4.3"
+datetime = "^5.4"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
