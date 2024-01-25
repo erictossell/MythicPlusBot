@@ -97,6 +97,8 @@ async def daily_guild_runs_plot(runs: list, discord_guild_id: int):
             annotation = plt.annotate(
                 txt,
                 (df["hours_passed"].iat[i], df["mythic_level"].iat[i]),
+                xytext=(5, 5),
+                textcoords="offset points",
                 fontsize=8,
                 color="white",
             )
@@ -230,6 +232,8 @@ async def weekly_guild_runs_plot(runs: list, guild_runs: list, discord_guild_id:
                     annotation = plt.annotate(
                         txt,
                         (df["completed_at"].iat[i], df["mythic_level"].iat[i]),
+                        xytext=(5, 5),
+                        textcoords="offset points",
                         fontsize=8,
                         color="white",
                     )
@@ -238,7 +242,7 @@ async def weekly_guild_runs_plot(runs: list, guild_runs: list, discord_guild_id:
                 annotations,
                 expand_points=(1.2, 1.2),
                 expand_text=(1.2, 1.2),
-                force_text=0.5,
+                force_text=(0.5, 0.5),
             )
 
             directory = "images"
