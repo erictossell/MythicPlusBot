@@ -21,7 +21,7 @@
         formatter = pkgs.nixpkgs-fmt;
 
         packages = {
-          myapp = mkPoetryApplication {
+          mythicPlusBot = mkPoetryApplication {
             projectDir = self;
             overrides = overrides.withDefaults (self: super: {
               dnspython = super.dnspython.overridePythonAttrs (
@@ -40,12 +40,12 @@
               );
             });
           };
-          default = self.packages.${system}.myapp;
+          default = self.packages.${system}.mythicPlusBot;
         };
-
+        # https://discourse.nixos.org/t/nixos-with-poetry-installed-pandas-libstdc-so-6-cannot-open-shared-object-file/8442/8
         devShells.default = pkgs.mkShell {
-          inputsFrom = [ self.packages.${system}.myapp ];
-          packages = [ pkgs.poetry pkgs.libgcc ];
+          inputsFrom = [ self.packages.${system}.mythicPlusBot ];
+          packages = [ pkgs.poetry ];
           shellHook = ''
             export LD_LIBRARY_PATH=${pkgs.lib.makeLibraryPath [
               pkgs.stdenv.cc.cc
