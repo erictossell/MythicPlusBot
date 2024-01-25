@@ -6,8 +6,7 @@ authors = ["Eric Tossell <eric@tossell.ca>"]
 # readme = "README.md"
 # license = "BSD"
 packages = [
-  { include = "app" },
-  { include = "bot.py"}
+  { include = "bot" }
 ]
 
 [tool.poetry.dependencies]
@@ -19,7 +18,7 @@ httpx = "^0.26.0"
 motor = "^3.3.2"
 psycopg2-binary = "^2.9.9"
 sqlalchemy = "^2.0.25"
-matplotlib = "^3.8.2"
+matplotlib = "3.7.1"
 dnspython = "^2.4.0"
 python-dotenv = "^1.0.1"
 asyncpg = "^0.29.0"
@@ -27,6 +26,7 @@ pandas = "2.0.2"
 adjusttext = "^1.0.4"
 asyncio = "^3.4.3"
 datetime = "^5.4"
+numpy = "1.24.2"
 
 [build-system]
 requires = ["poetry-core"]
