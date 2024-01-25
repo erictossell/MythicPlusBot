@@ -1,0 +1,25 @@
+[tool.poetry]
+name = "MythicPlusBot"
+version = "0.5.0"
+description = "A discord bot for tracking mythic+ runs."
+authors = ["Eric Tossell <eric@tossell.ca>"]
+# readme = "README.md"
+# license = "BSD"
+packages = [
+  { include = "app" },
+  { include = "bot.py"}
+]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+py-cord = "^2.4.1"
+python-dotenv = "^1.0.1"
+tqdm = "^4.66.1"
+ratelimit = "^2.2.1"
+httpx = "^0.26.0"
+motor = "^3.3.2"
+psycopg2-binary = "^2.9.9"
+sqlalchemy = "^2.0.25"
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
