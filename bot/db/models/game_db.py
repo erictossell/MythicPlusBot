@@ -2,7 +2,7 @@ import datetime
 from sqlalchemy import DateTime, Column, Integer, String
 from sqlalchemy.orm import relationship
 from bot.db.base import Base
-from bot.db.game_guild_db import GameGuildDB
+from bot.db.models.game_guild_db import GameGuildDB
 
 
 class GameDB(Base):
@@ -20,3 +20,4 @@ class GameDB(Base):
 
     def __init__(self, name: str = "World of Warcraft"):
         self.name = name
+
