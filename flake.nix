@@ -15,14 +15,14 @@
       let
         # see https://github.com/nix-community/poetry2nix/tree/master#api for more functions and examples.
         pkgs = nixpkgs.legacyPackages.${system};
-        inherit (poetry2nix.lib.mkPoetry2Nix { inherit pkgs; }) mkPoetryApplication overrides;
+        inherit (poetry2nix.lib.mkPoetry2Nix { inherit pkgs; }) mkPoetryApplication mkPoetryScriptsPackage overrides;
       in
       {
         formatter = pkgs.nixpkgs-fmt;
 
         packages = {
           mythicPlusBot = mkPoetryApplication {
-            projectDir = self;
+            projectDir = ./.;
             overrides = overrides.withDefaults (self: super: {
               dnspython = super.dnspython.overridePythonAttrs (
                 old: {
@@ -45,7 +45,7 @@
         # https://discourse.nixos.org/t/nixos-with-poetry-installed-pandas-libstdc-so-6-cannot-open-shared-object-file/8442/8
         devShells.default = pkgs.mkShell {
           inputsFrom = [ self.packages.${system}.mythicPlusBot ];
-          packages = [ pkgs.poetry ];
+          packages = [ pkgs.poetry pkgs.railway ];
           shellHook = ''
             export LD_LIBRARY_PATH=${pkgs.lib.makeLibraryPath [
               pkgs.stdenv.cc.cc

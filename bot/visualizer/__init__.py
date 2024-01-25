@@ -107,7 +107,7 @@ async def daily_guild_runs_plot(runs: list, discord_guild_id: int):
             annotations,
             expand_points=(1.2, 1.2),
             expand_text=(1.2, 1.2),
-            force_text=0.5,
+            force_text=(0.5, 0.5),
         )
 
         # set yticks to start at 0 and increment by 2

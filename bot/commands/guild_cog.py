@@ -68,15 +68,16 @@ class Guild(commands.Cog):
                     await ctx.respond(embed=embed)
 
         except Exception as exception:
-            print(exception)
+            import traceback
+
+            traceback.print_exc()
             await ctx.respond(
                 "Something went wrong :( Talk to the bot developer for help."
             )
-            error_channel = await ctx.bot.fetch_guild(
-                int(SUPPORT_SERVER_ID)
-            ).fetch_channel(int(SUPPORT_CHANNEL_ID))
+            guild = await ctx.bot.fetch_guild(int(SUPPORT_SERVER_ID))
+            error_channel = await guild.fetch_channel(int(SUPPORT_CHANNEL_ID))
 
-            await error_channel.send(f"Error in !register command: {exception}")
+            await error_channel.send(f"Error in !daily command: {exception}")
 
     @guild.command(name="weekly", help="Gets the daily guild report.")
     async def weekly_report(self, ctx):
