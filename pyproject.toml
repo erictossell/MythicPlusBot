@@ -24,12 +24,11 @@ python-dotenv = "^1.0.1"
 asyncpg = "^0.29.0"
 pandas = "2.0.2"
 adjusttext = "^1.0.4"
-asyncio = "^3.4.3"
 datetime = "^5.4"
 numpy = "1.24.2"
 
 [tool.poetry.scripts]
-poetry = "poetry.console.application:bot"
+mythicPlusBot = "bot.__main__:main"
 
 [build-system]
 requires = ["poetry-core"]
