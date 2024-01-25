@@ -1,37 +1,50 @@
 from datetime import datetime
-from sqlalchemy import BigInteger, Boolean, Column, Integer, String, ForeignKey, DateTime
+from sqlalchemy import (
+    BigInteger,
+    Boolean,
+    Column,
+    Integer,
+    String,
+    ForeignKey,
+    DateTime,
+)
 from sqlalchemy.orm import relationship
 from bot.db.base import Base
 from bot.db.models.dungeon_run_db import DungeonRunDB
 
+
 class AnnouncementDB(Base):
     """Model representing an announcement in the database."""
 
-    __tablename__ = 'announcements'
+    __tablename__ = "announcements"
 
     id = Column(Integer, primary_key=True)
     title = Column(String)
     content = Column(String)
-    
+
     announcement_channel_id = Column(BigInteger)
     has_been_sent = Column(Boolean)
     created_at = Column(DateTime, default=datetime.utcnow)
     modified_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    dungeon_run_id = Column(Integer, ForeignKey('dungeon_runs.id'))
+    dungeon_run_id = Column(Integer, ForeignKey("dungeon_runs.id"))
     dungeon_run = relationship("DungeonRunDB", back_populates="announcements")
-    
-    discord_guild_id = Column(BigInteger, ForeignKey('discord_guilds.id'), nullable=False)
+
+    discord_guild_id = Column(
+        BigInteger, ForeignKey("discord_guilds.id"), nullable=False
+    )
     discord_guild = relationship("DiscordGuildDB", back_populates="announcements")
 
-    def __init__(self,
-                 title: str,
-                 content: str,
-                 discord_guild_id :int,
-                 announcement_channel_id:int,
-                 has_been_sent : bool = False ,
-                 id: int = None,
-                 dungeon_run_id: int = None,
-                 dunegon_run: DungeonRunDB = None):
+    def __init__(
+        self,
+        title: str,
+        content: str,
+        discord_guild_id: int,
+        announcement_channel_id: int,
+        has_been_sent: bool = False,
+        id: int = None,
+        dungeon_run_id: int = None,
+        dunegon_run: DungeonRunDB = None,
+    ):
         """
         AnnouncementDB constructor.
 

@@ -1,7 +1,9 @@
-import random   
+import random
+
 
 class Dice:
     """A class that represents a dice."""
+
     def __init__(self, num_sides):
         """The constructor for the Dice class.
 

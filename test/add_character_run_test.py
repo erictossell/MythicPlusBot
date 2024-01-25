@@ -3,15 +3,16 @@ from unittest.mock import MagicMock, patch
 
 import app.db as db
 
+
 # Replace 'your_module' with the actual name of the module where `add_character_run` is defined.
 class TestCharacterDB:
-    
     @pytest.fixture
     def mock_session(self):
         session = MagicMock()
         with patch("db.Session", return_value=session):
             with db.async_session_scope() as session:
                 yield session
+
     @pytest.mark.usefixtures("mock_session")
     def test_add_character_run(self, mock_session):
         # Create example character and run objects
@@ -35,17 +36,19 @@ class TestCharacterDB:
             last_crawled_at="2022-01-01",
             is_reporting=True,
         )
-        run = db.DungeonRunDB(id=1,
-                        season='season-df-1',
-                        name="TestRun",
-                        short_name="Test",
-                        mythic_level=15,
-                        completed_at="2022-01-01",
-                        clear_time_ms=100000,
-                        par_time_ms=100000,
-                        num_keystone_upgrades=0,
-                        score=1000,
-                        url= "https://example.com/run")
+        run = db.DungeonRunDB(
+            id=1,
+            season="season-df-1",
+            name="TestRun",
+            short_name="Test",
+            mythic_level=15,
+            completed_at="2022-01-01",
+            clear_time_ms=100000,
+            par_time_ms=100000,
+            num_keystone_upgrades=0,
+            score=1000,
+            url="https://example.com/run",
+        )
 
         # Set up the database query results
         mock_session.query(db.CharacterDB).filter().first.return_value = character

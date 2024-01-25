@@ -1,14 +1,16 @@
 import discord
-class Poll():
-    """This class represents poll objects within the bot.
-    """
-    def __init__(self) -> None:       
-        self.poll_id = 0 
-        self.question = ''
-        self.answers = {}    
-        self.votes = {}         
 
-    def new_poll(self,question, answers) -> None:
+
+class Poll:
+    """This class represents poll objects within the bot."""
+
+    def __init__(self) -> None:
+        self.poll_id = 0
+        self.question = ""
+        self.answers = {}
+        self.votes = {}
+
+    def new_poll(self, question, answers) -> None:
         """Creates a new poll object.
 
         Args:
@@ -17,7 +19,7 @@ class Poll():
         """
         self.question = question
         self.answers = answers
-        self.votes = {answer: 0 for answer in answers}       
+        self.votes = {answer: 0 for answer in answers}
 
     def update_vote(self, votes) -> None:
         """Updates the number of votes for each answer.
@@ -33,10 +35,14 @@ class Poll():
         Args:
             channel (channel): the channel object to send the poll to.
         """
-        embed = discord.Embed(title='Take a Lap Discord Poll', description=self.question, color=discord.Color.blue())
+        embed = discord.Embed(
+            title="Take a Lap Discord Poll",
+            description=self.question,
+            color=discord.Color.blue(),
+        )
         for option in self.answers:
             embed.add_field(name=option, value=self.votes[option], inline=False)
-        
+
         message = await channel.send(embed=embed)
         for i in range(len(self.answers)):
             await message.add_reaction(chr(0x1F1E6 + i))

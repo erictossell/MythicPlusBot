@@ -20,4 +20,3 @@ class GameDB(Base):
 
     def __init__(self, name: str = "World of Warcraft"):
         self.name = name
-
