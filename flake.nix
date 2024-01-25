@@ -18,32 +18,39 @@
         inherit (poetry2nix.lib.mkPoetry2Nix { inherit pkgs; }) mkPoetryApplication overrides;
       in
       {
+        formatter = pkgs.nixpkgs-fmt;
+
         packages = {
-          myapp = mkPoetryApplication { 
-	    projectDir = self;
- 	    overrides = overrides.withDefaults (self: super: {
-	      dnspython = super.dnspython.overridePythonAttrs (
-	        old: {
-		  nativeBuildInputs = (old.nativeBuildInputs or []) ++ [
-		    self.hatchling
-		    ];
-		}
-	      );
-	      asyncio = super.asyncio.overridePythonAttrs (
-	        old: {
-		  nativeBuildInputs = (old.nativeBuildInputs or []) ++ [
-		    self.setuptools
-		    ];
-		}
-	      );
-	   });
-	  };
+          myapp = mkPoetryApplication {
+            projectDir = self;
+            overrides = overrides.withDefaults (self: super: {
+              dnspython = super.dnspython.overridePythonAttrs (
+                old: {
+                  nativeBuildInputs = (old.nativeBuildInputs or [ ]) ++ [
+                    self.hatchling
+                  ];
+                }
+              );
+              asyncio = super.asyncio.overridePythonAttrs (
+                old: {
+                  nativeBuildInputs = (old.nativeBuildInputs or [ ]) ++ [
+                    self.setuptools
+                  ];
+                }
+              );
+            });
+          };
           default = self.packages.${system}.myapp;
         };
 
         devShells.default = pkgs.mkShell {
           inputsFrom = [ self.packages.${system}.myapp ];
-          packages = [ pkgs.poetry pkgs.libgcc pkgs.libstdcxx5 ];
+          packages = [ pkgs.poetry pkgs.libgcc ];
+          shellHook = ''
+            export LD_LIBRARY_PATH=${pkgs.lib.makeLibraryPath [
+              pkgs.stdenv.cc.cc
+            ]}
+          '';
         };
       });
 }
