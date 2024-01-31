@@ -10,3 +10,4 @@
 result
 lib
 dist
+__pycache__
