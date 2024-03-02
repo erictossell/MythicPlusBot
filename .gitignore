@@ -1,4 +1,6 @@
 *.env
+*.envrc
+.direnv/
 *.pyc
 *.log
 *.csv

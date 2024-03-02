@@ -13,7 +13,7 @@ SUPPORT_CHANNEL_ID = os.getenv("SUPPORT_CHANNEL_ID")
 SUPPORT_SERVER_ID = os.getenv("SUPPORT_SERVER_ID")
 
 # Set up Discord BOT with correct permissions
-intents = discord.Intents(guilds=True, members=True)
+intents = discord.Intents(guilds=True)
 intents.guilds = True
 
 bot = discord.Bot(

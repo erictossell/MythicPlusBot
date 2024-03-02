@@ -107,8 +107,8 @@ async def daily_guild_runs_plot(runs: list, discord_guild_id: int):
 
         adjust_text(
             annotations,
-            expand_points=(1.2, 1.2),
-            expand_text=(1.2, 1.2),
+            # expand_points=(1.2, 1.2),
+            # expand_text=(1.2, 1.2),
             force_text=(0.5, 0.5),
         )
 
@@ -240,8 +240,8 @@ async def weekly_guild_runs_plot(runs: list, guild_runs: list, discord_guild_id:
                     annotations.append(annotation)
             adjust_text(
                 annotations,
-                expand_points=(1.2, 1.2),
-                expand_text=(1.2, 1.2),
+                # expand_points=(1.2, 1.2),
+                # expand_text=(1.2, 1.2),
                 force_text=(0.1, 0.1),
             )
 

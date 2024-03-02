@@ -15,7 +15,7 @@ Mythic+ Bot allows Discord server owners to define their own roster of players f
   - Coming soon - summary season reports for Discord servers
 
 
-[Check out the devblog here!](https://docs.eriim.dev/src/python/Mythic+Plus+Bot/Mythic+Plus+Bot)
+[Check out the devblog here!](https://docs.eriim.dev/Projects/Mythic+Plus+Bot/1.+Mythic+Plus+Bot)
 
 [Try out the bot or invite it to your server!](https://www.mythicplusbot.dev)
 
