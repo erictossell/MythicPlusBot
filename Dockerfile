@@ -14,4 +14,3 @@ COPY --from=builder /usr/src/app/requirements.txt .
 RUN pip install --no-cache /wheels/*
 COPY . .
 CMD ["python", "-m", "bot"]
-
