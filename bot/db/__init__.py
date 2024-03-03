@@ -37,7 +37,7 @@ from bot.raiderIO.models.character import Character
 from bot.raiderIO.models.dungeon_run import DungeonRun
 
 load_dotenv()
-DATABASE_URL = os.getenv("DEV_RAILWAY")
+DATABASE_URL = os.getenv("DATABASE_URL")
 
 async_engine = create_async_engine(
     DATABASE_URL,
