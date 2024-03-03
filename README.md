@@ -4,6 +4,8 @@
 
 Mythic+ Bot allows Discord server owners to define their own roster of players from accross a region and compile daily and weekly reports on the Mythic+ dungeon runs completed directly in Discord.
 
+[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/template/zLQuSb?referralCode=_EnWYp)
+
 **Features:**
   - Add guild's wholesale with auto-updating rosters.
   - Add individual characters from any server in the region
