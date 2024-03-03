@@ -26,7 +26,6 @@ bot = discord.Bot(
 cogs_list = [
     "bot.commands.general_cog",
     "bot.commands.admin_cog",
-    "bot.commands.member_events_cog",
     "bot.commands.guild_cog",
     "bot.commands.character_cog",
     "bot.commands.announcement_cog",
