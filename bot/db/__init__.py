@@ -1801,7 +1801,7 @@ async def get_top10_character_by_highest_item_level(
 
 
 async def get_top10_guild_runs_this_week(
-    discord_guild_id: int, season: str = "season-df-3"
+    discord_guild_id: int, season: str = "season-df-4"
 ) -> Optional[DefaultDict[List[DungeonRunDB], List[CharacterDB]]]:
     try:
         async with async_session_scope() as session:
