@@ -1852,7 +1852,7 @@ async def get_top10_guild_runs_this_week(
 
 
 async def get_top5_guild_runs_all_time(
-    discord_guild_id: int, season: str = "season-df-3"
+    discord_guild_id: int, season: str = "season-df-4"
 ) -> List[DungeonRunDB]:
     try:
         async with async_session_scope() as session:
