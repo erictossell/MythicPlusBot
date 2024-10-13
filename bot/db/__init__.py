@@ -1757,7 +1757,7 @@ async def get_top10_character_by_mythic_plus(
                 .join(DiscordGuildCharacterDB)
                 .filter(
                     DiscordGuildCharacterDB.discord_guild_id == discord_guild_id,
-                    DiscordGuildCharacterDB.is_reporting == True,
+                    DiscordGuildCharacterDB.is_reporting,
                 )
                 .order_by(CharacterDB.score.desc())
                 .limit(10)
@@ -1786,7 +1786,7 @@ async def get_top10_character_by_highest_item_level(
                 .join(DiscordGuildCharacterDB)
                 .filter(
                     DiscordGuildCharacterDB.discord_guild_id == discord_guild_id,
-                    DiscordGuildCharacterDB.is_reporting == True,
+                    DiscordGuildCharacterDB.is_reporting,
                 )
                 .order_by(CharacterDB.item_level.desc())
                 .limit(10)
@@ -1801,7 +1801,7 @@ async def get_top10_character_by_highest_item_level(
 
 
 async def get_top10_guild_runs_this_week(
-    discord_guild_id: int, season: str = "season-df-4"
+    discord_guild_id: int, season: str = "season-tww-1"
 ) -> Optional[DefaultDict[List[DungeonRunDB], List[CharacterDB]]]:
     try:
         async with async_session_scope() as session:
@@ -1852,7 +1852,7 @@ async def get_top10_guild_runs_this_week(
 
 
 async def get_top5_guild_runs_all_time(
-    discord_guild_id: int, season: str = "season-df-4"
+    discord_guild_id: int, season: str = "season-tww-1"
 ) -> List[DungeonRunDB]:
     try:
         async with async_session_scope() as session:
