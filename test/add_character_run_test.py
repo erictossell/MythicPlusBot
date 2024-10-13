@@ -38,7 +38,7 @@ class TestCharacterDB:
         )
         run = db.DungeonRunDB(
             id=1,
-            season="season-df-1",
+            season="season-tww-1",
             name="TestRun",
             short_name="Test",
             mythic_level=15,
