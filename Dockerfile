@@ -3,7 +3,7 @@ FROM python:3.11-slim as builder
 WORKDIR /usr/src/app
 RUN pip install poetry
 COPY pyproject.toml poetry.lock* ./
-RUN python -m poetry export -f requirements.txt --output requirements.txt --without-hashes
+RUN poetry export -f requirements.txt --output requirements.txt --without-hashes
 RUN pip wheel --no-cache-dir --no-deps --wheel-dir /usr/src/app/wheels -r requirements.txt
 
 # Runtime stage
